@@ -1,0 +1,18 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "password": "$2b$10$Rvd1qtkjO6vZ.tnyNIwtE.5iwBpINBfxWPmCeLAst.i.nAjEfIcKW",
+      "role": "superuser"
+    },
+    {
+      "id": 2,
+      "username": "user1",
+      "password": "$2b$10$hw3hxgoM06sqbunmkKZtAuqEstiVekBlkvrM8WznHr7ee2w/HVxTO",
+      "role": "user"
+    }
+  ],
+  "projects": [],
+  "history": []
+}
