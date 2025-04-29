@@ -13,6 +13,25 @@
       "role": "user"
     }
   ],
-  "projects": [],
+  "projects": [
+    {
+      "id": 1,
+      "name": "HR01 - พุทธบูชา 36",
+      "water_rate": 8,
+      "electricity_rate": 21
+    },
+    {
+      "id": 2,
+      "name": "HR02 - ถ.เทพารักษ์ จ.สมุทรปราการ",
+      "water_rate": 8,
+      "electricity_rate": 18
+    },
+    {
+      "id": 3,
+      "name": "HR03 - บ้านค่าย ระยอง",
+      "water_rate": 5,
+      "electricity_rate": 20
+    }
+  ],
   "history": []
 }

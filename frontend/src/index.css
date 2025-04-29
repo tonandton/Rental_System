@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
 body {
   font-family: 'TH Sarabun New', sans-serif;
   @apply bg-gray-100 text-gray-900 text-sm sm:text-base;
@@ -12,22 +11,28 @@ body {
   animation: fadeIn 0.5s ease-in;
 }
 
+.animate-slide-in {
+  animation: slideIn 0.3s ease-in;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ปรับตารางให้เลื่อนได้บนจอเล็ก */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 table {
   @apply min-w-full;
 }
 
-/* ปรับ input และ select */
 input, select {
   @apply w-full p-1 sm:p-2 border rounded text-sm sm:text-base;
 }
 
-/* ปรับปุ่ม */
 button {
   @apply px-2 py-1 sm:px-3 sm:py-2 rounded text-sm sm:text-base;
 }

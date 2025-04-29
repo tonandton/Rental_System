@@ -2,6 +2,7 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "./Nav";
+import FilterForm from "./FilterForm";
 
 function Main({ token, role, setToken, setRole }) {
   const [project, setProject] = useState("");
@@ -16,6 +17,35 @@ function Main({ token, role, setToken, setRole }) {
   const [showFilter, setShowFilter] = useState(false);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    fetchProjects();
+    fetchHistory();
+  });
+
+  const fetchProjects = async () => {
+    try {
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await axios.get("http://localhost:3001/api/projects", {
+        headers,
+      });
+      setProjects(response.data);
+    } catch (err) {
+      console.error("Error fetching projects:", err);
+    }
+  };
+
+  const fetchHistory = async () => {
+    try {
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await axios.get("http://localhost:3001/api/history", {
+        headers,
+      });
+      setHistory(response.data);
+    } catch (err) {
+      console.error("Error fetching history:", err);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <Navbar />
@@ -28,12 +58,17 @@ function Main({ token, role, setToken, setRole }) {
             บันทึกค่าใช้จ่าย
           </h2>
           <div className="grid grid-cols-2 gap-3 sm:gap-4">
-            <select className="p-2 border rounded text-sm sm:text-base">
-              <option value="">-- เลือกโครงการ --</option>
-              <option value="">HR01 - พุทธบูชา 36</option>
-              <option value="">HR02 - โครงการที่ 2</option>
-              <option value="">HR03 - โครงการที่ 3</option>
-              <option value="">HR04 - โครงการที่ 4</option>
+            <select
+              value={project}
+              onChange={(e) => setProject(e.target.value)}
+              className="p-2 border rounded text-sm sm:text-base"
+            >
+              <option value="">เลือกโครงการ</option>
+              {projects.map((proj) => (
+                <option key={proj.id} value={proj.id}>
+                  {proj.name}
+                </option>
+              ))}
             </select>
 
             <input type="month" placeholder="เดือนที่บันทึก (YYYY-MM)" />
@@ -53,6 +88,7 @@ function Main({ token, role, setToken, setRole }) {
             />
           </div>
         </div>
+        <FilterForm />
       </div>
     </div>
   );
