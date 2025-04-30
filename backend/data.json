@@ -3,12 +3,14 @@
     {
       "id": 1,
       "username": "admin",
+      "name": "tonandton",
       "password": "$2b$10$Rvd1qtkjO6vZ.tnyNIwtE.5iwBpINBfxWPmCeLAst.i.nAjEfIcKW",
       "role": "superuser"
     },
     {
       "id": 2,
       "username": "user1",
+      "name": "user01",
       "password": "$2b$10$hw3hxgoM06sqbunmkKZtAuqEstiVekBlkvrM8WznHr7ee2w/HVxTO",
       "role": "user"
     }
@@ -31,7 +33,59 @@
       "name": "HR03 - บ้านค่าย ระยอง",
       "water_rate": 5,
       "electricity_rate": 20
+    },
+    {
+      "id": 4,
+      "name": "HR04 - อนามัยงามเจริญ",
+      "water_rate": 9,
+      "electricity_rate": 21
     }
   ],
-  "history": []
+  "history": [
+    {
+      "id": 1,
+      "project_id": 1,
+      "user_id": 2,
+      "date": "2025-04-30T02:19:41.060Z",
+      "record_month": "2025-01",
+      "rent": 0,
+      "water_meter": 1,
+      "water_units": 0,
+      "water_cost": 0,
+      "electricity_meter": 1,
+      "electricity_units": 0,
+      "electricity_cost": 0,
+      "total": 0
+    },
+    {
+      "id": 2,
+      "project_id": 1,
+      "user_id": 2,
+      "date": "2025-04-30T02:37:19.424Z",
+      "record_month": "2025-02",
+      "rent": 0,
+      "water_meter": 3,
+      "water_units": 2,
+      "water_cost": 16,
+      "electricity_meter": 2,
+      "electricity_units": 1,
+      "electricity_cost": 21,
+      "total": 37
+    },
+    {
+      "id": 3,
+      "project_id": 1,
+      "user_id": 1,
+      "date": "2025-04-30T03:44:49.479Z",
+      "record_month": "2025-03",
+      "rent": 0,
+      "water_meter": 4,
+      "water_units": 1,
+      "water_cost": 8,
+      "electricity_meter": 5,
+      "electricity_units": 3,
+      "electricity_cost": 63,
+      "total": 71
+    }
+  ]
 }

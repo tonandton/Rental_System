@@ -75,7 +75,15 @@ const requireSuperUser = (req, res, next) => {
   next();
 };
 
-// API: Login
+// Middelware check user or superuser
+const requireAuth = (req, res, next) => {
+  if (!req.user) {
+    return res.status(403).json({ error: "Authentication required" });
+  }
+  next();
+};
+
+// API: Login  *** UPDATE ***
 app.post("/api/login", async (req, res) => {
   const { username, password } = req.body;
 
@@ -181,27 +189,31 @@ app.get("/api/projects", authenticateToken, async (req, res) => {
   }
 });
 
-// API: AddProject
-app.post("/api/project", authenticateToken, async (req, res) => {
-  if (!req.user)
-    return res.status(403).json({ error: "Authentication required" });
-  const { name, water_rate, electricity_rate } = req.body;
-  try {
-    const data = await readData();
-    const newId = Math.max(...data.projects.map((p) => p.id), 0) + 1;
-    const project = {
-      id: newId,
-      name,
-      water_rate: parseFloat(water_rate),
-      electricity_rate: parseFloat(electricity_rate),
-    };
-    data.projects.push(project);
-    await writeData(data);
-    res.json(project);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+// API: AddProject (SuperUser only)  *** UPDATE ***
+app.post(
+  "/api/project",
+  authenticateToken,
+  requireSuperUser,
+  async (req, res) => {
+    const { name, water_rate, electricity_rate } = req.body;
+
+    try {
+      const data = await readData();
+      const newId = Math.max(...data.projects.map((p) => p.id), 0) + 1;
+      const project = {
+        id: newId,
+        name,
+        water_rate: parseFloat(water_rate),
+        electricity_rate: parseFloat(electricity_rate),
+      };
+      data.projects.push(project);
+      await writeData(data);
+      res.json({ status: "บันทึกโครงการเรียบร้อย", project });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
   }
-});
+);
 
 // API: EditProject
 app.put("/api/projects/:id", authenticateToken, async (req, res) => {
@@ -319,21 +331,33 @@ app.post("/api/history/filter", authenticateToken, async (req, res) => {
   }
 });
 
-// API: AddHistory
-app.post("/api/history", authenticateToken, async (req, res) => {
-  if (!req.user)
-    return res.status(403).json({ error: "Authentication required" });
-  const { project_id, rent, water_meter, electricity_meter } = req.body;
-
+// API: AddHistory (User or Superuser) *** UPDATE ***
+app.post("/api/history", authenticateToken, requireAuth, async (req, res) => {
+  const { project_id, rent, water_meter, electricity_meter, record_month } =
+    req.body;
   try {
+    //  Check record month
+    if (!record_month || !/^\d{4}-\d{2}$/.test(record_month)) {
+      return res.status(400).json({ error: "กรุณาระบุเดือนในรูปแบบ YYYY-MM" });
+    }
+
     const data = await readData();
     const project = data.projects.find((p) => p.id === project_id);
     if (!project) return res.status(404).json({ error: "Project not found" });
 
+    // ตรวจสอบว่าไม่มีบันทึกในเดือนและโครงการเเดียวกัน
+    const existingEntry = data.history.find(
+      (h) => h.project_id === project_id && h.record_month === record_month
+    );
+    if (existingEntry) {
+      return res
+        .status(400)
+        .json({ error: "มีบันทึกสำหรับเดือนนี้ในโครงการแล้ว" });
+    }
+
     const lastEntry = data.history
       .filter((h) => h.project_id === project_id)
       .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
-
     const waterMeterValue = parseFloat(water_meter) || 0;
     const electricityMeterValue = parseFloat(electricity_meter) || 0;
     if (lastEntry) {
@@ -349,7 +373,7 @@ app.post("/api/history", authenticateToken, async (req, res) => {
       }
     }
 
-    const waterUnits = lastEntry ? waterMetervalue - lastEntry.water_meter : 0;
+    const waterUnits = lastEntry ? waterMeterValue - lastEntry.water_meter : 0;
     const electricityUnits = lastEntry
       ? electricityMeterValue - lastEntry.electricity_meter
       : 0;
@@ -361,8 +385,10 @@ app.post("/api/history", authenticateToken, async (req, res) => {
     const newId = Math.max(...data.history.map((h) => h.id), 0) + 1;
     const entry = {
       id: newId,
+      project_id,
       user_id: req.user.id,
       date: new Date().toISOString(),
+      record_month,
       rent: rentCost,
       water_meter: waterMeterValue,
       water_units: waterUnits,
@@ -372,9 +398,11 @@ app.post("/api/history", authenticateToken, async (req, res) => {
       electricity_cost: electricityCost,
       total,
     };
+
     data.history.push(entry);
     await writeData(data);
-    res.json({
+    console.log(entry);
+    res.status(200).json({
       ...entry,
       project_name: project.name,
       water_rate: project.water_rate,

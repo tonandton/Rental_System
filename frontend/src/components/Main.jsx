@@ -12,7 +12,8 @@ function Main({ token, role, setToken, setRole }) {
   const [rent, setRent] = useState("");
   const [waterMeter, setWtaterMeter] = useState("");
   const [electricityMeter, setElectricityMeter] = useState("");
-  const [history, setHistory] = useState("");
+  const [recordMonth, setRecordMonth] = useState("");
+  const [history, setHistory] = useState([]);
   const [bill, setBill] = useState(null);
   const [showFilter, setShowFilter] = useState(false);
   const navigate = useNavigate();
@@ -88,7 +89,15 @@ function Main({ token, role, setToken, setRole }) {
             />
           </div>
         </div>
-        <FilterForm />
+        <FilterForm
+          showFilter={showFilter}
+          setShowFilter={setShowFilter}
+          projects={projects}
+          history={history}
+          setHistory={setHistory}
+          token={token}
+          role={role}
+        />
       </div>
     </div>
   );
