@@ -25,14 +25,54 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-table {
-  @apply min-w-full;
-}
-
 input, select {
   @apply w-full p-1 sm:p-2 border rounded text-sm sm:text-base;
 }
 
 button {
   @apply px-2 py-1 sm:px-3 sm:py-2 rounded text-sm sm:text-base;
+}
+
+table {
+  @apply min-w-full bg-white rounded-lg shadow-sm;
+}
+
+th {
+  @apply bg-gray-200 text-gray-700 font-semibold text-left p-3 sm:p-4 border-b border-gray-300;
+}
+
+td {
+  @apply p-3 sm:p-4 border-b border-gray-200;
+}
+
+tr {
+  @apply transition-colors;
+}
+
+tr:hover {
+  @apply bg-gray-50;
+}
+
+thead th {
+  @apply sticky top-0 bg-gray-200 z-10;
+}
+
+button {
+  @apply px-2 py-1 sm:px-3 sm:py-2 rounded text-sm sm:text-base transition-colors;
+}
+
+.modal {
+  @apply fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50;
+}
+
+.modal-content {
+  @apply bg-white rounded-xl p-6 max-w-[95vw] max-h-[85vh] overflow-auto shadow-lg relative;
+}
+
+.modal-image {
+  @apply max-w-full max-h-[80vh] object-contain rounded-lg;
+}
+
+.close-button {
+  @apply absolute top-3 right-3 bg-red-600 text-white rounded-full p-2 hover:bg-red-700 transition-colors;
 }

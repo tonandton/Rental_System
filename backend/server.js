@@ -1,7 +1,9 @@
 const express = require("express");
-const fs = require("fs").promises;
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
+const fs = require("fs").promises;
+const path = require("path");
+const multer = require("multer");
 const bcrypt = require("bcryptjs");
 
 const app = express();
@@ -401,7 +403,7 @@ app.post("/api/history", authenticateToken, requireAuth, async (req, res) => {
 
     data.history.push(entry);
     await writeData(data);
-    console.log(entry);
+    // console.log(entry);
     res.status(200).json({
       ...entry,
       project_name: project.name,

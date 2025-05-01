@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "./Nav";
 import FilterForm from "./FilterForm";
+import History from "./History";
 
 function Main({ token, role, setToken, setRole }) {
   const [project, setProject] = useState("");
@@ -80,12 +81,12 @@ function Main({ token, role, setToken, setRole }) {
             <input
               value="บันทึก"
               type="submit"
-              className="min-w-[100px] bg-green-400 text-white text-sm sm:text-base p-2 rounded hover:bg-green-500  cursor-pointer"
+              className="min-w-[100px] bg-green-500 text-white text-sm sm:text-base p-2 rounded hover:bg-green-600  cursor-pointer"
             />
             <input
               value="ล้างข้อมูล"
               type="submit"
-              className="min-w-[100px] bg-rose-500 text-white text-sm sm:text-base p-2 rounded hover:bg-rose-600  cursor-pointer"
+              className="min-w-[100px] border-red-500 text-sm sm:text-base p-2 rounded hover:border-red-600 hover:text-red-500  cursor-pointer"
             />
           </div>
         </div>
@@ -98,6 +99,7 @@ function Main({ token, role, setToken, setRole }) {
           token={token}
           role={role}
         />
+        <History history={history} role={role} setBill={setBill} />
       </div>
     </div>
   );

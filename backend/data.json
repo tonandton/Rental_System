@@ -86,6 +86,36 @@
       "electricity_units": 3,
       "electricity_cost": 63,
       "total": 71
+    },
+    {
+      "id": 4,
+      "project_id": 2,
+      "user_id": 1,
+      "date": "2025-04-30T08:06:56.311Z",
+      "record_month": "2025-01",
+      "rent": 0,
+      "water_meter": 0,
+      "water_units": 0,
+      "water_cost": 0,
+      "electricity_meter": 0,
+      "electricity_units": 0,
+      "electricity_cost": 0,
+      "total": 0
+    },
+    {
+      "id": 5,
+      "project_id": 2,
+      "user_id": 1,
+      "date": "2025-04-30T08:07:09.669Z",
+      "record_month": "2025-02",
+      "rent": 0,
+      "water_meter": 2,
+      "water_units": 2,
+      "water_cost": 16,
+      "electricity_meter": 4,
+      "electricity_units": 4,
+      "electricity_cost": 72,
+      "total": 88
     }
   ]
 }
