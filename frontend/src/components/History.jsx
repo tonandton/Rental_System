@@ -4,6 +4,7 @@ function History({ history, role, setBill }) {
   const [modalImage, setModalImage] = useState(null);
 
   const groupedHistory = history.reduce((acc, entry) => {
+    if (!entry.project_name) return acc;
     acc[entry.project_name] = acc[entry.project_name] || [];
     acc[entry.project_name].push(entry);
     return acc;
@@ -20,7 +21,7 @@ function History({ history, role, setBill }) {
 
   const handleViewImage = (image) => {
     if (image) {
-      setModalImage(`http://localhost:3001/${image}`);
+      setModalImage(`http://localhost:3001/uploads/${image}`);
     }
   };
 
@@ -56,9 +57,9 @@ function History({ history, role, setBill }) {
                     <th className="border p-1 sm:p-2 word-break break-word text-xs sm:text-sm lg:text:base">
                       บันทึกโดย
                     </th>
-                    <th className="border p-1 sm:p-2 word-break break-word text-xs sm:text-sm lg:text:base">
+                    {/* <th className="border p-1 sm:p-2 word-break break-word text-xs sm:text-sm lg:text:base">
                       ค่าเช่า
-                    </th>
+                    </th> */}
                     <th className="border p-1 sm:p-2 word-break break-word text-xs sm:text-sm lg:text:base">
                       มิเตอร์น้ำ
                     </th>
@@ -100,9 +101,9 @@ function History({ history, role, setBill }) {
                       <td className="border p-1 sm:p-2 text-xs sm:text-sm lg:text-base word-break break-word">
                         {entry.name || entry.username}
                       </td>
-                      <td className="border p-1 sm:p-2 text-xs sm:text-sm lg:text-base text-right word-break break-word">
+                      {/* <td className="border p-1 sm:p-2 text-xs sm:text-sm lg:text-base text-right word-break break-word">
                         {entry.rent.toLocaleString("th-TH")} บาท
-                      </td>
+                      </td> */}
                       <td className="border p-1 sm:p-2 text-xs sm:text-sm lg:text-base text-right word-break break-word">
                         {entry.water_meter.toLocaleString()}
                       </td>
@@ -115,7 +116,7 @@ function History({ history, role, setBill }) {
                       <td className="border p-1 sm:p-2 text-xs sm:text-sm lg:text-base">
                         {entry.water_image ? (
                           <button
-                            onClick={handleViewImage(entry.water_image)}
+                            onClick={() => handleViewImage(entry.water_image)}
                             className="bg-blue-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg hover:bg-blue-700 text-sx sm:text-sm flex items-center gap-1"
                             aria-label="ดูรูปมิเตอร์น้ำ"
                           >
@@ -137,7 +138,9 @@ function History({ history, role, setBill }) {
                       <td className="border p-1 sm:p-2 text-xs sm:text-sm lg:text-base">
                         {entry.electricity_image ? (
                           <button
-                            onClick={handleViewImage(entry.electricity_image)}
+                            onClick={() =>
+                              handleViewImage(entry.electricity_image)
+                            }
                             className="bg-blue-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg hover:bg-blue-700 text-sx sm:text-sm flex items-center gap-1"
                             aria-label="ดูรูปมิเตอร์ไฟ"
                           >
@@ -169,17 +172,14 @@ function History({ history, role, setBill }) {
       )}
 
       {modalImage && (
-        <div className="modal" onClick={() => setModelImage(null)}>
-          <div
-            className="modal-content"
-            onClick={(e) => e.isPropagationStopped()}
-          >
+        <div className="modal" onClick={() => setModalImage(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => setModalImage(null)}
               className="close-button"
               aria-label="ปิดหน้าต่างรูปภาพ"
             >
-              <i className="fas fa times"></i>
+              {/* <i className="fas fa times"></i> */}
             </button>
             <img src={modalImage} alt="Meter Image" className="modal-image" />
           </div>

@@ -25,17 +25,10 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-input, select {
-  @apply w-full p-1 sm:p-2 border rounded text-sm sm:text-base;
-}
-
-button {
-  @apply px-2 py-1 sm:px-3 sm:py-2 rounded text-sm sm:text-base;
-}
-
 table {
   @apply min-w-full bg-white rounded-lg shadow-sm;
 }
+
 
 th {
   @apply bg-gray-200 text-gray-700 font-semibold text-left p-3 sm:p-4 border-b border-gray-300;

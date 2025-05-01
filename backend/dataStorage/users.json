@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "username": "admin",
+    "password": "$2b$10$N2WjhFNgwkxRQNOwhz25U.wsjra8vaaggA.UtkjtAtE9fl4dJcvYW",
+    "role": "superuser",
+    "name": "รัชต์ภาคย์ หันจางสิทธิ์"
+  },
+  {
+    "id": 2,
+    "username": "user",
+    "password": "$2b$10$DoYEvMSxDbMhVIImDrPSWOWmVQ48RnL76FqiHhnBBwNFKeilLVM96",
+    "role": "user",
+    "name": "สรศักดิ์ หันจางสิทธิ์"
+  }
+]

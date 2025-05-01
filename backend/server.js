@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
-const fs = require("fs").promises;
+const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
 const bcrypt = require("bcryptjs");
@@ -9,435 +9,418 @@ const bcrypt = require("bcryptjs");
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-const JWT_SECRET = "your_jwt_secret";
-const DATA_FILE = "./data.json";
-// Data Begin
-async function initializeData() {
+// Middleware for file upload
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  },
+});
+
+const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("ใส่ได้เฉพาะไฟล์รูปภาพเท่านั้น"), false);
+    }
+  },
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+});
+
+// ตรวจสอบว่าโฟลเดอร์ uploads มีอยู่หรือไม่ ถ้าไม่มีให้สร้าง - Ensure uploads folder exists
+if (!fs.existsSync("uploads")) {
+  fs.mkdirSync("uploads");
+}
+
+const dataDir = path.join(__dirname, "dataStorage");
+const userFile = path.join(dataDir, "users.json");
+
+// ✅ สร้างโฟลเดอร์ dataStorage หากยังไม่มี
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir);
+}
+
+// Load or initialize data
+let users = [];
+let projects = [];
+let history = [];
+
+// try {
+//   users = JSON.parse(fs.readFileSync("dataStorage/users.json", "utf8"));
+//   projects = JSON.parse(fs.readFileSync("dataStorage/projects.json", "utf8"));
+//   history = JSON.parse(fs.readFileSync("dataStorage/history.json", "utf8"));
+// } catch (err) {
+//   // Initialize empty files if they don't exist
+//   fs.writeFileSync("dataStorage/users.json", JSON.stringify([]));
+//   fs.writeFileSync("dataStorage/projects.json", JSON.stringify([]));
+//   fs.writeFileSync("dataStorage/history.json", JSON.stringify([]));
+// }
+
+const loadJsonFile = (filePath, defaultData) => {
   try {
-    await fs.access(DATA_FILE);
-  } catch {
-    const initialData = {
-      users: [
-        {
-          id: 1,
-          username: "admin",
-          password: await bcrypt.hash("adminpass", 10),
-          role: "superuser",
-        },
-        {
-          id: 2,
-          username: "user1",
-          password: await bcrypt.hash("userpass", 10),
-          role: "user",
-        },
-      ],
-      projects: [],
-      history: [],
-    };
-    await fs.writeFile(DATA_FILE, JSON.stringify(initialData, null, 2));
+    if (fs.existsSync(filePath)) {
+      const data = fs.readFileSync(filePath, "utf8");
+      if (data.trim()) {
+        return JSON.parse(data);
+      }
+    }
+    // If file doesn't exist or is empty, initialize with default data
+    fs.writeFileSync(filePath, JSON.stringify(defaultData, null, 2));
+    return defaultData;
+  } catch (err) {
+    console.error(`Error loading ${filePath}:`, err.message);
+    // Return default data without overwriting if error occurs
+    return defaultData;
   }
+};
+
+// Load JSON files
+users = loadJsonFile("dataStorage/users.json", []);
+projects = loadJsonFile("dataStorage/projects.json", []);
+history = loadJsonFile("dataStorage/history.json", []);
+
+// Initialize default users only if users.json is empty
+if (users.length === 0) {
+  const adminPass = bcrypt.hashSync("adminpass", 10);
+  const userPass = bcrypt.hashSync("userpass", 10);
+
+  users = [
+    {
+      id: 1,
+      username: "admin",
+      password: adminPass,
+      role: "superuser",
+      name: "รัชต์ภาคย์ หันจางสิทธิ์",
+    },
+    {
+      id: 2,
+      username: "user",
+      password: userPass,
+      role: "user",
+      name: "สรศักดิ์ หันจางสิทธิ์",
+    },
+  ];
+
+  fs.writeFileSync(userFile, JSON.stringify(users, null, 2));
 }
 
-initializeData();
-
-// Read Data
-async function readData() {
-  const data = await fs.readFile(DATA_FILE);
-  return JSON.parse(data);
-}
-
-// Write Data
-async function writeData(data) {
-  await fs.writeFile(DATA_FILE, JSON.stringify(data, null, 2));
-}
-
-// Middleware Check JWT
+// Middleware to verify token
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
+  if (!token) return res.sendStatus(401).json({ error: "Access denied" });
 
-  if (!token) {
-    req.user = null;
-    return next();
-  }
-
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ error: "Invaild token" });
-    req.user = user;
+  try {
+    const decoded = jwt.verify(token, "secret");
+    req.user = decoded;
     next();
-  });
-};
-
-// Middleware check SuperUser
-const requireSuperUser = (req, res, next) => {
-  if (!req.user || req.user.role !== "superuser") {
-    return res.status(403).json({ error: "SuperUser access required" });
+  } catch (err) {
+    res.status(403).json({ error: "Invalid token" });
   }
-  next();
 };
 
-// Middelware check user or superuser
-const requireAuth = (req, res, next) => {
-  if (!req.user) {
-    return res.status(403).json({ error: "Authentication required" });
-  }
-  next();
-};
-
-// API: Login  *** UPDATE ***
+// Login  *** UPDATE ***
 app.post("/api/login", async (req, res) => {
   const { username, password } = req.body;
+  const user = users.find((u) => u.username === username);
 
-  try {
-    const data = await readData();
-    const user = data.users.find((u) => u.username === username);
-
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.status(401).json({ error: "Invaild credentials" });
-    }
-    const token = jwt.sign(
-      { id: user.id, username: user.username, role: user.role },
-      JWT_SECRET,
-      {
-        expiresIn: "1h",
-      }
-    );
-    res.json({ token, role: user.role });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  if (!user || !(await bcrypt.compare(password, user.password))) {
+    return res.status(401).json({ error: "Invaild credentials" });
   }
+  const token = jwt.sign(
+    { id: user.id, username: user.username, role: user.role },
+    "secret",
+    {
+      expiresIn: "1h",
+    }
+  );
+  res.status(200).json({ token, role: user.role, id: user.id });
 });
 
-// API: fetch user data
-app.get("/api/users", authenticateToken, requireSuperUser, async (req, res) => {
-  try {
-    const data = await readData();
-    res.json(data.users.map(({ password, ...user }) => user));
-    console.log(data);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+// Users
+app.get("/api/users", authenticateToken, (req, res) => {
+  if (req.user.role !== "superuser") {
+    return res.status(403).json({ error: "Access denied" });
   }
+  res.status(200).json(users);
 });
 
 // API: Add / Edit
-app.post(
-  "/api/users",
-  authenticateToken,
-  requireSuperUser,
-  async (req, res) => {
-    const { username, password, role, id } = req.body;
+app.post("/api/users", authenticateToken, async (req, res) => {
+  if (req.user.role !== "superuser")
+    return res.status(403).json({ error: "Access denied" });
 
-    try {
-      const data = await readData();
-      const hashedPassword = await bcrypt.hash(password, 10);
+  const { username, password, name, role, id } = req.body;
 
-      if (id) {
-        const userIndex = data.users.findIndex((u) => u.id === id);
-        if (userIndex === -1)
-          return res.status(404).json({ erroor: "User not Found" });
-        data.users[userIndex] = {
-          id,
-          username,
-          password: hashedPassword,
-          role,
-        };
-      } else {
-        const newId = Math.max(...data.users.map((u) => u.id), 0) + 1;
-        data.users.push({
-          id: newId,
-          username,
-          passwoord: hashedPassword,
-          role,
-        });
-      }
-      await writeData(data);
-      res.json({ id, username, role });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
+  if (id) {
+    const userIndex = users.findIndex((u) => u.id === id);
+    if (userIndex === -1)
+      return res.status(404).json({ erroor: "User not Found" });
+    users[userIndex] = { ...users[userIndex], username, role, name };
+    if (password) {
+      users[userIndex].password = await bcrypt.hash(password, 10);
     }
+  } else {
+    const newId = users.length ? Math.max(...users.map((u) => u.id)) + 1 : 1;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    users.push({ id: newId, username, password: hashedPassword, role, name });
   }
-);
+  fs.writeFileSync("dataStorage/users.json", JSON.stringify(users, null, 2));
+  res.status(200).json({ message: "User saved successfully" });
+});
 
 // API: Delete User
-app.delete(
-  "/api/users/:id",
-  authenticateToken,
-  requireSuperUser,
-  async (req, res) => {
-    const { id } = req.params;
-    try {
-      const data = await readData();
-      const userIndex = data.users.findIndex((u) => u.id === parseInt(id));
-      if (userIndex === -1)
-        return res.status(404).json({ error: "User not found" });
-      data.users.splice(userIndex, 1);
-      data.history = data.history.filter((h) => h.user_id !== parseInt(id));
-      await writeData(data);
-      res.json({ message: "User deleted" });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  }
-);
-
-// API: PullProject
-app.get("/api/projects", authenticateToken, async (req, res) => {
-  try {
-    const data = await readData();
-    res.json(data.projects);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+app.delete("/api/users/:id", authenticateToken, (req, res) => {
+  if (req.user.role !== "superuser")
+    return res.status(403).json({ error: "Access denied" });
+  const id = parseInt(req.params.id);
+  users = users.filter((u) => u.id !== id);
+  fs.writeFileSync("dataStorage/users.json", JSON.stringify(users, null, 2));
+  res.json({ message: "User deleted successfully" });
 });
 
-// API: AddProject (SuperUser only)  *** UPDATE ***
-app.post(
-  "/api/project",
-  authenticateToken,
-  requireSuperUser,
-  async (req, res) => {
-    const { name, water_rate, electricity_rate } = req.body;
+// Projects
+app.get("/api/projects", (req, res) => {
+  res.status(200).json(projects);
+});
 
-    try {
-      const data = await readData();
-      const newId = Math.max(...data.projects.map((p) => p.id), 0) + 1;
-      const project = {
-        id: newId,
-        name,
-        water_rate: parseFloat(water_rate),
-        electricity_rate: parseFloat(electricity_rate),
-      };
-      data.projects.push(project);
-      await writeData(data);
-      res.json({ status: "บันทึกโครงการเรียบร้อย", project });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  }
-);
-
-// API: EditProject
-app.put("/api/projects/:id", authenticateToken, async (req, res) => {
-  if (!req.user)
-    return res.status(403).json({ error: "Authentication required" });
-  const { id } = req.params;
+// AddProject
+app.post("/api/projects", authenticateToken, async (req, res) => {
+  if (req.user.role !== "superuser")
+    return res.status(403).json({ error: "Access denied" });
   const { name, water_rate, electricity_rate } = req.body;
-  try {
-    const data = await readData();
-    const projectIndex = data.projects.findIndex((p) => p.id === parseInt(id));
-    if (projectIndex === -1)
-      return res.status(404).json({ error: "Project not found" });
-    data.projects[projectIndex] = {
-      id: parseInt(id),
-      name,
-      water_rate: parseFloat(water_rate),
-      electricity_rate: parseFloat(electricity_rate),
-    };
-    await writeData(data);
-    res.json(data.projects[projectIndex]);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  const newId = projects.length
+    ? Math.max(...projects.map((p) => p.id)) + 1
+    : 1;
+  projects.push({
+    id: newId,
+    name,
+    water_rate: parseFloat(water_rate),
+    electricity_rate: parseFloat(electricity_rate),
+  });
+  fs.writeFileSync(
+    "dataStorage/projects.json",
+    JSON.stringify(projects, null, 2)
+  );
+  res.status(200).json({ message: "Project saved successfully" });
 });
 
-// API: DeleteProject
-app.delete("/api/projects/:id", authenticateToken, async (req, res) => {
-  if (!req.user)
+// EditProject
+app.put("/api/projects/:id", authenticateToken, async (req, res) => {
+  if (req.user.role !== "superuser")
+    return res.status(403).json({ error: "Access denied" });
+  const id = path.parse(req.params.id);
+  const projectIndex = projects.findIndex((p) => p.id === id);
+  if (projectIndex === -1)
+    return res.status(404).json({ error: "Project not found" });
+  data.projects[projectIndex] = {
+    ...projects[projectIndex],
+    ...req.body,
+    water_rate: parseFloat(water_rate),
+    electricity_rate: parseFloat(electricity_rate),
+  };
+  fs.writeFileSync(
+    "dataStorage/projects.json",
+    JSON.stringify(projects, null, 2)
+  );
+  res.status(200).json({ message: "Project updated successfully" });
+});
+
+// DeleteProject
+app.delete("/api/projects/:id", authenticateToken, (req, res) => {
+  if (req.user.role !== "superuser")
     return res.status(403).json({ error: "Authtication required" });
-  const { id } = req.params;
-  try {
-    const data = await readData();
-    const projectIndex = data.projects.findIndex((p) => p.id === parseInt(id));
-    if (projectIndex === -1)
-      return res.status(404).json({ error: "Project not found" });
-    data.projects.splice(projectIndex, 1);
-    data.history = data.history.filter((h) => h.project_id !== parseFloat(id));
-    await writeData(data);
-    res.json({ message: "Project deleted" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  const id = parseInt(req.params.id);
+  projects = projects.filter((p) => p.id !== id);
+  fs.writeFileSync(
+    "dataStorage/projects.json",
+    JSON.stringify(projects, null, 2)
+  );
+  res.status(200).json({ message: "Project deleted successfully" });
 });
 
-// API: PullHistory
-app.get("/api/history", authenticateToken, async (req, res) => {
-  try {
-    const data = await readData();
-    let history = data.history.map((h) => ({
-      ...h,
-      project_name: data.projects.find((p) => p.id === h.project_id)?.name,
-      water_rate: data.projects.find((p) => p.id === h.project_id)?.water_rate,
-      electricity_rate: data.projects.find((p) => p.id === h.project_id)
-        ?.electricity_rate,
-      username: data.users.find((u) => u.id === h.user_id)?.username,
-    }));
-    if (req.user && req.user.role === "user") {
-      history = history.filter((h) => h.user_id === req.user.id);
+// History
+app.get("/api/history", (req, res) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+  let filteredHistory = history.map((h) => ({
+    ...h,
+    name: users.find((u) => u.id === h.user_id)?.name || h.username,
+  }));
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, "secret");
+      if (decoded.role === "user") {
+        filteredHistory = filteredHistory.filter(
+          (h) => h.user_id === decoded.id
+        );
+      }
+    } catch (err) {
+      // Continue as guest if token is invalid
     }
-    res.json(history);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
   }
+  res.status(200).json(filteredHistory);
 });
 
-// API: FilterHistory
+app.post(
+  "/api/history",
+  authenticateToken,
+  upload.fields([
+    { name: "water_image", maxCount: 1 },
+    { name: "electricity_image", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    const { project_id, rent, water_meter, electricity_meter, record_month } =
+      req.body;
+    const project = projects.find((p) => p.id === parseInt(project_id));
+    if (!project) return res.status(404).json({ error: "Project not found" });
+
+    const previousRecord = history
+      .filter(
+        (h) =>
+          h.project_id === parseInt(project_id) && h.record_month < record_month
+      )
+      .sort((a, b) => new Date(b.record_month) - new Date(a.record_month))[0];
+
+    const water_units = previousRecord
+      ? water_meter - previousRecord.water_meter
+      : 0;
+
+    const electricity_units = previousRecord
+      ? electricity_meter - previousRecord.electricity_meter
+      : 0;
+
+    const water_cost = water_units * project.water_rate;
+    const electricity_cost = electricity_units * project.electricity_rate;
+    const total = parseFloat(rent || 0) + water_cost + electricity_cost;
+
+    const newId = history.length
+      ? Math.max(...history.map((h) => h.id)) + 1
+      : 1;
+
+    const newRecord = {
+      id: newId,
+      project_id: parseInt(project_id),
+      project_name: project.name,
+      user_id: req.user.id,
+      username: req.user.username,
+      name: users.find((u) => u.id === req.user.id)?.name || req.user.username,
+      rent: parseFloat(rent || 0),
+      water_meter: parseFloat(water_meter),
+      electricity_meter: parseFloat(electricity_meter),
+      record_month,
+      water_units,
+      water_cost,
+      electricity_units,
+      electricity_cost,
+      total,
+      water_rate: project.water_rate,
+      electricity_rate: project.electricity_rate,
+      water_image: req.files["water_image"]
+        ? req.files["water_image"][0].filename
+        : null,
+      electricity_image: req.files["electricity_image"]
+        ? req.files["electricity_image"][0].filename
+        : null,
+    };
+
+    history.push(newRecord);
+    fs.writeFileSync(
+      "dataStorage/history.json",
+      JSON.stringify(history, null, 2)
+    );
+    res.status(201).json({ message: "History saved successfully" });
+  }
+);
+
+// FilterHistory
 app.post("/api/history/filter", authenticateToken, async (req, res) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+  let filteredHistory = history.map((h) => ({
+    ...h,
+    name: users.find((u) => u.id === h.user_id)?.name || h.username,
+  }));
+
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, "secret");
+      if (decoded.role === "user") {
+        filteredHistory = filteredHistory.filter(
+          (h) => h.user_id === decoded.id
+        );
+      }
+    } catch (err) {
+      // Continue as guest if token is invalid
+    }
+  }
+
   const {
     project_name,
     water_cost_min,
     water_cost_max,
     electricity_cost_min,
     electricity_cost_max,
-    date_start,
-    date_end,
     username,
   } = req.body;
 
-  try {
-    const data = await readData();
-    let history = data.history.map((p) => ({
-      ...h,
-      project_name: data.projects.find((p) => p.id === h.project_id)?.name,
-      water_rate: data.projects.find((p) => p.id === h.project_id)?.water_rate,
-      electricity_rate: data.projects.find((p) => p.id === h.project_id)
-        ?.electricity_rate,
-      username: data.users.find((u) => u.id === h.user_id)?.username,
-    }));
-
-    history = history.filter((h) => {
-      let pass = true;
-      if (project_name && h.project_name !== project_name) pass = false;
-      if (water_cost_min && h.water_cost < parseFloat(water_cost_min))
-        pass = false;
-      if (water_cost_max && h.water_cost < parseFloat(water_cost_max))
-        pass = false;
-      if (
-        electricity_cost_min &&
-        h.electricity_cost < parseFloat(electricity_cost_min)
-      )
-        pass = false;
-      if (
-        electricity_cost_max &&
-        h.electricity_cost < parseFloat(electricity_cost_max)
-      )
-        pass = false;
-      if (date_start && new Date(h.date) < new Date(date_start)) pass = false;
-      if (date_end && new Date(h.date) > new Date(date_end)) pass = false;
-      if (username && h.username !== username) pass = false;
-    });
-
-    res.json(history);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// API: AddHistory (User or Superuser) *** UPDATE ***
-app.post("/api/history", authenticateToken, requireAuth, async (req, res) => {
-  const { project_id, rent, water_meter, electricity_meter, record_month } =
-    req.body;
-  try {
-    //  Check record month
-    if (!record_month || !/^\d{4}-\d{2}$/.test(record_month)) {
-      return res.status(400).json({ error: "กรุณาระบุเดือนในรูปแบบ YYYY-MM" });
-    }
-
-    const data = await readData();
-    const project = data.projects.find((p) => p.id === project_id);
-    if (!project) return res.status(404).json({ error: "Project not found" });
-
-    // ตรวจสอบว่าไม่มีบันทึกในเดือนและโครงการเเดียวกัน
-    const existingEntry = data.history.find(
-      (h) => h.project_id === project_id && h.record_month === record_month
+  filteredHistory = filteredHistory.filter((h) => {
+    return (
+      (!project_name || h.project_name === project_name) &&
+      (water_cost_min === null || h.water_cost >= water_cost_min) &&
+      (water_cost_max === null || h.water_cost <= water_cost_max) &&
+      (electricity_cost_min === null ||
+        h.electricity_cost >= electricity_cost_min) &&
+      (electricity_cost_max === null ||
+        h.electricity_cost <= electricity_cost_max) &&
+      (!record_month || h.record_month === record_month) &&
+      (!username || h.username === username)
     );
-    if (existingEntry) {
-      return res
-        .status(400)
-        .json({ error: "มีบันทึกสำหรับเดือนนี้ในโครงการแล้ว" });
-    }
+  });
 
-    const lastEntry = data.history
-      .filter((h) => h.project_id === project_id)
-      .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
-    const waterMeterValue = parseFloat(water_meter) || 0;
-    const electricityMeterValue = parseFloat(electricity_meter) || 0;
-    if (lastEntry) {
-      if (waterMeterValue < lastEntry.water_meter) {
-        return res
-          .status(400)
-          .json({ error: "เลขมิเตอร์น้ำใหม่ต้องมากกว่าหรือเท่ากับค่าเก่า" });
-      }
-      if (electricityMeterValue < lastEntry.electricity_meter) {
-        return res
-          .status(400)
-          .json({ error: "เลขมิเตอร์ไฟใหม่ต้องมากกว่าหรือเท่ากับค่าเก่า" });
-      }
-    }
-
-    const waterUnits = lastEntry ? waterMeterValue - lastEntry.water_meter : 0;
-    const electricityUnits = lastEntry
-      ? electricityMeterValue - lastEntry.electricity_meter
-      : 0;
-    const waterCost = waterUnits * project.water_rate;
-    const electricityCost = electricityUnits * project.electricity_rate;
-    const rentCost = parseFloat(rent) || 0;
-    const total = rentCost + waterCost + electricityCost;
-
-    const newId = Math.max(...data.history.map((h) => h.id), 0) + 1;
-    const entry = {
-      id: newId,
-      project_id,
-      user_id: req.user.id,
-      date: new Date().toISOString(),
-      record_month,
-      rent: rentCost,
-      water_meter: waterMeterValue,
-      water_units: waterUnits,
-      water_cost: waterCost,
-      electricity_meter: electricityMeterValue,
-      electricity_units: electricityUnits,
-      electricity_cost: electricityCost,
-      total,
-    };
-
-    data.history.push(entry);
-    await writeData(data);
-    // console.log(entry);
-    res.status(200).json({
-      ...entry,
-      project_name: project.name,
-      water_rate: project.water_rate,
-      electricity_rate: project.electricity_rate,
-      username: req.user.username,
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  res.status(200).json(filteredHistory);
 });
 
-// API: DeleteHistory
-app.delete("/api/history/:id", authenticateToken, async (req, res) => {
-  if (!req.user)
-    return res.status(403).json({ error: "Authentication required" });
-  const { id } = req.params;
-  try {
-    const data = await readData();
-    const historyIndex = data.history.findIndex((h) => h.id === parseInt(id));
-    if (historyIndex === -1)
-      return res.status(404).json({ error: "History not found" });
-    if (
-      req.user.role === "user" &&
-      data.history[historyIndex].user_id !== req.user.id
-    ) {
-      return res.status(403).json({ error: "Acess denind" });
+// Monthly Report
+app.get("/api/month-report", (req, res) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+  let filteredHistory = history;
+
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, "secret");
+      if (decoded.role === "user") {
+        filteredHistory = filteredHistory.filter(
+          (h) => h.user_id === decoded.id
+        );
+      }
+    } catch (err) {
+      // Continue as guest if token is invalid
     }
-    data.history.splice(historyIndex, 1);
-    await writeData(data);
-    res.json({ message: "History deleted" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
   }
+
+  const report = filteredHistory.reduce((acc, h) => {
+    const month = record.record_month;
+    const project = record.project_name;
+    const username = record.username;
+    const name = users.find((u) => u.id === record.user_id)?.name || username;
+    if (!acc[month]) acc[month] = {};
+    if (!acc[month][project]) acc[month][project] = {};
+    if (!acc[month][project][username])
+      acc[month][project][username] = { name, entries: [] };
+    acc[month][project][username].entries.push(record);
+    return acc;
+  }, {});
+
+  res.status(200).json(report);
 });
 
 app.listen(3001, () => {

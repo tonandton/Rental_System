@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "project_id": 1,
+    "project_name": "HR01 - พุทธบูชา 36 กรุงเทพฯ",
+    "user_id": 1,
+    "username": "admin",
+    "name": "รัชต์ภาคย์ หันจางสิทธิ์",
+    "rent": 0,
+    "water_meter": 5,
+    "electricity_meter": 10,
+    "record_month": "2025-01",
+    "water_units": 0,
+    "water_cost": 0,
+    "electricity_units": 0,
+    "electricity_cost": 0,
+    "total": 0,
+    "water_rate": 8,
+    "electricity_rate": 14,
+    "water_image": "1746104235488-761494185.jpg",
+    "electricity_image": "1746104235503-938856967.jpg"
+  }
+]

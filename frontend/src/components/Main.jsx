@@ -11,9 +11,13 @@ function Main({ token, role, setToken, setRole }) {
   const [projectElectricityRate, setProjectElectricityRate] = useState("");
   const [projects, setProjects] = useState([]);
   const [rent, setRent] = useState("");
-  const [waterMeter, setWtaterMeter] = useState("");
+  const [waterMeter, setWaterMeter] = useState("");
   const [electricityMeter, setElectricityMeter] = useState("");
   const [recordMonth, setRecordMonth] = useState("");
+  const [waterImage, setWaterImage] = useState(null);
+  const [electricityImage, setElectricityImage] = useState(null);
+  const [waterImagePreview, setWaterImagePreview] = useState(null);
+  const [electricityImagePreview, setElectricityImagePreview] = useState(null);
   const [history, setHistory] = useState([]);
   const [bill, setBill] = useState(null);
   const [showFilter, setShowFilter] = useState(false);
@@ -22,7 +26,7 @@ function Main({ token, role, setToken, setRole }) {
   useEffect(() => {
     fetchProjects();
     fetchHistory();
-  });
+  }, []);
 
   const fetchProjects = async () => {
     try {
@@ -46,6 +50,58 @@ function Main({ token, role, setToken, setRole }) {
     } catch (err) {
       console.error("Error fetching history:", err);
     }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!project || !projects.some((p) => p.id === parseInt(project))) {
+      alert("กรุณาเลือกโครงการ");
+      return;
+    }
+    if (!recordMonth) {
+      alert("กรุณาเลือกเดือนที่บันทึก");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("project_id", parseFloat(project));
+    formData.append("rent", rent || "0");
+    formData.append("water_meter", waterMeter || "0");
+    formData.append("electricity_meter", electricityMeter || "0");
+    formData.append("record_month", recordMonth);
+    if (waterImage) formData.append("water_image", waterImage);
+    if (electricityImage)
+      formData.append("electricity_image", electricityImage);
+
+    try {
+      await axios.post("http://localhost:3001/api/history", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      fetchHistory();
+      resetForm();
+    } catch (err) {
+      alert(
+        "ไม่สามารถบันทึกข้อมูลได้: " +
+          (err.response?.data?.message || err.message)
+      );
+    }
+  };
+
+  const resetForm = () => {
+    setProject("");
+    setProjectWaterRate("");
+    setProjectElectricityRate("");
+    setRent("");
+    setWaterMeter("");
+    setElectricityMeter("");
+    setRecordMonth("");
+    setWaterImage(null);
+    setElectricityImage(null);
+    setWaterImagePreview(null);
+    setElectricityImagePreview(null);
   };
 
   return (
@@ -73,21 +129,82 @@ function Main({ token, role, setToken, setRole }) {
               ))}
             </select>
 
-            <input type="month" placeholder="เดือนที่บันทึก (YYYY-MM)" />
-            <input type="number" placeholder="ค่าเช่าห้อง (บาท)" />
-            <input type="number" placeholder="เลขมิเตอร์น้ำ" />
-            <input type="number" placeholder="เลขมิเตอร์ไฟ" />
-            <div></div>
             <input
-              value="บันทึก"
-              type="submit"
-              className="min-w-[100px] bg-green-500 text-white text-sm sm:text-base p-2 rounded hover:bg-green-600  cursor-pointer"
+              type="month"
+              value={recordMonth}
+              onChange={(e) => setRecordMonth(e.target.value)}
+              placeholder="เดือนที่บันทึก (YYYY-MM)"
+              className="p-2 border rounded text-sm sm:text-base"
+            />
+            {/* <input
+              type="number"
+              value={rent}
+              onChange={(e) => setRent(e.target.value)}
+              placeholder="ค่าเช่าห้อง (บาท)"
+              className="p-2 border rounded text-sm sm:text-base"
+            /> */}
+            <input
+              type="number"
+              placeholder="เลขมิเตอร์น้ำ"
+              value={waterMeter}
+              onChange={(e) => setWaterMeter(e.target.value)}
+              className="p-2 border rounded text-sm sm:text-base"
             />
             <input
-              value="ล้างข้อมูล"
-              type="submit"
-              className="min-w-[100px] border-red-500 text-sm sm:text-base p-2 rounded hover:border-red-600 hover:text-red-500  cursor-pointer"
+              type="number"
+              placeholder="เลขมิเตอร์ไฟ"
+              value={electricityMeter}
+              onChange={(e) => setElectricityMeter(e.target.value)}
+              className="p-2 border rounded text-sm sm:text-base"
             />
+            <div>
+              <label className="block text-sm sm:text-base mb-1">
+                รูปมิเตอร์น้ำ
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleImageChange(e, "water")}
+                className="p-2 border rounded text-sm sm:text-base w-full"
+              />
+              {waterImagePreview && (
+                <img
+                  src={waterImagePreview}
+                  alt="Water Meter Preview"
+                  className="mt-2 max-w-full h-auto max-h-40"
+                />
+              )}
+            </div>
+            <div>
+              <label className="block text-sm sm:text-base mb-1">
+                รูปมิเตอร์ไฟ
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleImageChange(e, "electricity")}
+                className="p-2 border rounded text-sm sm:text-base w-full"
+              />
+              {electricityImagePreview && (
+                <img
+                  src={electricityImagePreview}
+                  alt="Electricity Meter Preview"
+                  className="mt-2 max-w-full h-auto max-h-40"
+                />
+              )}
+            </div>
+            <button
+              type="submit"
+              className=" bg-green-500 text-white text-sm sm:text-base p-2 rounded hover:bg-green-600  cursor-pointer"
+            >
+              บันทึก
+            </button>
+            <button
+              type="submit"
+              className=" border-red-500 text-sm sm:text-base p-2 rounded hover:border-red-600 hover:text-red-500  cursor-pointer"
+            >
+              ล้างข้อมูล
+            </button>
           </div>
         </div>
         <FilterForm
