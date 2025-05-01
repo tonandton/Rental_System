@@ -2,14 +2,14 @@
   {
     "id": 1,
     "username": "admin",
-    "password": "$2b$10$N2WjhFNgwkxRQNOwhz25U.wsjra8vaaggA.UtkjtAtE9fl4dJcvYW",
+    "password": "$2b$10$u6unba94P.L2Q1qSQhQ7PePLJf56qzcelj7TrYfAO0nhzPMxUEh3S",
     "role": "superuser",
     "name": "รัชต์ภาคย์ หันจางสิทธิ์"
   },
   {
     "id": 2,
     "username": "user",
-    "password": "$2b$10$DoYEvMSxDbMhVIImDrPSWOWmVQ48RnL76FqiHhnBBwNFKeilLVM96",
+    "password": "$2b$10$MQ7ufAo0SB/Cfr6ytI1DKeNfWqbiEcoCrvAyVAPX58dul7wluxeXi",
     "role": "user",
     "name": "สรศักดิ์ หันจางสิทธิ์"
   }

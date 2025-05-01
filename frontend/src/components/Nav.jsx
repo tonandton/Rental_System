@@ -5,6 +5,15 @@ function Navbar({ token, role, setToken, setRole }) {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
+  console.log(
+    "Navbar.jsx: token:",
+    token,
+    "role:",
+    role,
+    "isLoggedIn:",
+    token && token !== ""
+  );
+
   const handleLogout = () => {
     setToken("");
     setRole("");
@@ -12,11 +21,27 @@ function Navbar({ token, role, setToken, setRole }) {
     localStorage.removeItem("role");
     localStorage.removeItem("userId");
     navigate("/");
+    setIsOpen(false);
   };
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
   };
+
+  const navItems = [
+    { label: "หน้าแรก", path: "/", visible: true },
+    { label: "รายงานรอบเดือน", path: "/monthly-report", visible: true },
+    {
+      label: "จัดการผู้ใช้",
+      path: "/manage-users",
+      visible: token && role === "superuser",
+    },
+    {
+      label: "จัดการโครงการ",
+      path: "/edit-projects",
+      visible: token && role === "superuser",
+    },
+  ];
 
   return (
     <nav className="bg-white  text-black shadow-md">
@@ -27,25 +52,34 @@ function Navbar({ token, role, setToken, setRole }) {
             <span className="text-lg sm:text-xl font-bold">Rental System</span>
           </div>
 
-          {/* LinkForDesktop */}
-          <div className="hidden sm:flex space-x-4">
-            <button className="px-3 py-2 rounded-md  hover:text-green-500">
-              หน้าแรก
-            </button>
-            <button className="px-3 py-2 rounded-md hover:text-green-500">
-              รายงานรอบเดือน
-            </button>
-            <>
-              <button className="px-3 py-2 rounded-md hover:text-green-500">
-                จัดการผู้ใช้
+          {/* Desktop Menu */}
+          <div className="hidden sm:flex space-x-4 items-center">
+            {navItems.map((item) =>
+              item.visible ? (
+                <button
+                  key={item.label}
+                  onClick={() => navigate(item.path)}
+                  className="px-3 py-2 rounded-md text-sm sm:text-base font-medium text-gray-700 hover:text-green-500 transition-colors"
+                >
+                  {item.label}
+                </button>
+              ) : null
+            )}
+            {token && token !== "" ? (
+              <button
+                onClick={handleLogout}
+                className="px-3 py-2 rounded-md hover:bg-rose-500"
+              >
+                ออกจากระบบ
               </button>
-              <button className="px-3 py-2 rounded-md hover:text-green-500">
-                จัดการโครงการ
+            ) : (
+              <button
+                onClick={() => navigate("/login")}
+                className="px-3 py-2 rounded-md hover:text-green-500"
+              >
+                เข้าสู่ระบบ
               </button>
-            </>
-            <button className="px-3 py-2 rounded-md bg-red-500 hover:bg-red-600 text-white font-bold">
-              ออกจากระบบ
-            </button>
+            )}
           </div>
 
           {/* Hamburger For Smartphone */}

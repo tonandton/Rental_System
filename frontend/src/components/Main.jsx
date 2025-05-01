@@ -106,7 +106,7 @@ function Main({ token, role, setToken, setRole }) {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <Navbar />
+      <Navbar token={token} role={role} setToken={setToken} setRole={setRole} />
       <div className="max-w-7xl mx-auto p-2 sm:p-4">
         <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mt-4 mb-4 sm:mb-6">
           ระบบจัดการค่าเช่าห้อง
@@ -195,13 +195,13 @@ function Main({ token, role, setToken, setRole }) {
             </div>
             <button
               type="submit"
-              className=" bg-green-500 text-white text-sm sm:text-base p-2 rounded hover:bg-green-600  cursor-pointer"
+              className=" bg-green-500 text-white text-sm sm:text-base p-2 rounded hover:bg-green-600"
             >
               บันทึก
             </button>
             <button
               type="submit"
-              className=" border-red-500 text-sm sm:text-base p-2 rounded hover:border-red-600 hover:text-red-500  cursor-pointer"
+              className=" bg-rose-400 text-white text-sm sm:text-base p-2 rounded hover:bg-rose-500"
             >
               ล้างข้อมูล
             </button>
