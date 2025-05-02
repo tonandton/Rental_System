@@ -109,104 +109,107 @@ function Main({ token, role, setToken, setRole }) {
       <Navbar token={token} role={role} setToken={setToken} setRole={setRole} />
       <div className="max-w-7xl mx-auto p-2 sm:p-4">
         <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mt-4 mb-4 sm:mb-6">
-          ระบบจัดการค่าเช่าห้อง
+          ระบบจัดการค่าใช้จ่ายโครงการ
         </h1>
-        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md mb-6 sm:mb-6">
-          <h2 className="text-lg sm:text-xl font-semibold mb-4">
-            บันทึกค่าใช้จ่าย
-          </h2>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4">
-            <select
-              value={project}
-              onChange={(e) => setProject(e.target.value)}
-              className="p-2 border rounded text-sm sm:text-base"
-            >
-              <option value="">เลือกโครงการ</option>
-              {projects.map((proj) => (
-                <option key={proj.id} value={proj.id}>
-                  {proj.name}
-                </option>
-              ))}
-            </select>
+        {(role === "user" || role === "superuser") && (
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md mb-6 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold mb-4">
+              บันทึกค่าใช้จ่าย
+            </h2>
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <select
+                value={project}
+                onChange={(e) => setProject(e.target.value)}
+                className="p-2 border rounded text-sm sm:text-base"
+              >
+                <option value="">เลือกโครงการ</option>
+                {projects.map((proj) => (
+                  <option key={proj.id} value={proj.id}>
+                    {proj.name}
+                  </option>
+                ))}
+              </select>
 
-            <input
-              type="month"
-              value={recordMonth}
-              onChange={(e) => setRecordMonth(e.target.value)}
-              placeholder="เดือนที่บันทึก (YYYY-MM)"
-              className="p-2 border rounded text-sm sm:text-base"
-            />
-            {/* <input
+              <input
+                type="month"
+                value={recordMonth}
+                onChange={(e) => setRecordMonth(e.target.value)}
+                placeholder="เดือนที่บันทึก (YYYY-MM)"
+                className="p-2 border rounded text-sm sm:text-base"
+              />
+              {/* <input
               type="number"
               value={rent}
               onChange={(e) => setRent(e.target.value)}
               placeholder="ค่าเช่าห้อง (บาท)"
               className="p-2 border rounded text-sm sm:text-base"
             /> */}
-            <input
-              type="number"
-              placeholder="เลขมิเตอร์น้ำ"
-              value={waterMeter}
-              onChange={(e) => setWaterMeter(e.target.value)}
-              className="p-2 border rounded text-sm sm:text-base"
-            />
-            <input
-              type="number"
-              placeholder="เลขมิเตอร์ไฟ"
-              value={electricityMeter}
-              onChange={(e) => setElectricityMeter(e.target.value)}
-              className="p-2 border rounded text-sm sm:text-base"
-            />
-            <div>
-              <label className="block text-sm sm:text-base mb-1">
-                รูปมิเตอร์น้ำ
-              </label>
               <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleImageChange(e, "water")}
-                className="p-2 border rounded text-sm sm:text-base w-full"
+                type="number"
+                placeholder="เลขมิเตอร์น้ำ"
+                value={waterMeter}
+                onChange={(e) => setWaterMeter(e.target.value)}
+                className="p-2 border rounded text-sm sm:text-base"
               />
-              {waterImagePreview && (
-                <img
-                  src={waterImagePreview}
-                  alt="Water Meter Preview"
-                  className="mt-2 max-w-full h-auto max-h-40"
-                />
-              )}
-            </div>
-            <div>
-              <label className="block text-sm sm:text-base mb-1">
-                รูปมิเตอร์ไฟ
-              </label>
               <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleImageChange(e, "electricity")}
-                className="p-2 border rounded text-sm sm:text-base w-full"
+                type="number"
+                placeholder="เลขมิเตอร์ไฟ"
+                value={electricityMeter}
+                onChange={(e) => setElectricityMeter(e.target.value)}
+                className="p-2 border rounded text-sm sm:text-base"
               />
-              {electricityImagePreview && (
-                <img
-                  src={electricityImagePreview}
-                  alt="Electricity Meter Preview"
-                  className="mt-2 max-w-full h-auto max-h-40"
+              <div>
+                <label className="block text-sm sm:text-base mb-1">
+                  รูปมิเตอร์น้ำ
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageChange(e, "water")}
+                  className="p-2 border rounded text-sm sm:text-base w-full"
                 />
-              )}
+                {waterImagePreview && (
+                  <img
+                    src={waterImagePreview}
+                    alt="Water Meter Preview"
+                    className="mt-2 max-w-full h-auto max-h-40"
+                  />
+                )}
+              </div>
+              <div>
+                <label className="block text-sm sm:text-base mb-1">
+                  รูปมิเตอร์ไฟ
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageChange(e, "electricity")}
+                  className="p-2 border rounded text-sm sm:text-base w-full"
+                />
+                {electricityImagePreview && (
+                  <img
+                    src={electricityImagePreview}
+                    alt="Electricity Meter Preview"
+                    className="mt-2 max-w-full h-auto max-h-40"
+                  />
+                )}
+              </div>
+              <button
+                type="submit"
+                className=" bg-green-500 text-white text-sm sm:text-base p-2 rounded hover:bg-green-600"
+              >
+                บันทึก
+              </button>
+              <button
+                type="submit"
+                className=" bg-rose-400 text-white text-sm sm:text-base p-2 rounded hover:bg-rose-500"
+              >
+                ล้างข้อมูล
+              </button>
             </div>
-            <button
-              type="submit"
-              className=" bg-green-500 text-white text-sm sm:text-base p-2 rounded hover:bg-green-600"
-            >
-              บันทึก
-            </button>
-            <button
-              type="submit"
-              className=" bg-rose-400 text-white text-sm sm:text-base p-2 rounded hover:bg-rose-500"
-            >
-              ล้างข้อมูล
-            </button>
           </div>
-        </div>
+        )}
+
         <FilterForm
           showFilter={showFilter}
           setShowFilter={setShowFilter}
@@ -214,9 +217,13 @@ function Main({ token, role, setToken, setRole }) {
           history={history}
           setHistory={setHistory}
           token={token}
-          role={role}
+          // role={role}
         />
-        <History history={history} role={role} setBill={setBill} />
+        <History
+          history={history}
+          // role={role}
+          setBill={setBill}
+        />
       </div>
     </div>
   );

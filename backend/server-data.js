@@ -1,29 +1,26 @@
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
-const { Pool } = require("pg");
-const multer = require("multer");
-const path = require("path");
 const fs = require("fs");
+const path = require("path");
+const multer = require("multer");
 const bcrypt = require("bcryptjs");
-
-require("dotenv").config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// ค้นหาไฟล์ Static จากโฟลเดอร์ updloads
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT,
+// Middleware for file upload
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  },
 });
-
-// Login Endpoint
-app.post;
 
 const upload = multer({
   storage,
@@ -54,6 +51,17 @@ if (!fs.existsSync(dataDir)) {
 let users = [];
 let projects = [];
 let history = [];
+
+// try {
+//   users = JSON.parse(fs.readFileSync("dataStorage/users.json", "utf8"));
+//   projects = JSON.parse(fs.readFileSync("dataStorage/projects.json", "utf8"));
+//   history = JSON.parse(fs.readFileSync("dataStorage/history.json", "utf8"));
+// } catch (err) {
+//   // Initialize empty files if they don't exist
+//   fs.writeFileSync("dataStorage/users.json", JSON.stringify([]));
+//   fs.writeFileSync("dataStorage/projects.json", JSON.stringify([]));
+//   fs.writeFileSync("dataStorage/history.json", JSON.stringify([]));
+// }
 
 const loadJsonFile = (filePath, defaultData) => {
   try {
