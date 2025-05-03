@@ -8,16 +8,18 @@ function Login({ setToken, setRole }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
     try {
-      const response = await axios.post("http://localhost:3001/api/login", {
+      const response = await axios.post(`${API_BASE_URL}/api/login`, {
         username,
         password,
       });
+      console.log("Login.jsx: response:", response.data);
       const { token, role, id } = response.data;
       console.log(
         "Login.jsx: Setting token:",
@@ -35,6 +37,7 @@ function Login({ setToken, setRole }) {
       navigate("/");
     } catch (err) {
       setError(err.response?.data?.error || "เกิดข้อผิดพลาดในการเข้าสู่ระบบ");
+      console.error("Login.jsx: Error during login:", err);
     }
   };
 
