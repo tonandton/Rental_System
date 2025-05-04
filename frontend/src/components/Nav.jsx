@@ -17,10 +17,10 @@ function Navbar({ token, role, setToken, setRole }) {
   const handleLogout = () => {
     setToken("");
     setRole("");
+    navigate("/");
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     localStorage.removeItem("userId");
-    navigate("/");
     setIsOpen(false);
   };
 

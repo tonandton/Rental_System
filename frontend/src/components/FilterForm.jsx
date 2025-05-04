@@ -17,6 +17,11 @@ function FilterForm({ projects, onFilterChange, role, token }) {
   // ดึงข้อมูลเจ้าของโครงการและผู้ใช้
   useEffect(() => {
     const fetchOwners = async () => {
+      if (!token) {
+        console.warn("Token is missing. Skipping fetchOwners.");
+        return;
+      }
+
       try {
         const response = await axios.get(`${API_BASE_URL}/api/project-owners`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -194,7 +199,7 @@ function FilterForm({ projects, onFilterChange, role, token }) {
         <button
           type="button"
           onClick={handleReset}
-          className="bg-gray-300 text-gray-700 p-2 rounded-lg hover:bg-gray-400 w-full"
+          className="bg-yellow-300 text-gray-700 p-2 rounded-lg hover:bg-yellow-400 w-full"
         >
           ล้าง
         </button>

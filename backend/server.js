@@ -38,7 +38,7 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file, originalname));
+    cb(null, uniqueSuffix + path.extname(file.originalname));
   },
 });
 
@@ -63,10 +63,10 @@ const upload = multer({
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
-  if (!token) return res.sendStatus(401).json({ error: "Access denied" });
+  if (!token) return res.status(401).json({ error: "Access denied" });
 
   jwt.verify(token, process.env.JWT_SECRET_KEY, (err, user) => {
-    if (err) return res.sendStatus(403).json({ error: "Invalid token" });
+    if (err) return res.status(403).json({ message: "Invalid token" });
     req.user = user;
     next();
   });
@@ -92,7 +92,7 @@ app.post("/api/login", async (req, res) => {
     ]);
     const user = result.rows[0];
     if (!user || !bcrypt.compareSync(password, user.password)) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      return res.status(401).json({ error: "เกิดข้อผิดพลาดในการเข้าสู่ระบบ" });
     }
     const token = jwt.sign(
       {

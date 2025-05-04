@@ -35,13 +35,10 @@ function Main({ token, role, setToken, setRole }) {
         params.recorderUsername = filters.recorderUsername;
       if (filters.username) params.username = filters.username;
 
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/history`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          params,
-        }
-      );
+      const response = await axios.get(`${API_BASE_URL}/api/history`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params,
+      });
       setHistory(response.data);
     } catch (err) {
       setError(err.response?.data?.error || "เกิดข้อผิดพลาดในการดึงข้อมูล");
@@ -75,7 +72,6 @@ function Main({ token, role, setToken, setRole }) {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <Navbar token={token} role={role} setToken={setToken} setRole={setRole} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <h1 className="text-2xl font-bold mb-6">แดชบอร์ด</h1>
         {error && <p className="text-red-500 mb-4">{error}</p>}

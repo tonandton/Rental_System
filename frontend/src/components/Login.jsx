@@ -43,7 +43,6 @@ function Login({ setToken, setRole }) {
 
   return (
     <div className="main-h-screen bg-gray-100">
-      <Navbar token={null} role={null} setToken={setToken} setRole={setRole} />
       <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
         <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-full max-w-xs sm:max-w-md">
           <h2 className="text-lg sm:text-xl font-semibold mb-4 text-center">
