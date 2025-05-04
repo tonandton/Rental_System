@@ -19,16 +19,16 @@ function Login({ setToken, setRole }) {
         username,
         password,
       });
-      console.log("Login.jsx: response:", response.data);
+      // console.log("Login.jsx: response:", response.data);
       const { token, role, id } = response.data;
-      console.log(
-        "Login.jsx: Setting token:",
-        token,
-        "role:",
-        role,
-        "userId:",
-        id
-      );
+      // console.log(
+      //   "Login.jsx: Setting token:",
+      //   token,
+      //   "role:",
+      //   role,
+      //   "userId:",
+      //   id
+      // );
       setToken(token);
       setRole(role);
       localStorage.setItem("token", token);

@@ -11,6 +11,10 @@ function Main({ token, role, setToken, setRole }) {
     month: "",
     year: "",
     projectId: "",
+    status: "",
+    ownerName: "",
+    recorderUsername: "",
+    username: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -25,11 +29,19 @@ function Main({ token, role, setToken, setRole }) {
       if (filters.month) params.month = filters.month;
       if (filters.year) params.year = filters.year;
       if (filters.projectId) params.projectId = filters.projectId;
+      if (filters.status) params.status = filters.status;
+      if (filters.ownerName) params.ownerName = filters.ownerName;
+      if (filters.recorderUsername)
+        params.recorderUsername = filters.recorderUsername;
+      if (filters.username) params.username = filters.username;
 
-      const response = await axios.get(`${API_BASE_URL}/api/history`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params,
-      });
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/history`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params,
+        }
+      );
       setHistory(response.data);
     } catch (err) {
       setError(err.response?.data?.error || "เกิดข้อผิดพลาดในการดึงข้อมูล");
@@ -67,7 +79,12 @@ function Main({ token, role, setToken, setRole }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <h1 className="text-2xl font-bold mb-6">แดชบอร์ด</h1>
         {error && <p className="text-red-500 mb-4">{error}</p>}
-        <FilterForm projects={projects} onFilterChange={handleFilterChange} />
+        <FilterForm
+          projects={projects}
+          onFilterChange={handleFilterChange}
+          role={role}
+          token={token}
+        />
         {loading ? (
           <p className="text-gray-500">กำลังโหลด....</p>
         ) : (

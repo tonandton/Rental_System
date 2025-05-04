@@ -5,14 +5,14 @@ function Navbar({ token, role, setToken, setRole }) {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
-  console.log(
-    "Navbar.jsx: token:",
-    token,
-    "role:",
-    role,
-    "isLoggedIn:",
-    token && token !== ""
-  );
+  // console.log(
+  //   "Navbar.jsx: token:",
+  //   token,
+  //   "role:",
+  //   role,
+  //   "isLoggedIn:",
+  //   token && token !== ""
+  // );
 
   const handleLogout = () => {
     setToken("");

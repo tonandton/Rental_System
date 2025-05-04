@@ -72,12 +72,14 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// Middleware ตรวจสอบ SuperUser
-const isSuperUser = (req, res, next) => {
-  if (req.user.role !== "superuser") {
-    return res.status(403).json({ error: "Superuser access required" });
-  }
-  next();
+// Middleware ตรวจสอบบทบาท
+const restrictTo = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+    next();
+  };
 };
 
 // Login
@@ -93,7 +95,13 @@ app.post("/api/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
     const token = jwt.sign(
-      { id: user.id, username: user.name, role: user.role },
+      {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        first_name: user.first_name,
+        last_name: user.last_name,
+      },
       process.env.JWT_SECRET_KEY,
       { expiresIn: "1h" }
     );
@@ -104,138 +112,206 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// จัดการข้อมูลผู้ใช้ (Superuser เท่านั้น)
-app.get("/api/users", authenticateToken, isSuperUser, async (req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT id, username, role, email, first_name, last_name, created_at FROM users"
-    );
-  } catch (err) {
-    console.error("Get users error:", err);
-    res.status(500).json({ error: "Server error" });
+// จัดการผู้ใช้ (เฉพาะ superadmin)
+app.get(
+  "/api/users",
+  authenticateToken,
+  restrictTo("superadmin", "admin"),
+  async (req, res) => {
+    try {
+      const result = await pool.query(
+        "SELECT id, username, role, email, first_name, last_name, created_at FROM users"
+      );
+      res.json(result.rows);
+    } catch (err) {
+      console.error("Get users error:", err);
+      res.status(500).json({ error: "Server error" });
+    }
   }
-});
+);
 
 // Add / Edit
-app.post("/api/users", authenticateToken, isSuperUser, async (req, res) => {
-  const { username, password, role, email, first_name, last_name } = req.body;
+app.post(
+  "/api/users",
+  authenticateToken,
+  restrictTo("superadmin"),
+  async (req, res) => {
+    const { username, password, role, email, first_name, last_name } = req.body;
+    try {
+      const hashedPassword = bcrypt.hashSync(password, 10);
+      const result = await pool.query(
+        "INSERT INTO users (username, password, role, email, first_name, last_name) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
+        [username, hashedPassword, role, email, first_name, last_name]
+      );
+      res.status(201).json({ id: result.rows[0].id, message: "User created" });
+    } catch (err) {
+      console.error("Create user error:", err);
+      res.status(500).json({ error: "Server error" });
+    }
+  }
+);
 
+// จัดการโครงการ (superadmin, admin)
+app.get("/api/projects", authenticateToken, async (req, res) => {
   try {
-    const hashedPassword = bcrypt.hashSync(password, 10);
-    const result = await pool.query(
-      "INSERT INTO users(username, password, role, email, first_name, last_name) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
-      [username, hashedPassword, role, email, first_name, last_name]
-    );
-
-    res
-      .status(201)
-      .json({ id: result.rows[0].id, message: "User Created successfully" });
+    let query =
+      "SELECT p.*, po.owner_name, po.contact_info FROM projects p LEFT JOIN project_owners po ON p.id = po.project_id";
+    const params = [];
+    if (req.user.role === "user") {
+      query +=
+        " WHERE EXISTS (SELECT 1 FROM project_owners po WHERE po.project_id = p.id AND po.owner_name = $1)";
+      params.push(`${req.user.first_name} ${req.user.last_name}`);
+    }
+    const result = await pool.query(query, params);
+    res.json(result.rows);
   } catch (err) {
-    console.error("Create user error:", err);
+    console.error("Get projects error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
-
-// Delete User
-// app.delete("/api/users/:id", authenticateToken, (req, res) => {
-//   if (req.user.role !== "superuser")
-//     return res.status(403).json({ error: "Access denied" });
-//   const id = parseInt(req.params.id);
-//   users = users.filter((u) => u.id !== id);
-//   fs.writeFileSync("dataStorage/users.json", JSON.stringify(users, null, 2));
-//   res.json({ message: "User deleted successfully" });
-// });
-
-// Projects
-app.get("/api/projects", (req, res) => {
-  res.status(200).json(projects);
-});
-
-// จัดการโครงการ (Superuser เท่านั้น)
-// app.get("/api/projects", authenticateToken, async(req,res) => {
-//   try {
-//     const query = req.user.role === "superuser" ? "SELECT * FROM projects" :"SELECT * FROM projects WHERE user_id = $1";
-//     const result = await pool.query(query, req.user.role === "superuser" ? []: [req.user.id])
-//     res.json(result.rows);
-//   } catch (err) {
-//     console.error("Get projects error:", err);
-//     res.status(500).json({ error: "Server error" });
-//   }
-// })
 
 // AddProject - เพิ่มโครงการใหม่
-app.post("/api/projects", authenticateToken, async (req, res) => {
-  const {
-    name,
-    description,
-    start_date,
-    end_date,
-    water_unit_rate,
-    electricity_unit_rate,
-  } = req.body;
+app.post(
+  "/api/projects",
+  authenticateToken,
+  restrictTo("superadmin", "admin"),
+  async (req, res) => {
+    const {
+      name,
+      description,
+      start_date,
+      end_date,
+      water_unit_rate,
+      electricity_unit_rate,
+      owner_name,
+      contact_info,
+    } = req.body;
 
+    try {
+      const projectResult = await pool.query(
+        "INSERT INTO projects (user_id, name, description, start_date, end_date, water_unit_rate, electricity_unit_rate) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id",
+        [
+          req.user.id,
+          name,
+          description,
+          start_date,
+          end_date,
+          water_unit_rate,
+          electricity_unit_rate,
+        ]
+      );
+      const projectId = projectResult.rows[0].id;
+
+      await pool.query(
+        "INSERT INTO project_owners (project_id, owner_name, contact_info) VALUES ($1, $2, $3)",
+        [projectId, owner_name, contact_info]
+      );
+
+      res.status(201).json({ id: projectId, message: "Project created" });
+    } catch (err) {
+      console.error("Create project error:", err);
+      res.status(500).json({ error: "Server error" });
+    }
+  }
+);
+
+app.get("/api/project-owners", authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
-      "INSERT INTO projects (name, description, start_date, end_date, water_unit_rate, electricity_unit_rate) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
-      [
-        req.user.id,
-        name,
-        description,
-        start_date,
-        end_date,
-        water_unit_rate,
-        electricity_unit_rate,
-      ]
+      "SELECT DISTINCT owner_name FROM project_owners"
     );
-    res
-      .status(201)
-      .json({ id: result.rows[0].id, message: "Project created successfully" });
+    res.json(result.rows);
   } catch (err) {
-    console.error("Create project error:", err);
+    console.error("Get project owners error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
-
-// DeleteProject
-// app.delete("/api/projects/:id", authenticateToken, (req, res) => {
-//   if (req.user.role !== "superuser")
-//     return res.status(403).json({ error: "Authtication required" });
-//   const id = parseInt(req.params.id);
-//   projects = projects.filter((p) => p.id !== id);
-//   fs.writeFileSync(
-//     "dataStorage/projects.json",
-//     JSON.stringify(projects, null, 2)
-//   );
-//   res.status(200).json({ message: "Project deleted successfully" });
-// });
 
 // upload project image - อัปโหลดภาพโครงการ
 app.post(
   "/api/projects/:id/upload",
   authenticateToken,
+  restrictTo("superadmin", "admin"),
   upload.single("image"),
   async (req, res) => {
     const projectId = req.params.id;
     try {
       const projectResult = await pool.query(
-        "SELECT * user_id FROM projects WHERE id = $1",
+        "SELECT user_id FROM projects WHERE id = $1",
         [projectId]
       );
       const project = projectResult.rows[0];
-      if (!project) {
-        return res.status(404).json({ error: "Project not found" });
-      }
-      if (req.user.role !== "superuser" && req.user.id !== project.user_id) {
-        return res.status(403).json({ error: "Unauthorized access" });
+      if (!project) return res.status(404).json({ error: "Project not found" });
+      if (req.user.role !== "superadmin" && req.user.id !== project.user_id) {
+        return res.status(403).json({ error: "Unauthorized" });
       }
       const imagePath = `/uploads/${req.file.filename}`;
       await pool.query("UPDATE projects SET image_path = $1 WHERE id = $2", [
         imagePath,
         projectId,
       ]);
-      res.json({ message: "Image uploaded successfully", imagePath });
+      res.json({ message: "Image uploaded", image_path: imagePath });
     } catch (err) {
-      console.error("Upload project image error:", err);
+      console.error("Upload image error:", err);
+      res.status(500).json({ error: "Server error" });
+    }
+  }
+);
+
+// อัปโหลดรูปภาพสำหรับค่าน้ำ/ค่าไฟ
+app.post(
+  "/api/history/:id/upload",
+  authenticateToken,
+  restrictTo("superadmin", "admin", "user"),
+  upload.fields([
+    { name: "water_image", maxCount: 1 },
+    { name: "electricity_image", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    const historyId = req.params.id;
+    try {
+      const historyResult = await pool.query(
+        "SELECT user_id, project_id FROM rental_history WHERE id = $1",
+        [historyId]
+      );
+      const history = historyResult.rows[0];
+      if (!history)
+        return res.status(404).json({ error: "Rental history not found" });
+
+      if (req.user.role === "user") {
+        const ownerResult = await pool.query(
+          "SELECT 1 FROM project_owners WHERE project_id = $1 AND owner_name = $2",
+          [history.project_id, `${req.user.first_name} ${req.user.last_name}`]
+        );
+        if (!ownerResult.rows.length && history.user_id !== req.user.id) {
+          return res.status(403).json({ error: "Unauthorized" });
+        }
+      } else if (req.user.role === "admin" && history.user_id !== req.user.id) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+
+      const updates = {};
+      if (req.files.water_image)
+        updates.water_image_path = `/uploads/${req.files.water_image[0].filename}`;
+      if (req.files.electricity_image)
+        updates.electricity_image_path = `/uploads/${req.files.electricity_image[0].filename}`;
+
+      if (Object.keys(updates).length > 0) {
+        const fields = Object.keys(updates)
+          .map((key, index) => `${key} = $${index + 1}`)
+          .join(", ");
+        const values = Object.values(updates);
+        await pool.query(
+          `UPDATE rental_history SET ${fields} WHERE id = $${
+            values.length + 1
+          }`,
+          [...values, historyId]
+        );
+      }
+
+      res.json({ message: "Images uploaded", ...updates });
+    } catch (err) {
+      console.error("Upload history images error:", err);
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -244,22 +320,57 @@ app.post(
 // History - ประวัติการบันทึก
 app.get("/api/history", authenticateToken, async (req, res) => {
   try {
-    const { startDate, endDate, status, month, year, projectId } = req.query;
+    const {
+      startDate,
+      endDate,
+      status,
+      month,
+      year,
+      projectId,
+      ownerName,
+      recorderUsername,
+      username,
+    } = req.query;
 
-    let query = `SELECT rh.id, rh.rental_date, rh.amount,rh.previous_water_meter, rh.current_water_meter, rh.water_units, rh.water_bill,rh.previous_electricity_meter, rh.current_electricity_meter, rh.electricity_units,  rh.electricity_bill, rh.water_image_path, rh.electricity_image_path, rh.status, p.name AS project_name, u.username FROM rental_history rh JOIN projects p ON rh.project_id = p.id JOIN users u ON rh.user_id = u.id`;
+    let query = `
+     SELECT rh.id, rh.rental_date, rh.amount, rh.previous_water_meter, rh.current_water_meter, rh.water_units, rh.water_bill, 
+             rh.previous_electricity_meter, rh.current_electricity_meter, rh.electricity_units, rh.electricity_bill, 
+             rh.water_image_path, rh.electricity_image_path, rh.status, p.name AS project_name, u.username, 
+             po.owner_name, ru.username AS recorder_username
+      FROM rental_history rh
+      JOIN projects p ON rh.project_id = p.id
+      JOIN users u ON rh.user_id = u.id
+      JOIN users ru ON rh.recorder_id = ru.id
+      LEFT JOIN project_owners po ON p.id = po.project_id
+    `;
+
     const params = [];
     let conditions = [];
 
-    if (req.user.role !== "superuser") {
-      conditions.push(`rh.user_id = $${params.length + 1}`);
-      params.push(req.user.id);
+    if (req.user.role === "user") {
+      const ownerResult = await pool.query(
+        "SELECT project_id FROM project_owners WHERE owner_name = $1",
+        [`${req.user.first_name} ${req.user.last_name}`]
+      );
+      const ownedProjectIds = ownerResult.rows.map((row) => row.project_id);
+      if (ownedProjectIds.length > 0) {
+        conditions.push(
+          `(rh.user_id = $${params.length + 1} OR rh.project_id = ANY($${
+            params.length + 2
+          }))`
+        );
+        params.push(req.user.id, ownedProjectIds);
+      } else {
+        conditions.push(`rh.user_id = $${params.length + 1}`);
+        params.push(req.user.id);
+      }
     }
     if (startDate) {
       conditions.push(`rh.rental_date >= $${params.length + 1}`);
       params.push(startDate);
     }
     if (endDate) {
-      conditions.push.apply(`rh.renta_date <= $${params.length + 1}`);
+      conditions.push(`rh.rental_date <= $${params.length + 1}`);
       params.push(endDate);
     }
     if (status) {
@@ -272,7 +383,7 @@ app.get("/api/history", authenticateToken, async (req, res) => {
       );
       params.push(month);
     }
-    if (yeat) {
+    if (year) {
       conditions.push(
         `EXTRACT(YEAR FROM rh.rental_date) = $${params.length + 1}`
       );
@@ -282,10 +393,20 @@ app.get("/api/history", authenticateToken, async (req, res) => {
       conditions.push(`rh.project_id = $${params.length + 1}`);
       params.push(projectId);
     }
-    if (conditions.length > 0) {
-      query += " WHERE " + conditions.join(" AND ");
+    if (ownerName) {
+      conditions.push(`po.owner_name = $${params.length + 1}`);
+      params.push(ownerName);
+    }
+    if (recorderUsername) {
+      conditions.push(`ru.username = $${params.length + 1}`);
+      params.push(recorderUsername);
+    }
+    if (username) {
+      conditions.push(`u.username = $${params.length + 1}`);
+      params.push(username);
     }
 
+    if (conditions.length > 0) query += " WHERE " + conditions.join(" AND ");
     query += " ORDER BY rh.rental_date DESC";
 
     const result = await pool.query(query, params);
@@ -296,154 +417,142 @@ app.get("/api/history", authenticateToken, async (req, res) => {
   }
 });
 
-app.post("/api/history", authenticateToken, async (req, res) => {
-  const {
-    project_id,
-    rental_date,
-    amount,
-    previous_water_meter,
-    current_water_meter,
-    previous_electricity_meter,
-    current_electricity_meter,
-    status,
-  } = req.body;
-  try {
-    // ดึงอัตราค่าน้ำ/ค่าไฟจาก projects
-    const projectResult = await pool.query(
-      "SELECT water_unit_rate, electricity_unit_rate FROM projects WHERE id = $1",
-      [project_id]
-    );
-    const project = projectResult.rows[0];
-    if (!project) {
-      return res.status(404).json({ error: "Project not found" });
-    }
+app.post(
+  "/api/history",
+  authenticateToken,
+  restrictTo("superadmin", "admin", "user"),
+  async (req, res) => {
+    const {
+      project_id,
+      rental_date,
+      amount,
+      previous_water_meter,
+      current_water_meter,
+      previous_electricity_meter,
+      current_electricity_meter,
+      status,
+    } = req.body;
+    try {
+      const projectResult = await pool.query(
+        "SELECT water_unit_rate, electricity_unit_rate FROM projects WHERE id = $1",
+        [project_id]
+      );
+      const project = projectResult.rows[0];
+      if (!project) return res.status(404).json({ error: "Project not found" });
 
-    // คำนวณหน่วยที่ใช้
-    const water_units =
-      current_water_meter && previous_water_meter
-        ? current_water_meter - previous_water_meter
-        : 0;
-    const electricity_units =
-      current_electricity_meter && previous_electricity_meter
-        ? current_electricity_meter - previous_electricity_meter
-        : 0;
+      if (req.user.role === "user") {
+        const ownerResult = await pool.query(
+          "SELECT 1 FROM project_owners WHERE project_id = $1 AND owner_name = $2",
+          [project_id, `${req.user.first_name} ${req.user.last_name}`]
+        );
+        if (!ownerResult.rows.length) {
+          return res.status(403).json({ error: "Unauthorized" });
+        }
+      }
 
-    // คำนวณค่าน้ำและค่าไฟ
-    const water_bill = water_units * project.water_unit_rate;
-    const electricity_bill = electricity_units * project.electricity_unit_rate;
+      const water_units =
+        current_water_meter && previous_water_meter
+          ? current_water_meter - previous_water_meter
+          : 0;
+      const electricity_units =
+        current_electricity_meter && previous_electricity_meter
+          ? current_electricity_meter - previous_electricity_meter
+          : 0;
+      const water_bill = water_units * project.water_unit_rate;
+      const electricity_bill =
+        electricity_units * project.electricity_unit_rate;
 
-    const result = await pool.query(
-      "INSERT INTO rental_history (user_id, project_id, rental_date, amount, previous_water_meter, current_water_meter, water_units, water_bill, previous_electricity_meter, current_electricity_meter, electricity_units, electricity_bill, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id",
-      [
-        req.user.id,
-        project_id,
-        rental_date,
-        amount,
-        previous_water_meter,
-        current_water_meter,
-        water_units,
+      const result = await pool.query(
+        "INSERT INTO rental_history (user_id, recorder_id, project_id, rental_date, amount, previous_water_meter, current_water_meter, water_units, water_bill, previous_electricity_meter, current_electricity_meter, electricity_units, electricity_bill, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING id",
+        [
+          req.user.id,
+          req.user.id,
+          project_id,
+          rental_date,
+          amount,
+          previous_water_meter,
+          current_water_meter,
+          water_units,
+          water_bill,
+          previous_electricity_meter,
+          current_electricity_meter,
+          electricity_units,
+          electricity_bill,
+          status,
+        ]
+      );
+      res.status(201).json({
+        id: result.rows[0].id,
+        message: "Rental history created",
         water_bill,
-        previous_electricity_meter,
-        current_electricity_meter,
-        electricity_units,
         electricity_bill,
-        status,
-      ]
-    );
-    res.status(201).json({
-      id: result.rows[0].id,
-      message: "Rental history created",
-      water_bill,
-      electricity_bill,
-    });
-  } catch (err) {
-    console.error("Create history error:", err);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
-// FilterHistory
-app.post("/api/history/filter", authenticateToken, async (req, res) => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
-  let filteredHistory = history.map((h) => ({
-    ...h,
-    name: users.find((u) => u.id === h.user_id)?.name || h.username,
-  }));
-
-  if (token) {
-    try {
-      const decoded = jwt.verify(token, "secret");
-      if (decoded.role === "user") {
-        filteredHistory = filteredHistory.filter(
-          (h) => h.user_id === decoded.id
-        );
-      }
+      });
     } catch (err) {
-      // Continue as guest if token is invalid
+      console.error("Create history error:", err);
+      res.status(500).json({ error: "Server error" });
     }
   }
+);
 
-  const {
-    project_name,
-    water_cost_min,
-    water_cost_max,
-    electricity_cost_min,
-    electricity_cost_max,
-    username,
-  } = req.body;
-
-  filteredHistory = filteredHistory.filter((h) => {
-    return (
-      (!project_name || h.project_name === project_name) &&
-      (water_cost_min === null || h.water_cost >= water_cost_min) &&
-      (water_cost_max === null || h.water_cost <= water_cost_max) &&
-      (electricity_cost_min === null ||
-        h.electricity_cost >= electricity_cost_min) &&
-      (electricity_cost_max === null ||
-        h.electricity_cost <= electricity_cost_max) &&
-      (!record_month || h.record_month === record_month) &&
-      (!username || h.username === username)
-    );
-  });
-
-  res.status(200).json(filteredHistory);
-});
-
-// Monthly Report
-app.get("/api/month-report", (req, res) => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
-  let filteredHistory = history;
-
-  if (token) {
+// จัดการใบแจ้งหนี้ (superadmin เท่านั้น)
+app.get(
+  "/api/bills",
+  authenticateToken,
+  restrictTo("superadmin"),
+  async (req, res) => {
     try {
-      const decoded = jwt.verify(token, "secret");
-      if (decoded.role === "user") {
-        filteredHistory = filteredHistory.filter(
-          (h) => h.user_id === decoded.id
-        );
-      }
+      const query = `
+      SELECT b.id, b.bill_number, b.issue_date, b.amount, b.status, rh.rental_date, rh.previous_water_meter, rh.current_water_meter, rh.water_units, rh.water_bill, 
+             rh.previous_electricity_meter, rh.current_electricity_meter, rh.electricity_units, rh.electricity_bill, rh.water_image_path, rh.electricity_image_path, 
+             u.username, p.name AS project_name, po.owner_name, ru.username AS recorder_username
+      FROM bills b
+      JOIN rental_history rh ON b.rental_history_id = rh.id
+      JOIN users u ON rh.user_id = u.id
+      JOIN users ru ON rh.recorder_id = ru.id
+      JOIN projects p ON rh.project_id = p.id
+      LEFT JOIN project_owners po ON p.id = po.project_id
+    `;
+      const result = await pool.query(query);
+      res.json(result.rows);
     } catch (err) {
-      // Continue as guest if token is invalid
+      console.error("Get bills error:", err);
+      res.status(500).json({ error: "Server error" });
     }
   }
+);
 
-  const report = filteredHistory.reduce((acc, h) => {
-    const month = record.record_month;
-    const project = record.project_name;
-    const username = record.username;
-    const name = users.find((u) => u.id === record.user_id)?.name || username;
-    if (!acc[month]) acc[month] = {};
-    if (!acc[month][project]) acc[month][project] = {};
-    if (!acc[month][project][username])
-      acc[month][project][username] = { name, entries: [] };
-    acc[month][project][username].entries.push(record);
-    return acc;
-  }, {});
+app.post(
+  "/api/bills",
+  authenticateToken,
+  restrictTo("superadmin"),
+  async (req, res) => {
+    const { rental_history_id, bill_number, issue_date, status } = req.body;
+    try {
+      const rhResult = await pool.query(
+        "SELECT amount, water_bill, electricity_bill FROM rental_history WHERE id = $1",
+        [rental_history_id]
+      );
+      const rh = rhResult.rows[0];
+      if (!rh)
+        return res.status(404).json({ error: "Rental history not found" });
+      const totalAmount =
+        rh.amount + (rh.water_bill || 0) + (rh.electricity_bill || 0);
 
-  res.status(200).json(report);
-});
+      const result = await pool.query(
+        "INSERT INTO bills (rental_history_id, bill_number, issue_date, amount, status) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+        [rental_history_id, bill_number, issue_date, totalAmount, status]
+      );
+      res.status(201).json({
+        id: result.rows[0].id,
+        message: "Bill created",
+        amount: totalAmount,
+      });
+    } catch (err) {
+      console.error("Create bill error:", err);
+      res.status(500).json({ error: "Server error" });
+    }
+  }
+);
 
 // รันเซิร์ฟเวอร์
 const PORT = process.env.PORT || 5000;
