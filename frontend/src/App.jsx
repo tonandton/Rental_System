@@ -9,6 +9,9 @@ import ProtectedRoute from "./components/ProtectedRoute";
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token") || "");
   const [role, setRole] = useState(localStorage.getItem("role") || "");
+  const [user, setUser] = useState(
+    JSON.parse(localStorage.getItem("user")) || null
+  );
 
   return (
     <ErrorBoundary>
@@ -17,13 +20,21 @@ function App() {
           <Navbar
             token={token}
             role={role}
+            user={user}
             setToken={setToken}
             setRole={setRole}
+            setUser={setUser}
           />
           <Routes>
             <Route
               path="/login"
-              element={<Login setToken={setToken} setRole={setRole} />}
+              element={
+                <Login
+                  setToken={setToken}
+                  setRole={setRole}
+                  setUser={setUser}
+                />
+              }
             />
             <Route
               path="/"

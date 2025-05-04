@@ -105,7 +105,13 @@ app.post("/api/login", async (req, res) => {
       process.env.JWT_SECRET_KEY,
       { expiresIn: "1h" }
     );
-    res.json({ token, role: user.role, id: user.id });
+    res.json({
+      token,
+      role: user.role,
+      id: user.id,
+      first_name: user.first_name,
+      last_name: user.last_name,
+    });
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ error: "Server error" });
