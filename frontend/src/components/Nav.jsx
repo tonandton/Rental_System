@@ -72,7 +72,7 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <span className="text-lg sm:text-xl font-bold">Rental System</span>
+            <span className="text-lg sm:text-xl font-bold">WEBR System</span>
           </div>
 
           {/* Desktop Menu */}

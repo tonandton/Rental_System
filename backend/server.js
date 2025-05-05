@@ -157,16 +157,18 @@ app.post(
   }
 );
 
-// จัดการโครงการ (superadmin, admin)
+// จัดการโครงการ (superadmin, admin, user)
 app.get("/api/projects", authenticateToken, async (req, res) => {
   try {
     let query =
-      "SELECT p.*, po.owner_name, po.contact_info FROM projects p LEFT JOIN project_owners po ON p.id = po.project_id";
+      "SELECT p.* u.first_name AS owner_first_name, u.last_name AS owner_last_name " +
+      "FROM projects p " +
+      "LEFT JOIN project_owners po ON p.id = po.project_id " +
+      "LEFT JOIN users u ON po.user_id = u.id";
     const params = [];
     if (req.user.role === "user") {
-      query +=
-        " WHERE EXISTS (SELECT 1 FROM project_owners po WHERE po.project_id = p.id AND po.owner_name = $1)";
-      params.push(`${req.user.first_name} ${req.user.last_name}`);
+      query += " WEHER po.user_id = $1";
+      params.push(req.user.id);
     }
     const result = await pool.query(query, params);
     res.json(result.rows);
@@ -209,8 +211,8 @@ app.post(
       const projectId = projectResult.rows[0].id;
 
       await pool.query(
-        "INSERT INTO project_owners (project_id, owner_name, contact_info) VALUES ($1, $2, $3)",
-        [projectId, owner_name, contact_info]
+        "INSERT INTO project_owners (project_id, user_id) VALUES ($1, $2)",
+        [projectId, owner_name || req.user.id]
       );
 
       res.status(201).json({ id: projectId, message: "Project created" });
@@ -221,10 +223,11 @@ app.post(
   }
 );
 
+// Get project owner - แสดงโครงการของตัวแทน
 app.get("/api/project-owners", authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT DISTINCT owner_name FROM project_owners"
+      "SELECT DISTINCT u.id, u.first_name, u.last_name FROM users u JOIN project_owners po ON u.id = po.user_id"
     );
     res.json(result.rows);
   } catch (err) {
@@ -286,8 +289,8 @@ app.post(
 
       if (req.user.role === "user") {
         const ownerResult = await pool.query(
-          "SELECT 1 FROM project_owners WHERE project_id = $1 AND owner_name = $2",
-          [history.project_id, `${req.user.first_name} ${req.user.last_name}`]
+          "SELECT 1 FROM project_owners WHERE project_id = $1 AND user_id = $2",
+          [history.project_id, req.user.id]
         );
         if (!ownerResult.rows.length && history.user_id !== req.user.id) {
           return res.status(403).json({ error: "Unauthorized" });
@@ -333,7 +336,7 @@ app.get("/api/history", authenticateToken, async (req, res) => {
       month,
       year,
       projectId,
-      ownerName,
+      ownerId,
       recorderUsername,
       username,
     } = req.query;
@@ -342,34 +345,25 @@ app.get("/api/history", authenticateToken, async (req, res) => {
      SELECT rh.id, rh.rental_date, rh.amount, rh.previous_water_meter, rh.current_water_meter, rh.water_units, rh.water_bill, 
              rh.previous_electricity_meter, rh.current_electricity_meter, rh.electricity_units, rh.electricity_bill, 
              rh.water_image_path, rh.electricity_image_path, rh.status, p.name AS project_name, u.username, 
-             po.owner_name, ru.username AS recorder_username
+             ru.username AS recorder_username, ou.first_name AS owner_first_name, ou.last_name AS owner_last_name
       FROM rental_history rh
       JOIN projects p ON rh.project_id = p.id
       JOIN users u ON rh.user_id = u.id
       JOIN users ru ON rh.recorder_id = ru.id
       LEFT JOIN project_owners po ON p.id = po.project_id
+      LEFT JOIN users ou ON po.user_id = ou.id
     `;
 
     const params = [];
     let conditions = [];
 
     if (req.user.role === "user") {
-      const ownerResult = await pool.query(
-        "SELECT project_id FROM project_owners WHERE owner_name = $1",
-        [`${req.user.first_name} ${req.user.last_name}`]
+      conditions.push(
+        `(rh.user_id = $${params.length + 1} OR po.user_id = $${
+          params.length + 1
+        })`
       );
-      const ownedProjectIds = ownerResult.rows.map((row) => row.project_id);
-      if (ownedProjectIds.length > 0) {
-        conditions.push(
-          `(rh.user_id = $${params.length + 1} OR rh.project_id = ANY($${
-            params.length + 2
-          }))`
-        );
-        params.push(req.user.id, ownedProjectIds);
-      } else {
-        conditions.push(`rh.user_id = $${params.length + 1}`);
-        params.push(req.user.id);
-      }
+      params.push(req.user.id);
     }
     if (startDate) {
       conditions.push(`rh.rental_date >= $${params.length + 1}`);
@@ -399,9 +393,9 @@ app.get("/api/history", authenticateToken, async (req, res) => {
       conditions.push(`rh.project_id = $${params.length + 1}`);
       params.push(projectId);
     }
-    if (ownerName) {
-      conditions.push(`po.owner_name = $${params.length + 1}`);
-      params.push(ownerName);
+    if (ownerId) {
+      conditions.push(`po.user_name = $${params.length + 1}`);
+      params.push(ownerId);
     }
     if (recorderUsername) {
       conditions.push(`ru.username = $${params.length + 1}`);
@@ -448,8 +442,8 @@ app.post(
 
       if (req.user.role === "user") {
         const ownerResult = await pool.query(
-          "SELECT 1 FROM project_owners WHERE project_id = $1 AND owner_name = $2",
-          [project_id, `${req.user.first_name} ${req.user.last_name}`]
+          "SELECT 1 FROM project_owners WHERE project_id = $1 AND user_id = $2",
+          [project_id, req.user.id]
         );
         if (!ownerResult.rows.length) {
           return res.status(403).json({ error: "Unauthorized" });
@@ -510,13 +504,14 @@ app.get(
       const query = `
       SELECT b.id, b.bill_number, b.issue_date, b.amount, b.status, rh.rental_date, rh.previous_water_meter, rh.current_water_meter, rh.water_units, rh.water_bill, 
              rh.previous_electricity_meter, rh.current_electricity_meter, rh.electricity_units, rh.electricity_bill, rh.water_image_path, rh.electricity_image_path, 
-             u.username, p.name AS project_name, po.owner_name, ru.username AS recorder_username
+             u.username, p.name AS project_name, ou.first_name AS owner_first_name, ou.last_name AS owner_last_name, ru.username AS recorder_username
       FROM bills b
       JOIN rental_history rh ON b.rental_history_id = rh.id
       JOIN users u ON rh.user_id = u.id
       JOIN users ru ON rh.recorder_id = ru.id
       JOIN projects p ON rh.project_id = p.id
       LEFT JOIN project_owners po ON p.id = po.project_id
+      LEFT JOIN users ou ON po.user_id = ou.id
     `;
       const result = await pool.query(query);
       res.json(result.rows);
@@ -527,6 +522,7 @@ app.get(
   }
 );
 
+// All Bill - เพิ่มบิล
 app.post(
   "/api/bills",
   authenticateToken,

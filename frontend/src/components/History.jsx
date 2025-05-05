@@ -1,23 +1,25 @@
 function History({ history, role }) {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+  console.log({ history });
+
   return (
-    <div className="hidden sm:block bg-white shadow-lg rounded-lg overflow-x-auto">
-      <table className="min-w-[1200px] w-full divide-y divide-gray-2000">
+    <div className="sm:block bg-white shadow-lg rounded-lg overflow-x-auto">
+      <table className="min-w-[ุ600px] w-full divide-y divide-gray-2000">
         <thead className="bg-gray-50 sticky top-0">
           <tr>
             <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
-              วันที่เช่า
+              วันที่ลง
             </th>
             <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
               โครงการ
             </th>
             <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
-              ผู้ใช้
+              เจ้าของโครงการ
             </th>
-            <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
+            {/* <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
               ค่าเช่า
-            </th>
+            </th> */}
             <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
               มิเตอร์น้ำก่อนหน้า
             </th>
@@ -49,6 +51,9 @@ function History({ history, role }) {
               รูปค่าไฟ
             </th>
             <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
+              ผู้บันทึก
+            </th>
+            <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
               สถานะ
             </th>
           </tr>
@@ -64,11 +69,11 @@ function History({ history, role }) {
                   {item.project_name}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-sm">
-                  {item.username}
+                  {item.owner_name}
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap text-sm">
+                {/* <td className="px-4 py-3 whitespace-nowrap text-sm">
                   {item.amount.toLocaleString("th-TH")} บาท
-                </td>
+                </td> */}
                 <td className="px-4 py-3 whitespace-nowrap text-sm">
                   {item.previous_water_meter
                     ? item.previous_water_meter.toLocaleString("th-TH")
@@ -82,8 +87,8 @@ function History({ history, role }) {
                   หน่วย
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-sm">
-                  {item.water_unit
-                    ? item.water_unit.toLocaleString("th-TH")
+                  {item.water_units
+                    ? item.water_units.toLocaleString("th-TH")
                     : "-"}{" "}
                   หน่วย
                 </td>
@@ -154,6 +159,9 @@ function History({ history, role }) {
                   ) : (
                     "-"
                   )}
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap text-sm">
+                  {item.username}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-sm">
                   {item.status === "pending"

@@ -55,7 +55,7 @@ function Login({ setToken, setRole, setUser }) {
     <div className="min-h-screen bg-gray-100 flex items-center justify-center py-12">
       <div className="bg-white p-10 rounded-xl shadow-2xl w-full max-w-md">
         <div className="flex justify-center mb-6">
-          <svg
+          {/* <svg
             className="w-16 h-16 text-blue-500"
             fill="none"
             stroke="currentColor"
@@ -68,10 +68,10 @@ function Login({ setToken, setRole, setUser }) {
               strokeWidth="2"
               d="M12 6v6m0 0v6m0-6h6m-6 0H6"
             ></path>
-          </svg>
+          </svg> */}
         </div>
         <h2 className="text-3xl font-bold mb-8 text-center text-gray-800">
-          เข้าสู่ระบบ
+          ระบบจัดการค่าน้ำ ค่าไฟ
         </h2>
         {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
         <form onSubmit={handleSubmit}>
