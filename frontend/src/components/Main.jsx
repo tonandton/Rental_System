@@ -1,95 +1,97 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import Navbar from "./Nav";
-import FilterForm from "./FilterForm";
-import History from "./History";
 
 function Main({ token, role, setToken, setRole }) {
-  const [histoty, setHistory] = useState([]);
+  const [history, setHistory] = useState([]);
   const [projects, setProjects] = useState([]);
-  const [filters, setFilters] = useState({
-    month: "",
-    year: "",
-    projectId: "",
-    status: "",
-    ownerName: "",
-    recorderUsername: "",
-    username: "",
-  });
-
-  const [loading, setLoading] = useState(false);
+  const [bills, setBills] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-  // ดึงข้อมูลประวัติการเช่า
-  const fetchHistory = async () => {
-    setLoading(true);
-    try {
-      const params = {};
-      if (filters.month) params.month = filters.month;
-      if (filters.year) params.year = filters.year;
-      if (filters.projectId) params.projectId = filters.projectId;
-      if (filters.status) params.status = filters.status;
-      if (filters.ownerName) params.ownerName = filters.ownerName;
-      if (filters.recorderUsername)
-        params.recorderUsername = filters.recorderUsername;
-      if (filters.username) params.username = filters.username;
-
-      const response = await axios.get(`${API_BASE_URL}/api/history`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params,
-      });
-      setHistory(response.data);
-    } catch (err) {
-      setError(err.response?.data?.error || "เกิดข้อผิดพลาดในการดึงข้อมูล");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ดึงข้อมูลโครงการ
-  const fetchProjects = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/projects`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setProjects(response.data);
-    } catch (err) {
-      setError("เกิดข้อผิดพลาดในการดึงข้อมูลโครงการ");
-    }
-  };
-
   useEffect(() => {
-    if (token) {
-      fetchProjects();
-      fetchHistory();
-    }
-  }, [token, filters]);
-
-  const handleFilterChange = (newFilters) => {
-    setFilters(newFilters);
-  };
+    const fetchData = async () => {
+      try {
+        const [projectsRes, historyRes, billsRes] = await Promise.all([
+          axios.get(`${API_BASE_URL}/api/projects`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get(`${API_BASE_URL}/api/history`, {
+            headers: { Authorization: `Bearer ${token}` },
+            params: { limit: 5 },
+          }),
+          role === "superadmin"
+            ? axios.get(`${API_BASE_URL}/api/bills`, {
+                headers: { Authorization: `Bearer ${token}` },
+                params: { status: "pending" },
+              })
+            : Promise.resolve({ data: [] }),
+        ]);
+        setProjects(projectsRes.data);
+        setHistory(historyRes.data);
+        setBills(billsRes.data);
+        setLoading(false);
+      } catch (err) {
+        setError(err.response?.data?.error || "เกิดข้อผิดพลาดในการดึงข้อมูล");
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [token, role]);
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <h1 className="text-2xl font-bold mb-6">แดชบอร์ด</h1>
-        {error && <p className="text-red-500 mb-4">{error}</p>}
-        <FilterForm
-          projects={projects}
-          onFilterChange={handleFilterChange}
-          role={role}
-          token={token}
-        />
-        {loading ? (
-          <p className="text-gray-500">กำลังโหลด....</p>
-        ) : (
-          <div className="mt-6">
-            <h2 className="text-xl font-semibold mb-4">รายการ</h2>
-            <History history={histoty} role={role} />
+    <div className="max-w-7xl mx-auto px-2 sm:px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8 text-gray-800">ภาพรวมระบบเช่า</h1>
+      {loading ? (
+        <p className="text-gray-600">กำลังโหลด...</p>
+      ) : error ? (
+        <p className="text-red-600">{error}</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* การ์ดโครงการ */}
+          <div className="bg-white shadow-md rounded-lg p-6 hover:shadow-lg transition">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              โครงการทั้งหมด
+            </h2>
+            <p className="text-3xl font-bold text-indigo-600">
+              {projects.length}
+            </p>
+            <p className="text-gray-600 mt-2">โครงการที่จัดการในระบบ</p>
           </div>
-        )}
-      </div>
+          {/* การ์ดประวัติการเช่า */}
+          <div className="bg-white shadow-md rounded-lg p-6 hover:shadow-lg transition">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              ประวัติการเช่าล่าสุด
+            </h2>
+            {history.length === 0 ? (
+              <p className="text-gray-600">ไม่มีประวัติ</p>
+            ) : (
+              <ul className="space-y-2">
+                {history.map((item) => (
+                  <li key={item.id} className="text-sm text-gray-700">
+                    <span className="font-medium">{item.project_name}</span> -{" "}
+                    {new Date(item.rental_date).toLocaleDateString("th-TH")} -{" "}
+                    {item.amount.toLocaleString("th-TH")} บาท
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          {/* การ์ดใบแจ้งหนี้ */}
+          {role === "superadmin" && (
+            <div className="bg-white shadow-md rounded-lg p-6 hover:shadow-lg transition">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                ใบแจ้งหนี้ค้างชำระ
+              </h2>
+              <p className="text-3xl font-bold text-indigo-600">
+                {bills.length}
+              </p>
+              <p className="text-gray-600 mt-2">ใบแจ้งหนี้ที่รอการชำระ</p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

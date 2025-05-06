@@ -31,8 +31,7 @@ CREATE TABLE addresses (
 CREATE TABLE project_owners (
     id SERIAL PRIMARY KEY,
     project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-    owner_name VARCHAR(100) NOT NULL,
-    contact_info VARCHAR(255)
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- สร้างตาราง projects
@@ -83,10 +82,4 @@ CREATE TABLE bills (
 CREATE INDEX idx_rental_history_rental_date ON rental_history(rental_date);
 CREATE INDEX idx_rental_history_project_id ON rental_history(project_id);
 CREATE INDEX idx_project_owners_project_id ON project_owners(project_id);
-
--- ล้างข้อมูลเก่าเพื่อเริ่มต้นใหม่
-DELETE FROM bills;
-DELETE FROM rental_history;
-DELETE FROM projects;
-DELETE FROM addresses;
-DELETE FROM users;
+CREATE INDEX idx_project_owners_user_id ON project_owners(user_id);

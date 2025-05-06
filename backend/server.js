@@ -161,20 +161,21 @@ app.post(
 app.get("/api/projects", authenticateToken, async (req, res) => {
   try {
     let query =
-      "SELECT p.* u.first_name AS owner_first_name, u.last_name AS owner_last_name " +
+      "SELECT p.*, u.first_name AS owner_first_name, u.last_name AS owner_last_name " +
       "FROM projects p " +
       "LEFT JOIN project_owners po ON p.id = po.project_id " +
       "LEFT JOIN users u ON po.user_id = u.id";
     const params = [];
     if (req.user.role === "user") {
-      query += " WEHER po.user_id = $1";
+      query += " WHERE po.user_id = $1";
       params.push(req.user.id);
     }
     const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (err) {
     console.error("Get projects error:", err);
-    res.status(500).json({ error: "Server error" });
+    // res.status(500).json({ error: "Server error" });
+    res.status(500).json({ error: err });
   }
 });
 
@@ -192,7 +193,6 @@ app.post(
       water_unit_rate,
       electricity_unit_rate,
       owner_name,
-      contact_info,
     } = req.body;
 
     try {
@@ -339,6 +339,7 @@ app.get("/api/history", authenticateToken, async (req, res) => {
       ownerId,
       recorderUsername,
       username,
+      limit,
     } = req.query;
 
     let query = `
@@ -408,6 +409,10 @@ app.get("/api/history", authenticateToken, async (req, res) => {
 
     if (conditions.length > 0) query += " WHERE " + conditions.join(" AND ");
     query += " ORDER BY rh.rental_date DESC";
+    if (limit) {
+      query += ` LIMIT $${params.length + 1}`;
+      params.push(parseInt(limit));
+    }
 
     const result = await pool.query(query, params);
     res.json(result.rows);

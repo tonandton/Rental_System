@@ -5,6 +5,7 @@ import Main from "./components/Main";
 import Login from "./components/Login";
 import ErrorBoundary from "./components/ErrorBoundary";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AddRentalHistory from "./components/AddRentalHistory";
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token") || "");
@@ -16,41 +17,39 @@ function App() {
   return (
     <ErrorBoundary>
       <Router>
-        <div className="min-h-screen bg-gray-100">
-          <Navbar
-            token={token}
-            role={role}
-            user={user}
-            setToken={setToken}
-            setRole={setRole}
-            setUser={setUser}
+        <Navbar
+          token={token}
+          role={role}
+          user={user}
+          setToken={setToken}
+          setRole={setRole}
+          setUser={setUser}
+        />
+        <Routes>
+          <Route
+            path="/login"
+            element={
+              <Login setToken={setToken} setRole={setRole} setUser={setUser} />
+            }
           />
-          <Routes>
-            <Route
-              path="/login"
-              element={
-                <Login
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute token={token}>
+                <Main
+                  token={token}
+                  role={role}
                   setToken={setToken}
                   setRole={setRole}
-                  setUser={setUser}
                 />
-              }
-            />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute token={token}>
-                  <Main
-                    token={token}
-                    role={role}
-                    setToken={setToken}
-                    setRole={setRole}
-                  />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </div>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/add-rental-history"
+            element={<AddRentalHistory token={token} role={role} user={user} />}
+          />
+        </Routes>
       </Router>
     </ErrorBoundary>
   );
