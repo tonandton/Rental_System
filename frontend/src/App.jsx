@@ -4,8 +4,11 @@ import Navbar from "./components/Nav";
 import Main from "./components/Main";
 import Login from "./components/Login";
 import ErrorBoundary from "./components/ErrorBoundary";
+import AddProject from "./components/AddProject";
+import Projects from "./components/Projects";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AddRentalHistory from "./components/AddRentalHistory";
+import "./index.css";
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token") || "");
@@ -44,6 +47,14 @@ function App() {
                 />
               </ProtectedRoute>
             }
+          />
+          <Route
+            path="/add-project"
+            element={<AddProject token={token} role={role} />}
+          />
+          <Route
+            path="/projects"
+            element={<Projects token={token} role={role} user={user} />}
           />
           <Route
             path="/add-rental-history"

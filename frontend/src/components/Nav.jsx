@@ -42,7 +42,7 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
     {
       path: "/add-rental-history",
       label: "บันทึกประวัติ",
-      roles: ["superadmin", "admin", "user"],
+      roles: ["superadmin", "admin", "user", "employee"],
     },
   ];
 
