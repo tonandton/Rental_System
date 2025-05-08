@@ -47,7 +47,7 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
   ];
 
   return (
-    <nav className="bg-indigo-600 text-white shadow-md sticky top-0 z-50">
+    <nav className="bg-green-500 text-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4">
         <div className="flex justify-between items-center">
           <div className="text-xl font-bold">Rental System</div>
@@ -59,8 +59,8 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
                   key={item.path}
                   to={item.path}
                   className={({ isActive }) =>
-                    `px-3 py-2 rounded-md text-sm font-medium ${
-                      isActive ? "bg-indigo-700" : "hover:bg-indigo-500"
+                    `px-3 py-2 rounded-md text-sm font-semibold ${
+                      isActive ? "bg-green-600" : "hover:bg-green-500"
                     }`
                   }
                 >
@@ -70,7 +70,7 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
             {token && (
               <button
                 onClick={handleLogout}
-                className="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-500"
+                className="px-3 py-2 rounded-md text-sm font-medium bg-rose-400 hover:bg-rose-500 text-gray-600 hover:text-white"
               >
                 ออกจากระบบ
               </button>
@@ -79,7 +79,7 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
           <div className="md:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 rounded-md hover:bg-indigo-500"
+              className="p-2 rounded-md hover:bg-green-500"
             >
               <svg
                 className="h-6 w-6"
@@ -103,7 +103,7 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
         </div>
       </div>
       {isMenuOpen && (
-        <div className="md:hidden bg-indigo-600">
+        <div className="md:hidden bg-green-600">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 animate-slide-in">
             {navItems
               .filter((item) => item.roles.includes(role))
@@ -113,7 +113,7 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
                   to={item.path}
                   className={({ isActive }) =>
                     `block px-3 py-2 rounded-md text-base font-medium ${
-                      isActive ? "bg-indigo-700" : "hover:bg-indigo-500"
+                      isActive ? "bg-green-600" : "hover:bg-green-500"
                     }`
                   }
                   onClick={() => setIsMenuOpen(false)}
@@ -127,7 +127,7 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
                   handdleLogout();
                   setIsMenuOpen(false);
                 }}
-                className="block w-full text-left px-3 py-2 rounded-md text-base font-meduim hover:bg-indigo-500"
+                className="block w-full text-left px-3 py-2 rounded-md text-base font-meduim hover:bg-rose-500"
               >
                 ออกจากระบบ
               </button>

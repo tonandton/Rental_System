@@ -9,7 +9,7 @@ CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    role VARCHAR(20) NOT NULL CHECK (role IN ('superadmin', 'admin', 'user')),
+    role VARCHAR(20) NOT NULL CHECK (role IN ('superadmin', 'admin', 'user', 'employee')),
     email VARCHAR(100) UNIQUE NOT NULL,
     first_name VARCHAR(50),
     last_name VARCHAR(50),
@@ -44,7 +44,9 @@ CREATE TABLE projects (
     end_date DATE,
     image_path VARCHAR(255),
     water_unit_rate DECIMAL(10,2) NOT NULL,
-    electricity_unit_rate DECIMAL(10,2) NOT NULL
+    electricity_unit_rate DECIMAL(10,2) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- สร้างตาราง rental_history
@@ -65,7 +67,9 @@ CREATE TABLE rental_history (
     electricity_bill DECIMAL(10,2),
     water_image_path VARCHAR(255),
     electricity_image_path VARCHAR(255),
-    status VARCHAR(20) NOT NULL CHECK (status IN ('pending', 'completed', 'cancelled'))
+    status VARCHAR(20) NOT NULL CHECK (status IN ('pending', 'completed', 'cancelled')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- สร้างตาราง bills

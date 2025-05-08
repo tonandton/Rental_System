@@ -56,7 +56,7 @@ function Login({ setToken, setRole, setUser }) {
       <div className="bg-white p-10 rounded-xl shadow-2xl w-full max-w-md">
         <div className="flex justify-center mb-6">
           {/* <svg
-            className="w-16 h-16 text-blue-500"
+            className="w-16 h-16 text-green-500"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -83,7 +83,7 @@ function Login({ setToken, setRole, setUser }) {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="p-3 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="p-3 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-green-300"
               required
             />
           </div>
@@ -95,7 +95,7 @@ function Login({ setToken, setRole, setUser }) {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="p-3 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="p-3 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-green-500"
               required
             />
           </div>
@@ -104,13 +104,13 @@ function Login({ setToken, setRole, setUser }) {
               type="checkbox"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-4 w-4 text-green-500 focus:ring-green-500 border-gray-300 rounded"
             />
             <label className="ml-2 text-sm text-gray-600">จำรหัสผ่าน</label>
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 transition duration-200"
+            className="w-full bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 transition duration-200"
           >
             ล็อกอิน
           </button>

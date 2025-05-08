@@ -5,11 +5,12 @@ DELETE FROM projects;
 DELETE FROM addresses;
 DELETE FROM users;
 -- เพิ่มผู้ใช้
-INSERT INTO users (username, password, role, email, first_name, last_name) VALUES
-    ('superadmin', '$2b$10$TyuCzUgHgQgC5mQVSAO.JO.ZIWYom.DfezdDc1vfjukkD8mF48vs.', 'superadmin', 'superadmin@example.com', 'ซูเปอร์', 'แอดมิน'),
-    ('admin', '$2b$10$TyuCzUgHgQgC5mQVSAO.JO.ZIWYom.DfezdDc1vfjukkD8mF48vs.', 'admin', 'admin@example.com', 'แอดมิน', 'ทั่วไป'),
-    ('user1', '$2b$10$W0P/dkr/P0JuzIO4l3ta9.PXJ5FVTKkfJdwmLeubW15GkTeMdMDeO', 'user', 'user1@example.com', 'ผู้ใช้', 'หนึ่ง'),
-    ('user2', '$2b$10$W0P/dkr/P0JuzIO4l3ta9.PXJ5FVTKkfJdwmLeubW15GkTeMdMDeO', 'user', 'user2@example.com', 'ผู้ใช้', 'สอง');
+INSERT INTO users (username, password, role, email, first_name, last_name, created_at, update_at) VALUES
+    ('superadmin', '$2b$10$TyuCzUgHgQgC5mQVSAO.JO.ZIWYom.DfezdDc1vfjukkD8mF48vs.', 'superadmin', 'superadmin@example.com', 'ซูเปอร์', 'แอดมิน',CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('admin', '$2b$10$TyuCzUgHgQgC5mQVSAO.JO.ZIWYom.DfezdDc1vfjukkD8mF48vs.', 'admin', 'admin@example.com', 'แอดมิน', 'ทั่วไป',CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('user1', '$2b$10$W0P/dkr/P0JuzIO4l3ta9.PXJ5FVTKkfJdwmLeubW15GkTeMdMDeO', 'user', 'user1@example.com', 'นาย', 'หนึ่ง',CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('user2', '$2b$10$W0P/dkr/P0JuzIO4l3ta9.PXJ5FVTKkfJdwmLeubW15GkTeMdMDeO', 'user', 'user2@example.com', 'เบิร์ด', 'สอง',CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('emplyee1', '$2b$10$W0P/dkr/P0JuzIO4l3ta9.PXJ5FVTKkfJdwmLeubW15GkTeMdMDeO', 'employee', 'user3@example.com', 'ช่าง', 'สาม', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- เพิ่มที่อยู่
 INSERT INTO addresses (user_id, address_line1, city, postal_code, country) VALUES
@@ -19,10 +20,10 @@ INSERT INTO addresses (user_id, address_line1, city, postal_code, country) VALUE
     (4, '101 ถนนสุขสวัสดิ์', 'พัทยา', '20150', 'ประเทศไทย');
 
 -- เพิ่มโครงการ
-INSERT INTO projects (user_id, name, description, start_date, water_unit_rate, electricity_unit_rate) VALUES
-    (2, 'โครงการเช่าบ้าน', 'บ้านเดี่ยวให้เช่าในกรุงเทพ', '2025-01-01', 20.00, 5.00),
-    (2, 'โครงการเช่าคอนโด', 'คอนโดใจกลางเมืองเชียงใหม่', '2025-02-01', 25.00, 6.00),
-    (2, 'โครงการเช่าอพาร์ตเมนต์', 'อพาร์ตเมนต์ในภูเก็ต', '2025-03-01', 22.00, 5.50);
+INSERT INTO projects (user_id, name, description, start_date, water_unit_rate, electricity_unit_rate, created_at, updated_at) VALUES
+    (3, 'โครงการเช่าบ้าน', 'บ้านเดี่ยวให้เช่าในกรุงเทพ', '2025-01-01', 20.00, 5.00, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (3, 'โครงการเช่าคอนโด', 'คอนโดใจกลางเมืองเชียงใหม่', '2025-02-01', 25.00, 6.00, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (4, 'โครงการเช่าอพาร์ตเมนต์', 'อพาร์ตเมนต์ในภูเก็ต', '2025-03-01', 22.00, 5.50, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- เพิ่มเจ้าของโครงการ
 INSERT INTO project_owners (project_id, user_id) VALUES
@@ -32,12 +33,12 @@ INSERT INTO project_owners (project_id, user_id) VALUES
     (3, 4); -- user2 เป็นเจ้าของโครงการเช่าอพาร์ตเมนต์
 
 -- เพิ่มประวัติการเช่า
-INSERT INTO rental_history (user_id, recorder_id, project_id, rental_date, amount, previous_water_meter, current_water_meter, water_units, water_bill, previous_electricity_meter, current_electricity_meter, electricity_units, electricity_bill, water_image_path, electricity_image_path, status) VALUES
-    (3, 1, 1, '2025-05-01', 15000.00, 1000.00, 1025.00, 25.00, 500.00, 5000.00, 5200.00, 200.00, 1000.00, '/uploads/water_may_2025_user1.jpg', '/uploads/electricity_may_2025_user1.jpg', 'completed'),
-    (3, 2, 2, '2025-05-02', 20000.00, 2000.00, 2020.00, 20.00, 500.00, 3000.00, 3150.00, 150.00, 900.00, '/uploads/water_may_2025_user1_condo.jpg', '/uploads/electricity_may_2025_user1_condo.jpg', 'pending'),
-    (4, 1, 1, '2025-06-01', 15000.00, 1025.00, 1055.00, 30.00, 600.00, 5200.00, 5420.00, 220.00, 1100.00, '/uploads/water_june_2025_user2.jpg', '/uploads/electricity_june_2025_user2.jpg', 'completed'),
-    (4, 4, 2, '2025-06-02', 20000.00, 2020.00, 2042.00, 22.00, 550.00, 3150.00, 3310.00, 160.00, 960.00, '/uploads/water_june_2025_user2_condo.jpg', '/uploads/electricity_june_2025_user2_condo.jpg', 'pending'),
-    (3, 3, 3, '2025-07-01', 18000.00, 1055.00, 1083.00, 28.00, 616.00, 5420.00, 5630.00, 210.00, 1155.00, '/uploads/water_july_2025_user1_apartment.jpg', '/uploads/electricity_july_2025_user1_apartment.jpg', 'pending');
+INSERT INTO rental_history (user_id, recorder_id, project_id, rental_date, amount, previous_water_meter, current_water_meter, water_units, water_bill, previous_electricity_meter, current_electricity_meter, electricity_units, electricity_bill, water_image_path, electricity_image_path, status, created_at, updated_at) VALUES
+    (3, 1, 1, '2025-05-01', 15000.00, 1000.00, 1025.00, 25.00, 500.00, 5000.00, 5200.00, 200.00, 1000.00, '/uploads/water_may_2025_user1.jpg', '/uploads/electricity_may_2025_user1.jpg', 'completed', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (3, 2, 2, '2025-05-02', 20000.00, 2000.00, 2020.00, 20.00, 500.00, 3000.00, 3150.00, 150.00, 900.00, '/uploads/water_may_2025_user1_condo.jpg', '/uploads/electricity_may_2025_user1_condo.jpg', 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (4, 1, 1, '2025-06-01', 15000.00, 1025.00, 1055.00, 30.00, 600.00, 5200.00, 5420.00, 220.00, 1100.00, '/uploads/water_june_2025_user2.jpg', '/uploads/electricity_june_2025_user2.jpg', 'completed', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (4, 4, 2, '2025-06-02', 20000.00, 2020.00, 2042.00, 22.00, 550.00, 3150.00, 3310.00, 160.00, 960.00, '/uploads/water_june_2025_user2_condo.jpg', '/uploads/electricity_june_2025_user2_condo.jpg', 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (3, 3, 3, '2025-07-01', 18000.00, 1055.00, 1083.00, 28.00, 616.00, 5420.00, 5630.00, 210.00, 1155.00, '/uploads/water_july_2025_user1_apartment.jpg', '/uploads/electricity_july_2025_user1_apartment.jpg', 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- เพิ่มใบแจ้งหนี้
 INSERT INTO bills (rental_history_id, bill_number, issue_date, amount, status) VALUES

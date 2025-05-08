@@ -68,8 +68,11 @@ function Main({ token, role, setToken, setRole }) {
               <p className="text-gray-600">ไม่มีประวัติ</p>
             ) : (
               <ul className="space-y-2">
-                {history.map((item) => (
-                  <li key={item.id} className="text-sm text-gray-700">
+                {history.map((item, index) => (
+                  <li
+                    key={`${item.id}-${index}`}
+                    className="text-sm text-gray-700"
+                  >
                     <span className="font-medium">{item.project_name}</span> -{" "}
                     {new Date(item.rental_date).toLocaleDateString("th-TH")} -{" "}
                     {item.amount.toLocaleString("th-TH")} บาท

@@ -27,6 +27,29 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
+// Middleware ตรวจสอบ Token(JWT)
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+  if (!token) return res.status(401).json({ error: "Access denied" });
+
+  // Old
+  // jwt.verify(token, process.env.JWT_SECRET_KEY, (err, user) => {
+  //   if (err) return res.status(403).json({ message: "Invalid token" });
+  //   req.user = user;
+  //   next();
+  // });
+
+  // New
+  try {
+    const verified = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    req.user = verified;
+    next();
+  } catch (err) {
+    res.status(403).json({ error: "Invalid token" });
+  }
+};
+
 // ตั้งค่า multer สำหรับอัปโหลดไฟล์
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -59,19 +82,6 @@ const upload = multer({
   },
 });
 
-// Middleware ตรวจสอบ Token(JWT)
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
-  if (!token) return res.status(401).json({ error: "Access denied" });
-
-  jwt.verify(token, process.env.JWT_SECRET_KEY, (err, user) => {
-    if (err) return res.status(403).json({ message: "Invalid token" });
-    req.user = user;
-    next();
-  });
-};
-
 // Middleware ตรวจสอบบทบาท
 const restrictTo = (...roles) => {
   return (req, res, next) => {
@@ -91,9 +101,15 @@ app.post("/api/login", async (req, res) => {
       username,
     ]);
     const user = result.rows[0];
-    if (!user || !bcrypt.compareSync(password, user.password)) {
-      return res.status(401).json({ error: "เกิดข้อผิดพลาดในการเข้าสู่ระบบ" });
-    }
+    const validPassword = await bcrypt.compare(password, user.password);
+    // if (!user || !bcrypt.compareSync(password, user.password)) {
+    //   return res.status(401).json({ error: "รหัสผ่านไม่ถูกต้อง" });
+    // }
+
+    if (!user) return res.status(400).json({ error: "ไม่พบผู้ใช้ระบบ" });
+    if (!validPassword)
+      return res.status(400).json({ error: "รหัสผ่านไม่ถูกต้อง" });
+
     const token = jwt.sign(
       {
         id: user.id,
@@ -114,7 +130,7 @@ app.post("/api/login", async (req, res) => {
     });
   } catch (err) {
     console.error("Login error:", err);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ error: "เกิดข้อผิดพลาดในระบบ" });
   }
 });
 
@@ -160,16 +176,20 @@ app.post(
 // จัดการโครงการ (superadmin, admin, user)
 app.get("/api/projects", authenticateToken, async (req, res) => {
   try {
-    let query =
-      "SELECT p.*, u.first_name AS owner_first_name, u.last_name AS owner_last_name " +
-      "FROM projects p " +
-      "LEFT JOIN project_owners po ON p.id = po.project_id " +
-      "LEFT JOIN users u ON po.user_id = u.id";
+    let query = `
+      SELECT DISTINCT ON (p.id) p.*, u.first_name AS owner_first_name, u.last_name AS owner_last_name
+      FROM projects p
+      LEFT JOIN project_owners po ON p.id = po.project_id
+      LEFT JOIN users u ON po.user_id = u.id
+    `;
     const params = [];
     if (req.user.role === "user") {
       query += " WHERE po.user_id = $1";
       params.push(req.user.id);
     }
+
+    query += " ORDER BY p.id";
+
     const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (err) {
@@ -271,7 +291,7 @@ app.post(
 app.post(
   "/api/history/:id/upload",
   authenticateToken,
-  restrictTo("superadmin", "admin", "user"),
+  restrictTo("superadmin", "admin", "user", "employee"),
   upload.fields([
     { name: "water_image", maxCount: 1 },
     { name: "electricity_image", maxCount: 1 },
@@ -339,6 +359,8 @@ app.get("/api/history", authenticateToken, async (req, res) => {
       ownerId,
       recorderUsername,
       username,
+      createdStartDate,
+      createdEndDate,
       limit,
     } = req.query;
 
@@ -346,7 +368,7 @@ app.get("/api/history", authenticateToken, async (req, res) => {
      SELECT rh.id, rh.rental_date, rh.amount, rh.previous_water_meter, rh.current_water_meter, rh.water_units, rh.water_bill, 
              rh.previous_electricity_meter, rh.current_electricity_meter, rh.electricity_units, rh.electricity_bill, 
              rh.water_image_path, rh.electricity_image_path, rh.status, p.name AS project_name, u.username, 
-             ru.username AS recorder_username, ou.first_name AS owner_first_name, ou.last_name AS owner_last_name
+             ru.username AS recorder_username, ou.first_name AS owner_first_name, ou.last_name AS owner_last_name, po.user_id AS owner_id
       FROM rental_history rh
       JOIN projects p ON rh.project_id = p.id
       JOIN users u ON rh.user_id = u.id
@@ -360,9 +382,12 @@ app.get("/api/history", authenticateToken, async (req, res) => {
 
     if (req.user.role === "user") {
       conditions.push(
-        `(rh.user_id = $${params.length + 1} OR po.user_id = $${
-          params.length + 1
-        })`
+        `EXISTS (
+          SELECT 1 FROM project_owners po2
+          WHERE po2.project_id = rh.project_id AND po2.user_id = $${
+            params.length + 1
+          }
+        )`
       );
       params.push(req.user.id);
     }
@@ -406,6 +431,14 @@ app.get("/api/history", authenticateToken, async (req, res) => {
       conditions.push(`u.username = $${params.length + 1}`);
       params.push(username);
     }
+    if (createdStartDate) {
+      conditions.push(`rh.created_at >= $${params.length + 1}`);
+      params.push(createdStartDate);
+    }
+    if (createdEndDate) {
+      conditions.push(`rh.created_at <= $${params.length + 1}`);
+      params.push(createdEndDate);
+    }
 
     if (conditions.length > 0) query += " WHERE " + conditions.join(" AND ");
     query += " ORDER BY rh.rental_date DESC";
@@ -425,7 +458,7 @@ app.get("/api/history", authenticateToken, async (req, res) => {
 app.post(
   "/api/history",
   authenticateToken,
-  restrictTo("superadmin", "admin", "user"),
+  restrictTo("superadmin", "admin", "user", "employee"),
   async (req, res) => {
     const {
       project_id,
@@ -467,23 +500,30 @@ app.post(
       const electricity_bill =
         electricity_units * project.electricity_unit_rate;
 
+      const toNullableNumber = (value) => {
+        return value === "" || value === undefined ? null : Number(value);
+      };
+      const now = new Date();
+
       const result = await pool.query(
-        "INSERT INTO rental_history (user_id, recorder_id, project_id, rental_date, amount, previous_water_meter, current_water_meter, water_units, water_bill, previous_electricity_meter, current_electricity_meter, electricity_units, electricity_bill, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING id",
+        "INSERT INTO rental_history (user_id, recorder_id, project_id, rental_date, amount, previous_water_meter, current_water_meter, water_units, water_bill, previous_electricity_meter, current_electricity_meter, electricity_units, electricity_bill, status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING id",
         [
           req.user.id,
           req.user.id,
           project_id,
           rental_date,
-          amount,
-          previous_water_meter,
-          current_water_meter,
+          toNullableNumber(amount),
+          toNullableNumber(previous_water_meter),
+          toNullableNumber(current_water_meter),
           water_units,
           water_bill,
-          previous_electricity_meter,
-          current_electricity_meter,
+          toNullableNumber(previous_electricity_meter),
+          toNullableNumber(current_electricity_meter),
           electricity_units,
           electricity_bill,
           status,
+          now,
+          now,
         ]
       );
       res.status(201).json({
@@ -494,7 +534,7 @@ app.post(
       });
     } catch (err) {
       console.error("Create history error:", err);
-      res.status(500).json({ error: "Server error" });
+      res.status(500).json({ error: "เกิดข้อมูลพลาดในกการบันทึก" });
     }
   }
 );

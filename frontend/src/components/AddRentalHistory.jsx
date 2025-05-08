@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/solid";
-import { Calendar, Droplet } from "lucide-react";
+import { Calendar, Droplet, Warehouse } from "lucide-react";
 
 function AddRentalHistory({ token, role, user }) {
   const [history, setHistory] = useState([]);
@@ -11,7 +11,7 @@ function AddRentalHistory({ token, role, user }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 3;
   const [isFormOpen, setIsFormOpen] = useState(true);
   const [isFilterOpen, setIsFilterOpen] = useState(true);
   const [isTableOpen, setIsTableOpen] = useState(true);
@@ -21,7 +21,7 @@ function AddRentalHistory({ token, role, user }) {
   const [filter, setFilters] = useState({
     startDate: "",
     endDate: "",
-    months: "",
+    month: "",
     year: "",
     projectId: "",
     ownerId: "",
@@ -87,7 +87,7 @@ function AddRentalHistory({ token, role, user }) {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
-        console.log("History response:", historyRes.data); // Debug
+        // console.log("History response:", historyRes.data); // Debug
         setHistory(historyRes.data);
         setProjects(projectsRes.data);
         setOwners(ownersRes.data);
@@ -112,8 +112,8 @@ function AddRentalHistory({ token, role, user }) {
   };
 
   const handleFilterChange = (e) => {
-    const { name, files } = e.target;
-    setFiles((prev) => ({ ...prev, [name]: e.target.value }));
+    const { name, value } = e.target;
+    setFiles((prev) => ({ ...prev, [name]: value }));
     setCurrentPage(1); // Reset to page 1 on filter change
   };
 
@@ -134,11 +134,28 @@ function AddRentalHistory({ token, role, user }) {
     setError("");
     setSuccess("");
 
+    const safeNumber = (val) => {
+      return val === "" ? null : Number(val);
+    };
+
+    const sanitizedFormData = {
+      ...formData,
+      amount: safeNumber(formData.amount),
+      previous_water_meter: safeNumber(formData.previous_water_meter),
+      current_water_meter: safeNumber(formData.current_water_meter),
+      previous_electricity_meter: safeNumber(
+        formData.previous_electricity_meter
+      ),
+      current_electricity_meter: safeNumber(formData.current_electricity_meter),
+    };
+
     try {
       const response = await axios.post(
         `${API_BASE_URL}/api/history`,
-        formData,
-        { headers: { Authorization: `Bearer ${token}` } }
+        sanitizedFormData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
       const historyId = response.data.id;
 
@@ -182,7 +199,7 @@ function AddRentalHistory({ token, role, user }) {
       setCurrentPage(1);
     } catch (error) {
       console.error("Submit error:", error);
-      setError(err.response?.data?.error || "เกิดข้อผิดพลาดในการบันทึก");
+      setError(error.response?.data?.error || "เกิดข้อผิดพลาดในการบันทึก");
     }
   };
 
@@ -202,14 +219,14 @@ function AddRentalHistory({ token, role, user }) {
       setLoading(false);
     } catch (error) {
       console.error("Retry error:", error);
-      setError(err.response?.data?.error || "เกิดข้อพลาดในการดึงข้อมูล");
+      setError(error.response?.data?.error || "เกิดข้อพลาดในการดึงข้อมูล");
       setLoading(false);
     }
   };
 
   // Pagination
   const totalPages = Math.ceil(history.length / itemsPerPage);
-  const paginatedistory = history.slice(
+  const paginatedHistory = history.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -219,7 +236,7 @@ function AddRentalHistory({ token, role, user }) {
       <h1 className="text-3xl font-bold mb-8 text-gray-800">บันทึกรายการ</h1>
 
       {/* ฟอร์มกรอง */}
-      <div className="bg-white shadow-xl rounded-2xl p-6 mb-8 border border-indigo-100 transition-all">
+      <div className="bg-white shadow-xl rounded-2xl p-6 mb-8 border border-green-100 transition-all">
         <div
           className="flex justify-between items-center cursor-pointer"
           onClick={() => setIsFilterOpen(!isFilterOpen)}
@@ -228,9 +245,9 @@ function AddRentalHistory({ token, role, user }) {
             🔍 ค้นหารายการ
           </h2>
           {isFilterOpen ? (
-            <ChevronUpIcon className="h-6 w-6 text-indigo-600" />
+            <ChevronUpIcon className="h-6 w-6 text-green-600" />
           ) : (
-            <ChevronDownIcon className="h-6 w-6 text-indigo-600" />
+            <ChevronDownIcon className="h-6 w-6 text-green-600" />
           )}
         </div>
         {isFilterOpen && (
@@ -273,7 +290,7 @@ function AddRentalHistory({ token, role, user }) {
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
                   <svg
-                    className="h-5 w-5 text-indigo-400"
+                    className="h-5 w-5 text-green-400"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
                     fill="currentColor"
@@ -303,7 +320,7 @@ function AddRentalHistory({ token, role, user }) {
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
                   <svg
-                    className="h-5 w-5 text-indigo-400"
+                    className="h-5 w-5 text-green-400"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
                     fill="currentColor"
@@ -326,7 +343,7 @@ function AddRentalHistory({ token, role, user }) {
                   value={filter.projectId}
                   onChange={handleFilterChange}
                 >
-                  <option value="">ทั้งหมด</option>
+                  <option value="">เลือกโครงการ</option>
                   {projects.map((project) => (
                     <option key={project.id} value={project.id}>
                       {project.name}
@@ -352,15 +369,15 @@ function AddRentalHistory({ token, role, user }) {
             <div className="col-span-1 sm:col-span-2 md:col-span-3 flex flex-wrap gap-4 mt-2">
               <button
                 onClick={() => setCurrentPage(1)}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
               >
-                🔎 ค้นหา
+                ค้นหา
               </button>
               <button
                 onClick={resetFilter}
                 className="bg-yellow-300 text-gray-700 px-6 py-2 rounded-md hover:bg-yellow-400 transition"
               >
-                ♻️ รีเซ็ต
+                รีเซ็ต
               </button>
             </div>
           </div>
@@ -368,16 +385,16 @@ function AddRentalHistory({ token, role, user }) {
       </div>
 
       {/* ฟอร์มบันทึก */}
-      <div className="bg-white shadow-lg rounded-xl p-6 mb-8 border border-indigo-100">
+      <div className="bg-white shadow-lg rounded-xl p-6 mb-8 border border-green-100">
         <div
           className="flex justify-between items-center cursor-pointer"
           onClick={() => setIsFormOpen(!isFormOpen)}
         >
           <h2 className="text-xl font-semibold text-gray-800">เพิ่มรายการ</h2>
           {isFormOpen ? (
-            <ChevronUpIcon className="h-6 w-6 text-indigo-600" />
+            <ChevronUpIcon className="h-6 w-6 text-green-600" />
           ) : (
-            <ChevronDownIcon className="h-6 w-6 text-indigo-600" />
+            <ChevronDownIcon className="h-6 w-6 text-green-600" />
           )}
         </div>
         {isFormOpen && (
@@ -390,25 +407,44 @@ function AddRentalHistory({ token, role, user }) {
                 className="bg-white p-6 rounded-xl shadow-md space-y-6"
               >
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <label>โครงการ</label>
-                    <select
-                      name="project_id"
-                      value={formData.project_id}
-                      onChange={handleFormChange}
-                      required
-                    >
-                      <option value="">เลือกโครงการ</option>
-                      {projects.map((project) => (
-                        <option key={project.id} value={project.id}>
-                          {project.name}
-                        </option>
-                      ))}
-                    </select>
+                  <div className="relative mt-1">
+                    <label>
+                      <Warehouse size={16} />
+                      โครงการ
+                    </label>
+                    <div className="relative">
+                      <select
+                        name="project_id"
+                        value={formData.project_id}
+                        onChange={handleFormChange}
+                        required
+                      >
+                        <option value="">เลือกโครงการ</option>
+                        {projects.map((project) => (
+                          <option key={project.id} value={project.id}>
+                            {project.name}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
+                        <svg
+                          className="h-5 w-5 text-gray-400"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 12a1 1 0 01-.7-.3l-4-4a1 1 0 011.4-1.4L10 9.58l3.3-3.3a1 1 0 011.4 1.42l-4 4a1 1 0 01-.7.3z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
-                      วันที่ลง
+                      <Calendar size={16} /> วันที่ลงวันที่ลง
                     </label>
                     <input
                       type="date"
@@ -416,7 +452,7 @@ function AddRentalHistory({ token, role, user }) {
                       value={formData.rental_date}
                       onChange={handleFormChange}
                       required
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-600 focus:ringg-indigo-600 transition"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-600 focus:ringg-green-600 transition"
                     />
                     {/* <div>
                     <label className="block text-sm font-medium text-gray-700">
@@ -430,7 +466,7 @@ function AddRentalHistory({ token, role, user }) {
                       required
                       min="0"
                       step="0.01"
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 transition"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
                     />
                   </div> */}
                   </div>
@@ -455,16 +491,214 @@ function AddRentalHistory({ token, role, user }) {
                     </label>
                     <input
                       type="number"
-                      name="current-water_meter"
+                      name="current_water_meter"
                       value={formData.current_water_meter}
                       onChange={handleFormChange}
                       min="0"
                       stop="0.01"
                     />
                   </div>
+                  <div>
+                    <label>มิเตอร์ไฟก่อนหน้า</label>
+                    <input
+                      type="number"
+                      name="previous_electricity_meter"
+                      value={formData.previous_electricity_meter}
+                      onChange={handleFormChange}
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                  <div>
+                    <label>มิเตอร์ไฟก่อนหน้า</label>
+                    <input
+                      type="number"
+                      name="current_electricity_meter"
+                      value={formData.current_electricity_meter}
+                      onChange={handleFormChange}
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                  {/* <div className="relative mt-1">
+                    <label>สถานะ</label>
+                    <div className="relative">
+                      <select
+                        name="status"
+                        value={formData.status}
+                        onChange={handleFormChange}
+                      >
+                        <option value="pending">รอดำเนินการ</option>
+                        <option value="completed">เสร็จสิ้น</option>
+                        <option value="cancelled">ยกเลิก</option>
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
+                        <svg
+                          className="h-5 w-5 text-gray-400"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 12a1 1 0 01-.7-.3l-4-4a1 1 0 011.4-1.4L10 9.58l3.3-3.3a1 1 0 011.4 1.42l-4 4a1 1 0 01-.7.3z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  </div> */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      รูปมิเตอร์น้ำ
+                    </label>
+                    <input
+                      type="file"
+                      name="water_image"
+                      accept="image/jpeg,image/jpg,image/png"
+                      onChange={handleFileChange}
+                      className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-green-100 file:text-green-600 hover:file:bg-green-200 transition"
+                    />
+                  </div>
+                  <div>
+                    <label>รูปมิเตอร์ไฟ</label>
+                    <input
+                      type="file"
+                      name="electricity_image"
+                      accept="image/jpeg,image/jpg,image/png"
+                      onChange={handleFileChange}
+                      className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-green-100 file:text-green-600 hover:file:bg-green-200 transition"
+                    />
+                  </div>
+                </div>
+                <div className="mt-6 flex space-x-4">
+                  <button
+                    type="submit"
+                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                  >
+                    บันทึก
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData({
+                        project_id: "",
+                        rental_date: "",
+                        amount: "",
+                        previous_water_meter: "",
+                        current_water_meter: "",
+                        previous_electricity_meter: "",
+                        current_electricity_meter: "",
+                        status: "pending",
+                      })
+                    }
+                    className="bg-yellow-300 text-gray-700 px-6 py-2 rounded-md hover:bg-yellow-400 transition"
+                  >
+                    รีเซ็ต
+                  </button>
                 </div>
               </form>
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* ตาราง */}
+      <div className="bg-white shadow-lg rounded-xl p-6 border">
+        <div
+          className="flex justify-between items-center cursor-pointer"
+          onClick={() => setIsTableOpen(!isTableOpen)}
+        >
+          <h2 className="text-xl font-semibold text-gray-800">ข้อมูลรายการ</h2>
+          {isTableOpen ? (
+            <ChevronUpIcon className="h-6 w-6 text-green-600" />
+          ) : (
+            <ChevronDownIcon className="w-6 text-green-600" />
+          )}
+        </div>
+        {isTableOpen && (
+          <div className="mt-4 animate-slide in">
+            {loading ? (
+              <p className="text-gray-600">กำลังโหลด...</p>
+            ) : error ? (
+              <div className="text-red-600">
+                <p>{error}</p>
+                <button onClick={retryFetch} className="">
+                  ลองใหม่
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border border-gray-200 rounded-lg">
+                    <thead className="bg-green 50">
+                      <tr>
+                        <th>วันที่</th>
+                        <th>ผู้ใช้</th>
+                        <th>โครงการ</th>
+                        <th>เจ้าของ</th>
+                        <th>สถานะ</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedHistory.length === 0 ? (
+                        <tr>
+                          <td>ไม่พบรายการ</td>
+                        </tr>
+                      ) : (
+                        paginatedHistory.map((item, index) => (
+                          <tr key={`${item.is}-${index}`}>
+                            <td>
+                              {new Date(item.rental_date).toLocaleDateString(
+                                "th-TH"
+                              )}
+                            </td>
+                            <td>{item.username}</td>
+                            <td>{item.project_name}</td>
+                            <td>{item.owner_first_name}</td>
+                            <td>{item.status}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="mt-6 flex justify-between items-center">
+                    <button
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(prev - 1, 1))
+                      }
+                      disabled={currentPage === 1}
+                      className={`px-6 py-2 rounded-full text-white transition ${
+                        currentPage === 1
+                          ? "bg-gray-300"
+                          : "bg-green-600 hover:bg-green-700"
+                      }`}
+                    >
+                      ก่อนหน้า
+                    </button>
+                    <span className="text-sm text-gray-600">
+                      หน้า {currentPage} จาก {totalPages}
+                    </span>
+                    <button
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                      }
+                      disabled={currentPage === totalPages}
+                      className={`px-6 py-2 rounded-full text-white transition ${
+                        currentPage === totalPages
+                          ? "bg-gray-300"
+                          : "bg-green-600 hover:bg-green-700"
+                      }`}
+                    >
+                      ถัดไป
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         )}
       </div>
