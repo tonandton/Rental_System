@@ -365,7 +365,7 @@ app.get("/api/history", authenticateToken, async (req, res) => {
     } = req.query;
 
     let query = `
-     SELECT rh.id, rh.rental_date, rh.amount, rh.previous_water_meter, rh.current_water_meter, rh.water_units, rh.water_bill, 
+     SELECT rh.id, rh.rental_date, rh.amount, rh.created_at, rh.updated_at, rh.previous_water_meter, rh.current_water_meter, rh.water_units, rh.water_bill, 
              rh.previous_electricity_meter, rh.current_electricity_meter, rh.electricity_units, rh.electricity_bill, 
              rh.water_image_path, rh.electricity_image_path, rh.status, p.name AS project_name, u.username, 
              ru.username AS recorder_username, ou.first_name AS owner_first_name, ou.last_name AS owner_last_name, po.user_id AS owner_id

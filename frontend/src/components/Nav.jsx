@@ -50,7 +50,7 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
     <nav className="bg-green-500 text-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4">
         <div className="flex justify-between items-center">
-          <div className="text-xl font-bold">Rental System</div>
+          <div className="text-xl font-bold">WEBILL SYSETM</div>
           <div className="hidden md:flex space-x-4">
             {navItems
               .filter((item) => item.roles.includes(role))
@@ -103,7 +103,7 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
         </div>
       </div>
       {isMenuOpen && (
-        <div className="md:hidden bg-green-600">
+        <div className="md:hidde">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 animate-slide-in">
             {navItems
               .filter((item) => item.roles.includes(role))
@@ -123,11 +123,8 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
               ))}
             {token && (
               <button
-                onClick={() => {
-                  handdleLogout();
-                  setIsMenuOpen(false);
-                }}
-                className="block w-full text-left px-3 py-2 rounded-md text-base font-meduim hover:bg-rose-500"
+                onClick={handleLogout}
+                className="px-3 py-2 rounded-md text-sm font-medium bg-rose-400 hover:bg-rose-500 text-gray-600 hover:text-white"
               >
                 ออกจากระบบ
               </button>

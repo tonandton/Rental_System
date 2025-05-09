@@ -50,7 +50,17 @@ function App() {
           />
           <Route
             path="/add-project"
-            element={<AddProject token={token} role={role} />}
+            element={
+              <ProtectedRoute token={token}>
+                {["superadmin", "admin"].includes(role) ? (
+                  <AddProject token={token} role={role} />
+                ) : (
+                  <div className="p-8 text-red-600 font-semibold text-center">
+                    คุณไม่มีสิทธิ์เข้าถึงหน้านี้
+                  </div>
+                )}
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/projects"

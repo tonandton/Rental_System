@@ -11,10 +11,11 @@ function AddRentalHistory({ token, role, user }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 3;
+  const itemsPerPage = 10;
   const [isFormOpen, setIsFormOpen] = useState(true);
   const [isFilterOpen, setIsFilterOpen] = useState(true);
   const [isTableOpen, setIsTableOpen] = useState(true);
+  const [popupImage, setPopupImage] = useState(null);
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   // Filter state
@@ -87,7 +88,7 @@ function AddRentalHistory({ token, role, user }) {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
-        // console.log("History response:", historyRes.data); // Debug
+        console.log("History response:", historyRes.data); // Debug
         setHistory(historyRes.data);
         setProjects(projectsRes.data);
         setOwners(ownersRes.data);
@@ -242,7 +243,7 @@ function AddRentalHistory({ token, role, user }) {
           onClick={() => setIsFilterOpen(!isFilterOpen)}
         >
           <h2 className="text-xl font-bold text-gray-800 tracking-wide">
-            🔍 ค้นหารายการ
+            ค้นหารายการ
           </h2>
           {isFilterOpen ? (
             <ChevronUpIcon className="h-6 w-6 text-green-600" />
@@ -630,14 +631,25 @@ function AddRentalHistory({ token, role, user }) {
             ) : (
               <>
                 <div className="overflow-x-auto">
-                  <table className="min-w-full border border-gray-200 rounded-lg">
+                  <table className="">
                     <thead className="bg-green 50">
                       <tr>
-                        <th>วันที่</th>
-                        <th>ผู้ใช้</th>
+                        <th>รอบวันที่</th>
                         <th>โครงการ</th>
-                        <th>เจ้าของ</th>
-                        <th>สถานะ</th>
+                        <th>เจ้าของโครงการ</th>
+                        <th>ค่าน้ำรอบที่ผ่านมา</th>
+                        <th>ค่าน้ำรอบปัจจุบัน</th>
+                        <th>รูปค่าน้ำรอบปัจจุบัน</th>
+                        <th>หน่วย</th>
+                        <th>รวมค่าน้ำ</th>
+                        <th>ค่าไฟรอบที่ผ่านมา</th>
+                        <th>ค่าไฟรอบปัจจุบัน</th>
+                        <th>รูปค่าไฟรอบปัจจุบัน</th>
+                        <th>หน่วย</th>
+                        <th>รวมค่าน้ำ</th>
+                        <th>ผู้บันทึก</th>
+                        <th>วันที่ลงข้อมูล</th>
+                        <th>วันที่อัพเดทข้อมูล</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -649,14 +661,117 @@ function AddRentalHistory({ token, role, user }) {
                         paginatedHistory.map((item, index) => (
                           <tr key={`${item.is}-${index}`}>
                             <td>
-                              {new Date(item.rental_date).toLocaleDateString(
-                                "th-TH"
+                              {new Date(item.rental_date).toLocaleString(
+                                "th-TH",
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                }
                               )}
                             </td>
-                            <td>{item.username}</td>
                             <td>{item.project_name}</td>
                             <td>{item.owner_first_name}</td>
-                            <td>{item.status}</td>
+                            <td>{Math.floor(item.previous_water_meter)}</td>
+                            <td>{Math.floor(item.current_water_meter)}</td>
+                            <td>
+                              {item.water_image_path && (
+                                <img
+                                  src={`${API_BASE_URL}${item.water_image_path}`}
+                                  alt="รูปค่าน้ำ"
+                                  style={{
+                                    width: "60px",
+                                    height: "auto",
+                                    borderRadius: "6px",
+                                    cursor: "Pointer",
+                                  }}
+                                  onClick={() =>
+                                    setPopupImage(
+                                      `${API_BASE_URL}${item.water_image_path}`
+                                    )
+                                  }
+                                />
+                              )}
+                              {popupImage && (
+                                <div
+                                  className="fixed inset-0 flex items-center justify-center z-50"
+                                  onClick={() => setPopupImage(null)}
+                                >
+                                  <img
+                                    src={popupImage}
+                                    alt="ภาพใหญ่"
+                                    className="max-w-[90vw] max-h-[90vh] rounded-lg shadow-lg"
+                                  />
+                                </div>
+                              )}
+                            </td>
+                            <td>{Math.floor(item.water_units)}</td>
+                            <td>{item.water_bill}</td>
+                            <td>
+                              {Math.floor(item.previous_electricity_meter)}
+                            </td>
+                            <td>
+                              {Math.floor(item.current_electricity_meter)}
+                            </td>
+                            <td>
+                              {item.electricity_image_path && (
+                                <img
+                                  src={`${API_BASE_URL}${item.electricity_image_path}`}
+                                  alt="รูปค่าไฟ"
+                                  style={{
+                                    width: "60px",
+                                    height: "auto",
+                                    borderRadius: "6px",
+                                    cursor: "Pointer",
+                                  }}
+                                  onClick={() =>
+                                    setPopupImage(
+                                      `${API_BASE_URL}${item.electricity_image_path}`
+                                    )
+                                  }
+                                />
+                              )}
+                              {popupImage && (
+                                <div
+                                  className="fixed inset-0 flex items-center justify-center z-50"
+                                  onClick={() => setPopupImage(null)}
+                                >
+                                  <img
+                                    src={popupImage}
+                                    alt="ภาพใหญ่"
+                                    className="max-w-[90vw] max-h-[90vh] rounded-lg shadow-lg"
+                                  />
+                                </div>
+                              )}
+                            </td>
+                            <td>{Math.floor(item.electricity_units)}</td>
+                            <td>{item.electricity_bill}</td>
+                            <td>{item.username}</td>
+                            <td>
+                              {" "}
+                              {new Date(item.created_at).toLocaleString(
+                                "th-TH",
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                }
+                              )}
+                            </td>
+                            <td>
+                              {new Date(item.updated_at).toLocaleString(
+                                "th-TH",
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                }
+                              )}
+                            </td>
                           </tr>
                         ))
                       )}
