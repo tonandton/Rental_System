@@ -88,7 +88,7 @@ function AddRentalHistory({ token, role, user }) {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
-        console.log("History response:", historyRes.data); // Debug
+        // console.log("History response:", historyRes.data); // Debug
         setHistory(historyRes.data);
         setProjects(projectsRes.data);
         setOwners(ownersRes.data);
@@ -114,7 +114,7 @@ function AddRentalHistory({ token, role, user }) {
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFiles((prev) => ({ ...prev, [name]: value }));
+    setFilters((prev) => ({ ...prev, [name]: value }));
     setCurrentPage(1); // Reset to page 1 on filter change
   };
 
@@ -237,12 +237,12 @@ function AddRentalHistory({ token, role, user }) {
       <h1 className="text-3xl font-bold mb-8 text-gray-800">บันทึกรายการ</h1>
 
       {/* ฟอร์มกรอง */}
-      <div className="bg-white shadow-xl rounded-2xl p-6 mb-8 border border-green-100 transition-all">
+      <div className="bg-white shadow-xl rounded-xl p-6 mb-8 border border-green-100">
         <div
-          className="flex justify-between items-center cursor-pointer"
+          className="flex justify-between items-center cursor-pointer mb-2"
           onClick={() => setIsFilterOpen(!isFilterOpen)}
         >
-          <h2 className="text-xl font-bold text-gray-800 tracking-wide">
+          <h2 className="text-xl font-semibold text-gray-800 tracking-wide">
             ค้นหารายการ
           </h2>
           {isFilterOpen ? (
@@ -252,7 +252,7 @@ function AddRentalHistory({ token, role, user }) {
           )}
         </div>
         {isFilterOpen && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4 animate-slide-in">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 animate-slide-in">
             <div>
               <label htmlFor="startDate">วันที่เริ่ม</label>
 
@@ -261,6 +261,7 @@ function AddRentalHistory({ token, role, user }) {
                 name="startDate"
                 value={filter.startDate}
                 onChange={handleFilterChange}
+                className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
               />
             </div>
 
@@ -272,6 +273,7 @@ function AddRentalHistory({ token, role, user }) {
                 name="endDate"
                 value={filter.endDate}
                 onChange={handleFilterChange}
+                className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
               />
             </div>
 
@@ -282,6 +284,7 @@ function AddRentalHistory({ token, role, user }) {
                   name="month"
                   value={filter.months}
                   onChange={handleFilterChange}
+                  className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
                 >
                   {months.map((month) => (
                     <option key={month.value} value={month.value}>
@@ -312,6 +315,7 @@ function AddRentalHistory({ token, role, user }) {
                   name="year"
                   value={filter.year}
                   onChange={handleFilterChange}
+                  className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
                 >
                   {years.map((year) => (
                     <option key={year.value} value={year.value}>
@@ -343,8 +347,9 @@ function AddRentalHistory({ token, role, user }) {
                   name="projectId"
                   value={filter.projectId}
                   onChange={handleFilterChange}
+                  className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
                 >
-                  <option value="">เลือกโครงการ</option>
+                  <option value="">ทุกโครงการ</option>
                   {projects.map((project) => (
                     <option key={project.id} value={project.id}>
                       {project.name}
@@ -353,7 +358,7 @@ function AddRentalHistory({ token, role, user }) {
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
                   <svg
-                    className="h-5 w-5 text-gray-400"
+                    className="h-5 w-5 text-green-400"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
                     fill="currentColor"
@@ -367,7 +372,39 @@ function AddRentalHistory({ token, role, user }) {
                 </div>
               </div>
             </div>
-            <div className="col-span-1 sm:col-span-2 md:col-span-3 flex flex-wrap gap-4 mt-2">
+            <div className="relative mt-1">
+              <label>เจ้าของโครงการ</label>
+              <div className="relative">
+                <select
+                  name="ownerId"
+                  value={filter.ownerId}
+                  onChange={handleFilterChange}
+                  className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
+                >
+                  <option value="">ทั้งหมด</option>
+                  {owners.map((owner) => (
+                    <option key={owner.id} value={owner.id}>
+                      {owner.first_name} {owner.last_name}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
+                  <svg
+                    className="h-5 w-5 text-green-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 12a1 1 0 01-.7-.3l-4-4a1 1 0 011.4-1.4L10 9.58l3.3-3.3a1 1 0 011.4 1.42l-4 4a1 1 0 01-.7.3z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            {/* <div className="col-span-1 sm:col-span-2 md:col-span-3 flex flex-wrap gap-4 mt-2">
               <button
                 onClick={() => setCurrentPage(1)}
                 className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
@@ -380,7 +417,7 @@ function AddRentalHistory({ token, role, user }) {
               >
                 รีเซ็ต
               </button>
-            </div>
+            </div> */}
           </div>
         )}
       </div>
@@ -444,7 +481,7 @@ function AddRentalHistory({ token, role, user }) {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label>
                       <Calendar size={16} /> วันที่ลงวันที่ลง
                     </label>
                     <input
@@ -456,7 +493,7 @@ function AddRentalHistory({ token, role, user }) {
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-600 focus:ringg-green-600 transition"
                     />
                     {/* <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label >
                       จำนวนเงิน (บาท)
                     </label>
                     <input
@@ -550,9 +587,7 @@ function AddRentalHistory({ token, role, user }) {
                     </div>
                   </div> */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      รูปมิเตอร์น้ำ
-                    </label>
+                    <label>รูปมิเตอร์น้ำ</label>
                     <input
                       type="file"
                       name="water_image"

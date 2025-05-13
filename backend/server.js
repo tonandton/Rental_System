@@ -247,12 +247,12 @@ app.post(
 app.get("/api/project-owners", authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT DISTINCT u.id, u.first_name, u.last_name FROM users u JOIN project_owners po ON u.id = po.user_id"
+      `SELECT DISTINCT u.id, u.first_name, u.last_name FROM users u JOIN project_owners po ON u.id = po.user_id ORDER BY u.first_name`
     );
     res.json(result.rows);
   } catch (err) {
     console.error("Get project owners error:", err);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ error: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
   }
 });
 
@@ -420,7 +420,15 @@ app.get("/api/history", authenticateToken, async (req, res) => {
       params.push(projectId);
     }
     if (ownerId) {
-      conditions.push(`po.user_name = $${params.length + 1}`);
+      // ตรวจสอบว่า ownerId มีอยู่ใน project_owners
+      const ownerCheck = await pool.query(
+        "SELECT 1 FROM project_owners WHERE user_id = $1 LIMIT 1",
+        [ownerId]
+      );
+      if (ownerCheck.rows.length === 0) {
+        return res.json([]); // คืน array ว่างถ้า ownerId ไม่มี
+      }
+      conditions.push(`po.user_id = $${params.length + 1}`);
       params.push(ownerId);
     }
     if (recorderUsername) {
