@@ -13,7 +13,7 @@ function AddRentalHistory({ token, role, user }) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [isFormOpen, setIsFormOpen] = useState(true);
-  const [isFilterOpen, setIsFilterOpen] = useState(true);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isTableOpen, setIsTableOpen] = useState(true);
   const [popupImage, setPopupImage] = useState(null);
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
