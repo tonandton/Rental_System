@@ -6,6 +6,7 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const profileRef = useRef(null);
+  const mobileMenuRef = useRef(null);
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -34,7 +35,7 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
     {
       path: "/projects",
       label: "จัดการโครงการ",
-      roles: ["superadmin", "admin", "user"],
+      roles: ["superadmin", "admin"],
     },
     {
       path: "/bills",
@@ -54,8 +55,17 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // สำหรับ Desktop Profile
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setIsProfileOpen(false);
+      }
+
+      // สำหรับ Mobile Dropdown
+      if (
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(event.target)
+      ) {
+        setIsMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -71,44 +81,108 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
           WEBILL SYSETM
         </div>
 
+        {/* ปุ่มเมนู (Mobile) */}
+        <div className="md:hidden relative" ref={mobileMenuRef}>
+          {token && (
+            <>
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="flex items-center justify-center w-10 h-10 rounded-full bg-white text-green-700 font-extrabold shadow-md ring-2 ring-white hover:scale-105 transition-transform duration-200"
+              >
+                <span className="text-base">
+                  {getInitials(user?.first_name, user?.last_name)}
+                </span>
+              </button>
+
+              {isMenuOpen && (
+                <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl z-50 border border-gray-200 animate-slide-in-down overflow-hidden">
+                  {/* ส่วนหัวของโปรไฟล์ */}
+                  <div className="px-4 py-3 bg-green-50 border-b border-gray-200 flex items-center gap-2 font-semibold text-green-800">
+                    <span className="text-xl">👤</span>
+                    {user?.first_name} {user?.last_name}
+                  </div>
+
+                  {/* เมนูรายการ */}
+                  <div className="px-3 py-2 space-y-1">
+                    {navItems
+                      .filter((item) => item.roles.includes(role))
+                      .map((item) => (
+                        <NavLink
+                          key={item.path}
+                          to={item.path}
+                          onClick={() => setIsMenuOpen(false)}
+                          className={({ isActive }) =>
+                            `block px-3 py-2 rounded-md text-sm font-medium transition ${
+                              isActive
+                                ? "bg-green-100 text-green-800"
+                                : "text-gray-700 hover:bg-gray-100"
+                            }`
+                          }
+                        >
+                          {item.label}
+                        </NavLink>
+                      ))}
+                  </div>
+
+                  {/* ปุ่มออกจากระบบ */}
+                  <div className="border-t border-gray-100 mt-2">
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:text-red-600 hover:bg-gray-50 transition flex items-center gap-2"
+                    >
+                      🚪 ออกจากระบบ
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center space-x-4">
-          {navItems
-            .filter((item) => item.roles.includes(role))
-            .map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={({ isActive }) =>
-                  `px-4 py-2 rounded-lg text-sm font-semibold transition duration-300 ${
-                    isActive
-                      ? "bg-white text-green-800 shadow-md"
-                      : "hover:bg-green-500 hover:shadow-lg"
-                  }`
-                }
-              >
-                {item.label}
-              </NavLink>
-            ))}
           {token && (
             <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="flex items-center justify-center w-10 h-10 rounded-full bg-white text-green-800 font-bold hover:scale-105 transition duration-300 shadow ring-2 ring-white"
+                className="flex items-center justify-center w-10 h-10 rounded-full bg-white text-green-800 font-bold hover:scale-105 transition ring-2 ring-white"
               >
-                <span className="text-sm font-medium">
-                  {getInitials(user?.first_name, user?.last_name)}
-                </span>
+                {getInitials(user?.first_name, user?.last_name)}
               </button>
+
               {isProfileOpen && (
-                <div className="absolute right-0 mt-3 w-56 bg-white text-gray-800 rounded-xl shadow-xl py-2 z-50 animate-fade-in border border-gray-100">
-                  <div className="px-4 py-2 border-b font-semibold flex items-center gap-2">
-                    <span className="text-green-500">👤</span>
-                    {user?.first_name} {user?.last_name}
+                <div className="absolute right-0 mb-2 w-64 bg-white text-gray-800 rounded-xl shadow-xl py-3 z-50 animate-slide-in-down  border-gray-100">
+                  {/* ชื่อผู้ใช้ */}
+                  <div className="px-4 py-2 font-semibold border-b flex items-center gap-2">
+                    👤 {user?.first_name} {user?.last_name}
                   </div>
+
+                  {/* รายการเมนู */}
+                  <div className="py-2 px-2 space-y-1">
+                    {navItems
+                      .filter((item) => item.roles.includes(role))
+                      .map((item) => (
+                        <NavLink
+                          key={item.path}
+                          to={item.path}
+                          onClick={() => setIsProfileOpen(false)}
+                          className={({ isActive }) =>
+                            `block w-full text-left px-3 py-2 rounded-md text-sm font-medium transition ${
+                              isActive
+                                ? "bg-green-100 text-green-800"
+                                : "hover:bg-gray-100"
+                            }`
+                          }
+                        >
+                          {item.label}
+                        </NavLink>
+                      ))}
+                  </div>
+
+                  {/* ปุ่มออกจากระบบ */}
                   <button
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:text-red-600 transition flex items-center gap-2"
                     onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 hover:text-red-600 transition flex items-center gap-2"
                   >
                     🚪 ออกจากระบบ
                   </button>
@@ -117,54 +191,7 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
             </div>
           )}
         </div>
-
-        {/* Mobile Menu Button */}
-        <div className="flex md:hidden">
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="text-white p-2 rounded-full hover:bg-green-700 transition"
-          >
-            {isMenuOpen ? <XIcon size={24} /> : <MenuIcon size={24} />}
-          </button>
-        </div>
       </div>
-
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="md:hidden bg-green-700 px-4 pb-4 rounded-b-lg animate-slide-in-down">
-          <div className="pt-2 space-y-1">
-            {navItems
-              .filter((item) => item.roles.includes(role))
-              .map((item) => (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  className={({ isActive }) =>
-                    `block px-4 py-2 rounded-lg text-base font-medium transition duration-300 ${
-                      isActive ? "bg-green-900" : "hover:bg-green-600"
-                    }`
-                  }
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item.label}
-                </NavLink>
-              ))}
-            {token && (
-              <div className="mt-3 pt-3 border-t border-green-600">
-                <div className="text-sm text-white mb-2">
-                  👤 {user?.first_name} {user?.last_name}
-                </div>
-                <button
-                  onClick={handleLogout}
-                  className="w-full px-4 py-2 bg-rose-500 text-white rounded-md hover:bg-rose-600 transition"
-                >
-                  🚪 ออกจากระบบ
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </nav>
   );
 }

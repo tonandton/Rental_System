@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/solid";
-import { Calendar, Droplet, Warehouse } from "lucide-react";
+import { Calendar, Droplet, Warehouse, Zap } from "lucide-react";
 
 function AddRentalHistory({ token, role, user }) {
   const [history, setHistory] = useState([]);
@@ -537,7 +537,10 @@ function AddRentalHistory({ token, role, user }) {
                     />
                   </div>
                   <div>
-                    <label>มิเตอร์ไฟก่อนหน้า</label>
+                    <label>
+                      <Zap size={16} />
+                      มิเตอร์ไฟก่อนหน้า
+                    </label>
                     <input
                       type="number"
                       name="previous_electricity_meter"
@@ -548,7 +551,10 @@ function AddRentalHistory({ token, role, user }) {
                     />
                   </div>
                   <div>
-                    <label>มิเตอร์ไฟก่อนหน้า</label>
+                    <label>
+                      <Zap size={16} />
+                      มิเตอร์ไฟก่อนหน้า
+                    </label>
                     <input
                       type="number"
                       name="current_electricity_meter"
@@ -587,7 +593,9 @@ function AddRentalHistory({ token, role, user }) {
                     </div>
                   </div> */}
                   <div>
-                    <label>รูปมิเตอร์น้ำ</label>
+                    <label>
+                      <Droplet size={16} /> รูปมิเตอร์น้ำ
+                    </label>
                     <input
                       type="file"
                       name="water_image"
@@ -597,7 +605,10 @@ function AddRentalHistory({ token, role, user }) {
                     />
                   </div>
                   <div>
-                    <label>รูปมิเตอร์ไฟ</label>
+                    <label>
+                      <Zap size={16} />
+                      รูปมิเตอร์ไฟ
+                    </label>
                     <input
                       type="file"
                       name="electricity_image"
