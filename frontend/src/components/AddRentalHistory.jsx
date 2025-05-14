@@ -16,6 +16,8 @@ function AddRentalHistory({ token, role, user }) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isTableOpen, setIsTableOpen] = useState(true);
   const [popupImage, setPopupImage] = useState(null);
+  const [activeTab, setActiveTab] = useState("water");
+
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   // Filter state
@@ -429,70 +431,95 @@ function AddRentalHistory({ token, role, user }) {
           onClick={() => setIsFormOpen(!isFormOpen)}
         >
           <h2 className="text-xl font-semibold text-gray-800">เพิ่มรายการ</h2>
-          {isFormOpen ? (
+          {/* {isFormOpen ? (
             <ChevronUpIcon className="h-6 w-6 text-green-600" />
           ) : (
             <ChevronDownIcon className="h-6 w-6 text-green-600" />
-          )}
+          )} */}
         </div>
-        {isFormOpen && (
-          <div className="mt-4 animate-slide-in">
-            {error && <p className="text-red-600 mb-4"></p>}
-            {success && <p className="text-green-600 mb-4">{success}</p>}
-            <div>
-              <form
-                onSubmit={handleSubmit}
-                className="bg-white p-6 rounded-xl shadow-md space-y-6"
-              >
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div className="relative mt-1">
-                    <label>
-                      <Warehouse size={16} />
-                      โครงการ
-                    </label>
-                    <div className="relative">
-                      <select
-                        name="project_id"
-                        value={formData.project_id}
-                        onChange={handleFormChange}
-                        required
-                      >
-                        <option value="">เลือกโครงการ</option>
-                        {projects.map((project) => (
-                          <option key={project.id} value={project.id}>
-                            {project.name}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
-                        <svg
-                          className="h-5 w-5 text-gray-400"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M10 12a1 1 0 01-.7-.3l-4-4a1 1 0 011.4-1.4L10 9.58l3.3-3.3a1 1 0 011.4 1.42l-4 4a1 1 0 01-.7.3z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <label>
-                      <Calendar size={16} /> วันที่ลงวันที่ลง
-                    </label>
-                    <input
-                      type="date"
-                      name="rental_date"
-                      value={formData.rental_date}
+
+        <div className="mt-4 animate-slide-in">
+          <div className="flex gap-4 mb-4">
+            <button
+              type="button"
+              onClick={() => setActiveTab("water")}
+              className={`px-5 py-2 rounded-md font-medium ${
+                activeTab === "water"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-blue-100"
+              }`}
+            >
+              <Droplet size={16} /> ค่าน้ำ
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("electricity")}
+              className={`px-5 py-2 rounded-md font-medium ${
+                activeTab === "electricity"
+                  ? "bg-amber-500 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-amber-100"
+              }`}
+            >
+              <Zap size={16} /> ค่าไฟ
+            </button>
+          </div>
+
+          {error && <p className="text-red-600 mb-4"></p>}
+          {success && <p className="text-green-600 mb-4">{success}</p>}
+          <div>
+            <form
+              onSubmit={handleSubmit}
+              className="bg-white p-6 rounded-xl shadow-md space-y-6"
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="relative mt-1">
+                  <label>
+                    <Warehouse size={16} />
+                    โครงการ
+                  </label>
+                  <div className="relative">
+                    <select
+                      name="project_id"
+                      value={formData.project_id}
                       onChange={handleFormChange}
                       required
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-600 focus:ringg-green-600 transition"
-                    />
-                    {/* <div>
+                    >
+                      <option value="">เลือกโครงการ</option>
+                      {projects.map((project) => (
+                        <option key={project.id} value={project.id}>
+                          {project.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
+                      <svg
+                        className="h-5 w-5 text-gray-400"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 12a1 1 0 01-.7-.3l-4-4a1 1 0 011.4-1.4L10 9.58l3.3-3.3a1 1 0 011.4 1.42l-4 4a1 1 0 01-.7.3z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label>
+                    <Calendar size={16} /> วันที่ลงวันที่ลง
+                  </label>
+                  <input
+                    type="date"
+                    name="rental_date"
+                    value={formData.rental_date}
+                    onChange={handleFormChange}
+                    required
+                    className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
+                  />
+                  {/* <div>
                     <label >
                       จำนวนเงิน (บาท)
                     </label>
@@ -507,9 +534,12 @@ function AddRentalHistory({ token, role, user }) {
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
                     />
                   </div> */}
-                  </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              </div>
+
+              {/* ค่าน้ำ */}
+              {activeTab === "water" && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 animate-slide-in">
                   <div>
                     <label>
                       <Droplet size={16} /> มิเตอร์น้ำก่อนหน้า
@@ -521,6 +551,7 @@ function AddRentalHistory({ token, role, user }) {
                       onChange={handleFormChange}
                       min="0"
                       step="0.01"
+                      className="border-blue-500 focus:border-blue-600 focus:ring-blue-600"
                     />
                   </div>
                   <div>
@@ -533,65 +564,10 @@ function AddRentalHistory({ token, role, user }) {
                       value={formData.current_water_meter}
                       onChange={handleFormChange}
                       min="0"
-                      stop="0.01"
-                    />
-                  </div>
-                  <div>
-                    <label>
-                      <Zap size={16} />
-                      มิเตอร์ไฟก่อนหน้า
-                    </label>
-                    <input
-                      type="number"
-                      name="previous_electricity_meter"
-                      value={formData.previous_electricity_meter}
-                      onChange={handleFormChange}
-                      min="0"
                       step="0.01"
+                      className="border-blue-500 focus:border-blue-600 focus:ring-blue-600"
                     />
                   </div>
-                  <div>
-                    <label>
-                      <Zap size={16} />
-                      มิเตอร์ไฟก่อนหน้า
-                    </label>
-                    <input
-                      type="number"
-                      name="current_electricity_meter"
-                      value={formData.current_electricity_meter}
-                      onChange={handleFormChange}
-                      min="0"
-                      step="0.01"
-                    />
-                  </div>
-                  {/* <div className="relative mt-1">
-                    <label>สถานะ</label>
-                    <div className="relative">
-                      <select
-                        name="status"
-                        value={formData.status}
-                        onChange={handleFormChange}
-                      >
-                        <option value="pending">รอดำเนินการ</option>
-                        <option value="completed">เสร็จสิ้น</option>
-                        <option value="cancelled">ยกเลิก</option>
-                      </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
-                        <svg
-                          className="h-5 w-5 text-gray-400"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M10 12a1 1 0 01-.7-.3l-4-4a1 1 0 011.4-1.4L10 9.58l3.3-3.3a1 1 0 011.4 1.42l-4 4a1 1 0 01-.7.3z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  </div> */}
                   <div>
                     <label>
                       <Droplet size={16} /> รูปมิเตอร์น้ำ
@@ -601,53 +577,87 @@ function AddRentalHistory({ token, role, user }) {
                       name="water_image"
                       accept="image/jpeg,image/jpg,image/png"
                       onChange={handleFileChange}
-                      className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-green-100 file:text-green-600 hover:file:bg-green-200 transition"
+                      className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md border-blue-500 file:border-0 file:bg-blue-100 file:text-blue-600 hover:file:bg-blue-200 transition"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* ค่าไฟ */}
+              {activeTab === "electricity" && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 animate-slide-in">
+                  <div>
+                    <label>
+                      <Zap size={16} /> มิเตอร์ไฟก่อนหน้า
+                    </label>
+                    <input
+                      type="number"
+                      name="previous_electricity_meter"
+                      value={formData.previous_electricity_meter}
+                      onChange={handleFormChange}
+                      min="0"
+                      step="0.01"
+                      className="border-amber-500 focus:border-amber-600 focus:ring-amber-600"
                     />
                   </div>
                   <div>
                     <label>
-                      <Zap size={16} />
-                      รูปมิเตอร์ไฟ
+                      <Zap size={16} /> มิเตอร์ไฟปัจจุบัน
+                    </label>
+                    <input
+                      type="number"
+                      name="current_electricity_meter"
+                      value={formData.current_electricity_meter}
+                      onChange={handleFormChange}
+                      min="0"
+                      step="0.01"
+                      className="border-amber-500 focus:border-amber-600 focus:ring-amber-600"
+                    />
+                  </div>
+                  <div>
+                    <label>
+                      <Zap size={16} /> รูปมิเตอร์ไฟ
                     </label>
                     <input
                       type="file"
                       name="electricity_image"
                       accept="image/jpeg,image/jpg,image/png"
                       onChange={handleFileChange}
-                      className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-green-100 file:text-green-600 hover:file:bg-green-200 transition"
+                      className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md border-amber-500 file:border-0 file:bg-amber-100 file:text-amber-600 hover:file:bg-amber-200 transition"
                     />
                   </div>
                 </div>
-                <div className="mt-6 flex space-x-4">
-                  <button
-                    type="submit"
-                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-                  >
-                    บันทึก
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData({
-                        project_id: "",
-                        rental_date: "",
-                        amount: "",
-                        previous_water_meter: "",
-                        current_water_meter: "",
-                        previous_electricity_meter: "",
-                        current_electricity_meter: "",
-                        status: "pending",
-                      })
-                    }
-                    className="bg-yellow-300 text-gray-700 px-6 py-2 rounded-md hover:bg-yellow-400 transition"
-                  >
-                    รีเซ็ต
-                  </button>
-                </div>
-              </form>
-            </div>
+              )}
+
+              <div className="mt-6 flex space-x-4">
+                <button
+                  type="submit"
+                  className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                >
+                  บันทึก
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData({
+                      project_id: "",
+                      rental_date: "",
+                      amount: "",
+                      previous_water_meter: "",
+                      current_water_meter: "",
+                      previous_electricity_meter: "",
+                      current_electricity_meter: "",
+                      status: "pending",
+                    })
+                  }
+                  className="bg-yellow-300 text-gray-700 px-6 py-2 rounded-md hover:bg-yellow-400 transition"
+                >
+                  รีเซ็ต
+                </button>
+              </div>
+            </form>
           </div>
-        )}
+        </div>
       </div>
 
       {/* ตาราง */}
@@ -664,7 +674,7 @@ function AddRentalHistory({ token, role, user }) {
           )}
         </div>
         {isTableOpen && (
-          <div className="mt-4 animate-slide in">
+          <div className="mt-4 animate-slide-in">
             {loading ? (
               <p className="text-gray-600">กำลังโหลด...</p>
             ) : error ? (
