@@ -18,7 +18,7 @@ function Login({ setToken, setRole, setUser }) {
 
     if (rememberedUsername && rememberedPassword) {
       setUsername(rememberedUsername);
-      setUsername(rememberedPassword);
+      setPassword(rememberedPassword);
       setRememberMe(true);
     }
   }, []);

@@ -75,10 +75,10 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
   }, []);
 
   return (
-    <nav className="bg-gradient-to-r from-green-600 to-green-800 text-white shadow-xl backdrop-blur-md sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-        <div className="text-2xl font-extrabold tracking-wide uppercase text-white drop-shadow-lg">
-          WEBILL SYSETM
+    <nav className="bg-gradient-to-r from-green-600 to-green-800 text-white shadow-xl sticky top-0 z-50 backdrop-blur-md">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+        <div className="text-lg sm:text-xl md:text-2xl font-extrabold tracking-wide uppercase text-white drop-shadow">
+          WEBILL
         </div>
 
         {/* ปุ่มเมนู (Mobile) */}
@@ -140,49 +140,45 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
         </div>
 
         {/* Desktop Nav */}
-        <div className="hidden md:flex items-center space-x-4">
+        <div className="hidden md:flex items-center gap-3 lg:gap-5">
+          {/* Nav Items */}
+          {navItems
+            .filter((item) => item.roles.includes(role))
+            .map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) =>
+                  `px-3 py-2 rounded-lg text-sm font-medium transition duration-200 ${
+                    isActive
+                      ? "bg-white text-green-800 shadow"
+                      : "hover:bg-green-500 hover:text-white"
+                  }`
+                }
+              >
+                {item.label}
+              </NavLink>
+            ))}
+
+          {/* Avatar */}
           {token && (
             <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="flex items-center justify-center w-10 h-10 rounded-full bg-white text-green-800 font-bold hover:scale-105 transition ring-2 ring-white"
+                className="flex items-center justify-center w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-white text-green-800 font-bold hover:scale-105 transition ring-2 ring-white"
               >
                 {getInitials(user?.first_name, user?.last_name)}
               </button>
 
+              {/* Profile Dropdown */}
               {isProfileOpen && (
-                <div className="absolute right-0 mb-2 w-64 bg-white text-gray-800 rounded-xl shadow-xl py-3 z-50 animate-slide-in-down  border-gray-100">
-                  {/* ชื่อผู้ใช้ */}
+                <div className="absolute right-0 mt-2 w-64 bg-white text-gray-800 rounded-xl shadow-xl py-3 z-50 border border-gray-100 animate-fade-in">
                   <div className="px-4 py-2 font-semibold border-b flex items-center gap-2">
                     👤 {user?.first_name} {user?.last_name}
                   </div>
-
-                  {/* รายการเมนู */}
-                  <div className="py-2 px-2 space-y-1">
-                    {navItems
-                      .filter((item) => item.roles.includes(role))
-                      .map((item) => (
-                        <NavLink
-                          key={item.path}
-                          to={item.path}
-                          onClick={() => setIsProfileOpen(false)}
-                          className={({ isActive }) =>
-                            `block w-full text-left px-3 py-2 rounded-md text-sm font-medium transition ${
-                              isActive
-                                ? "bg-green-100 text-green-800"
-                                : "hover:bg-gray-100"
-                            }`
-                          }
-                        >
-                          {item.label}
-                        </NavLink>
-                      ))}
-                  </div>
-
-                  {/* ปุ่มออกจากระบบ */}
                   <button
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:text-red-600 transition flex items-center gap-2"
                     onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 hover:text-red-600 transition flex items-center gap-2"
                   >
                     🚪 ออกจากระบบ
                   </button>
