@@ -4,6 +4,7 @@ import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/solid";
 import { Calendar, Droplet, Warehouse, Zap } from "lucide-react";
 
 function AddRentalHistory({ token, role, user }) {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [history, setHistory] = useState([]);
   const [projects, setProjects] = useState([]);
   const [owners, setOwners] = useState([]);
@@ -17,8 +18,6 @@ function AddRentalHistory({ token, role, user }) {
   const [isTableOpen, setIsTableOpen] = useState(true);
   const [popupImage, setPopupImage] = useState(null);
   const [activeTab, setActiveTab] = useState("water");
-
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   // Filter state
   const [filter, setFilters] = useState({
@@ -42,7 +41,14 @@ function AddRentalHistory({ token, role, user }) {
     status: "pending",
   });
 
+  // File image
   const [files, setFiles] = useState({
+    water_image: null,
+    electricity_image: null,
+  });
+
+  // Previews file image
+  const [previews, setPreviews] = useState({
     water_image: null,
     electricity_image: null,
   });
@@ -120,17 +126,17 @@ function AddRentalHistory({ token, role, user }) {
     setCurrentPage(1); // Reset to page 1 on filter change
   };
 
-  const resetFilter = () => {
-    setFilters({
-      startDate: "",
-      endDate: "",
-      months: "",
-      year: "",
-      projectId: "",
-      ownerId: "",
-    });
-    setCurrentPage(1);
-  };
+  // const resetFilter = () => {
+  //   setFilters({
+  //     startDate: "",
+  //     endDate: "",
+  //     months: "",
+  //     year: "",
+  //     projectId: "",
+  //     ownerId: "",
+  //   });
+  //   setCurrentPage(1);
+  // };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
