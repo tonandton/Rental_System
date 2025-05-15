@@ -1,7 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/solid";
 import { Calendar, Droplet, Warehouse, Zap } from "lucide-react";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function AddRentalHistory({ token, role, user }) {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -18,6 +20,7 @@ function AddRentalHistory({ token, role, user }) {
   const [isTableOpen, setIsTableOpen] = useState(true);
   const [popupImage, setPopupImage] = useState(null);
   const [activeTab, setActiveTab] = useState("water");
+  const tableRef = useRef(null);
 
   // Filter state
   const [filter, setFilters] = useState({
@@ -29,6 +32,8 @@ function AddRentalHistory({ token, role, user }) {
     ownerId: "",
   });
 
+  const [tempFilter, setTempFilter] = useState({ ...filter });
+
   // Form state
   const [formData, setFormData] = useState({
     project_id: "",
@@ -38,6 +43,8 @@ function AddRentalHistory({ token, role, user }) {
     current_water_meter: "",
     previous_electricity_meter: "",
     current_electricity_meter: "",
+    electricity_image_path: "",
+    water_image_path: "",
     status: "pending",
   });
 
@@ -117,7 +124,18 @@ function AddRentalHistory({ token, role, user }) {
 
   const handleFileChange = (e) => {
     const { name, files } = e.target;
-    setFiles((prev) => ({ ...prev, [name]: files[0] }));
+    const file = files[0];
+
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setPreviews((prev) => ({ ...prev, [name]: url }));
+      setFiles((prev) => ({ ...prev, [name]: files[0] }));
+    }
+  };
+
+  const handleRemoveFile = (field) => {
+    setFiles((prev) => ({ ...prev, [field]: null }));
+    setPreviews((prev) => ({ ...prev, [field]: null }));
   };
 
   const handleFilterChange = (e) => {
@@ -126,17 +144,29 @@ function AddRentalHistory({ token, role, user }) {
     setCurrentPage(1); // Reset to page 1 on filter change
   };
 
-  // const resetFilter = () => {
-  //   setFilters({
-  //     startDate: "",
-  //     endDate: "",
-  //     months: "",
-  //     year: "",
-  //     projectId: "",
-  //     ownerId: "",
-  //   });
-  //   setCurrentPage(1);
-  // };
+  const handleTempFilterChange = (e) => {
+    const { name, value } = e.target;
+    setTempFilter((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleApplyFilter = () => {
+    setCurrentPage(1);
+    setTimeout(() => {
+      tableRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 300);
+  };
+
+  const resetFilter = () => {
+    setFilters({
+      startDate: "",
+      endDate: "",
+      month: "",
+      year: "",
+      projectId: "",
+      ownerId: "",
+    });
+    setCurrentPage(1);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -168,7 +198,7 @@ function AddRentalHistory({ token, role, user }) {
       );
       const historyId = response.data.id;
 
-      if (files.water_image_image || files.electricity_image) {
+      if (files.water_image || files.electricity_image) {
         const uploadData = new FormData();
         if (files.water_image)
           uploadData.append("water_image", files.water_image);
@@ -184,7 +214,13 @@ function AddRentalHistory({ token, role, user }) {
         );
       }
 
-      setSuccess("บันทึกข้อมูลสำเร็จ");
+      setFiles({ water_image: null, electricity_image: null });
+      setPreviews({ water_image: null, electricity_image: null });
+      // setSuccess("✅ บันทึกสำเร็จแล้ว!");
+      toast.success("บันทึกสำเร็จแล้ว!", { autoClose: 3000 });
+      setTimeout(() => {
+        tableRef.current?.scrollIntoView({ behavior: "smooth" }, 500);
+      });
       setFormData({
         project_id: "",
         rental_date: "",
@@ -193,6 +229,8 @@ function AddRentalHistory({ token, role, user }) {
         current_water_meter: "",
         previous_electricity_meter: "",
         current_electricity_meter: "",
+        electricity_image_path: "",
+        water_image_path: "",
         status: "pending",
       });
 
@@ -203,12 +241,13 @@ function AddRentalHistory({ token, role, user }) {
         headers: { Authorization: `Bearer ${token}` },
         params: { ...baseParams, ...filter },
       });
-      console.log("Updated history:", historyRes.data); // Debug
+      // console.log("Updated history:", historyRes.data); // Debug
       setHistory(historyRes.data);
       setCurrentPage(1);
     } catch (error) {
       console.error("Submit error:", error);
       setError(error.response?.data?.error || "เกิดข้อผิดพลาดในการบันทึก");
+      toast.error("บันทึกไม่สำเร็จ", { autoClose: 3000 });
     }
   };
 
@@ -251,7 +290,7 @@ function AddRentalHistory({ token, role, user }) {
           onClick={() => setIsFilterOpen(!isFilterOpen)}
         >
           <h2 className="text-xl font-semibold text-gray-800 tracking-wide">
-            ค้นหารายการ
+            🔍 ค้นหารายการ
           </h2>
           {isFilterOpen ? (
             <ChevronUpIcon className="h-6 w-6 text-green-600" />
@@ -267,8 +306,8 @@ function AddRentalHistory({ token, role, user }) {
               <input
                 type="date"
                 name="startDate"
-                value={filter.startDate}
-                onChange={handleFilterChange}
+                value={tempFilter.startDate}
+                onChange={handleTempFilterChange}
                 className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
               />
             </div>
@@ -279,8 +318,8 @@ function AddRentalHistory({ token, role, user }) {
               <input
                 type="date"
                 name="endDate"
-                value={filter.endDate}
-                onChange={handleFilterChange}
+                value={tempFilter.endDate}
+                onChange={handleTempFilterChange}
                 className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
               />
             </div>
@@ -290,8 +329,8 @@ function AddRentalHistory({ token, role, user }) {
               <div className="relative">
                 <select
                   name="month"
-                  value={filter.months}
-                  onChange={handleFilterChange}
+                  value={tempFilter.month}
+                  onChange={handleTempFilterChange}
                   className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
                 >
                   {months.map((month) => (
@@ -321,8 +360,8 @@ function AddRentalHistory({ token, role, user }) {
               <div className="relative">
                 <select
                   name="year"
-                  value={filter.year}
-                  onChange={handleFilterChange}
+                  value={tempFilter.year}
+                  onChange={handleTempFilterChange}
                   className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
                 >
                   {years.map((year) => (
@@ -353,8 +392,8 @@ function AddRentalHistory({ token, role, user }) {
               <div className="relative">
                 <select
                   name="projectId"
-                  value={filter.projectId}
-                  onChange={handleFilterChange}
+                  value={tempFilter.projectId}
+                  onChange={handleTempFilterChange}
                   className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
                 >
                   <option value="">ทุกโครงการ</option>
@@ -385,8 +424,8 @@ function AddRentalHistory({ token, role, user }) {
               <div className="relative">
                 <select
                   name="ownerId"
-                  value={filter.ownerId}
-                  onChange={handleFilterChange}
+                  value={tempFilter.ownerId}
+                  onChange={handleTempFilterChange}
                   className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
                 >
                   <option value="">ทั้งหมด</option>
@@ -412,20 +451,27 @@ function AddRentalHistory({ token, role, user }) {
                 </div>
               </div>
             </div>
-            {/* <div className="col-span-1 sm:col-span-2 md:col-span-3 flex flex-wrap gap-4 mt-2">
+            <div className="col-span-1 sm:col-span-2 md:col-span-3 flex flex-wrap gap-4 mt-2">
               <button
-                onClick={() => setCurrentPage(1)}
+                onClick={() => {
+                  handleApplyFilter();
+                  setFilters(tempFilter);
+                  setCurrentPage(1);
+                  toast.success("ค้นหาข้อมูลเรียบร้อยแล้ว", {
+                    autoClose: 2000,
+                  });
+                }}
                 className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
               >
-                ค้นหา
+                🔍 ค้นหา
               </button>
               <button
                 onClick={resetFilter}
                 className="bg-yellow-300 text-gray-700 px-6 py-2 rounded-md hover:bg-yellow-400 transition"
               >
-                รีเซ็ต
+                🧹 รีเซ็ต
               </button>
-            </div> */}
+            </div>
           </div>
         )}
       </div>
@@ -436,7 +482,9 @@ function AddRentalHistory({ token, role, user }) {
           className="flex justify-between items-center cursor-pointer"
           onClick={() => setIsFormOpen(!isFormOpen)}
         >
-          <h2 className="text-xl font-semibold text-gray-800">เพิ่มรายการ</h2>
+          <h2 className="text-xl font-semibold text-gray-800">
+            ➕ เพิ่มรายการ
+          </h2>
           {/* {isFormOpen ? (
             <ChevronUpIcon className="h-6 w-6 text-green-600" />
           ) : (
@@ -548,7 +596,7 @@ function AddRentalHistory({ token, role, user }) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 animate-slide-in">
                   <div>
                     <label>
-                      <Droplet size={16} /> มิเตอร์น้ำก่อนหน้า
+                      <Droplet size={16} /> มิเตอร์น้ำรอบที่ผ่านมา
                     </label>
                     <input
                       type="number"
@@ -575,16 +623,50 @@ function AddRentalHistory({ token, role, user }) {
                     />
                   </div>
                   <div>
-                    <label>
-                      <Droplet size={16} /> รูปมิเตอร์น้ำ
+                    <label className="block font-medium text-gray-700 mb-4">
+                      <Droplet size={16} className="inline-block mr-1" />
+                      รูปมิเตอร์น้ำ
                     </label>
+
+                    <div className="flex items-center gap-4">
+                      <label
+                        htmlFor="water_image"
+                        className="cursor-pointer px-4 py-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition"
+                      >
+                        📷 เลือกรูปภาพ
+                      </label>
+
+                      <span className="text-sm text-gray-600 truncate w-40">
+                        {files.water_image?.name || "ยังไม่ได้เลือกรูป"}
+                      </span>
+                    </div>
+
                     <input
+                      id="water_image"
                       type="file"
                       name="water_image"
-                      accept="image/jpeg,image/jpg,image/png"
+                      accept="image/*"
                       onChange={handleFileChange}
-                      className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md border-blue-500 file:border-0 file:bg-blue-100 file:text-blue-600 hover:file:bg-blue-200 transition"
+                      className="hidden"
                     />
+                  </div>
+                  <div>
+                    {previews.water_image && (
+                      <div className="mt-2 flex items-center gap-3">
+                        <img
+                          src={previews.water_image}
+                          alt="พรีวิวมิเตอร์น้ำ"
+                          className="w-32 h-auto rounded-md shadow"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFile("water_image")}
+                          className="text-sm text-red-600 hover:underline"
+                        >
+                          ลบ
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -594,7 +676,7 @@ function AddRentalHistory({ token, role, user }) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 animate-slide-in">
                   <div>
                     <label>
-                      <Zap size={16} /> มิเตอร์ไฟก่อนหน้า
+                      <Zap size={16} /> มิเตอร์ไฟรอบที่ผ่านมา
                     </label>
                     <input
                       type="number"
@@ -621,16 +703,51 @@ function AddRentalHistory({ token, role, user }) {
                     />
                   </div>
                   <div>
-                    <label>
-                      <Zap size={16} /> รูปมิเตอร์ไฟ
+                    <label className="block font-medium text-gray-700 mb-4">
+                      <Zap size={16} className="inline-block mr-1" />
+                      รูปมิเตอร์ไฟ
                     </label>
+
+                    <div className="flex items-center gap-4">
+                      <label
+                        htmlFor="electricity_image"
+                        className="cursor-pointer px-4 py-2 bg-amber-100 text-amber-700 rounded-md hover:bg-amber-200 transition"
+                      >
+                        📷 เลือกรูปภาพ
+                      </label>
+
+                      <span className="text-sm text-gray-600 truncate w-40">
+                        {files.electricity_image?.name || "ยังไม่ได้เลือกรูป"}
+                      </span>
+                    </div>
+
                     <input
+                      id="electricity_image"
                       type="file"
+                      value={formData.electricity_image_path}
                       name="electricity_image"
                       accept="image/jpeg,image/jpg,image/png"
                       onChange={handleFileChange}
-                      className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md border-amber-500 file:border-0 file:bg-amber-100 file:text-amber-600 hover:file:bg-amber-200 transition"
+                      className="hidden"
                     />
+                  </div>
+                  <div>
+                    {previews.electricity_image && (
+                      <div className="mt-2 flex items-center gap-3">
+                        <img
+                          src={previews.electricity_image}
+                          alt="พรีวิวมิเตอร์ไฟ"
+                          className="mt-2 w-52 h-auto rounded-lg shadow border"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFile("electricity_image")}
+                          className="text-sm text-red-600 hover:underline"
+                        >
+                          ลบ
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -640,7 +757,7 @@ function AddRentalHistory({ token, role, user }) {
                   type="submit"
                   className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
                 >
-                  บันทึก
+                  📝 บันทึก
                 </button>
                 <button
                   type="button"
@@ -658,7 +775,7 @@ function AddRentalHistory({ token, role, user }) {
                   }
                   className="bg-yellow-300 text-gray-700 px-6 py-2 rounded-md hover:bg-yellow-400 transition"
                 >
-                  รีเซ็ต
+                  🧹 รีเซ็ต
                 </button>
               </div>
             </form>
@@ -667,218 +784,212 @@ function AddRentalHistory({ token, role, user }) {
       </div>
 
       {/* ตาราง */}
-      <div className="bg-white shadow-lg rounded-xl p-6 border">
+      <div className="bg-white shadow-lg rounded-xl p-6 border" ref={tableRef}>
         <div
-          className="flex justify-between items-center cursor-pointer"
-          onClick={() => setIsTableOpen(!isTableOpen)}
+        // className="flex justify-between items-center cursor-pointer"
+        // onClick={() => setIsTableOpen(!isTableOpen)}
         >
-          <h2 className="text-xl font-semibold text-gray-800">ข้อมูลรายการ</h2>
-          {isTableOpen ? (
+          <h2 className="text-xl font-semibold text-gray-800">
+            🧾 ข้อมูลรายการ
+          </h2>
+          {/* {isTableOpen ? (
             <ChevronUpIcon className="h-6 w-6 text-green-600" />
           ) : (
             <ChevronDownIcon className="w-6 text-green-600" />
+          )} */}
+        </div>
+        {/* {isTableOpen && ( */}
+        <div className="mt-4 animate-slide-in">
+          {loading ? (
+            <p className="text-gray-600">กำลังโหลด...</p>
+          ) : error ? (
+            <div className="text-red-600">
+              <p>{error}</p>
+              <button onClick={retryFetch} className="">
+                ลองใหม่
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <table className="">
+                  <thead className="bg-green 50">
+                    <tr>
+                      <th>รอบวันที่</th>
+                      <th>โครงการ</th>
+                      <th>เจ้าของโครงการ</th>
+                      <th>มิเตอร์รอบที่ผ่านมา</th>
+                      <th>มิเตอร์รอบปัจจุบัน</th>
+                      <th>รูปมิเตอร์รอบปัจจุบัน</th>
+                      <th>หน่วย</th>
+                      <th>รวมค่าน้ำ</th>
+                      <th>มิเตอร์ไฟรอบที่ผ่านมา</th>
+                      <th>มิเตอร์ไฟรอบปัจจุบัน</th>
+                      <th>รูปมิเตอร์ไฟรอบปัจจุบัน</th>
+                      <th>หน่วย</th>
+                      <th>รวมค่าไฟ</th>
+                      <th>ผู้บันทึก</th>
+                      <th>วันที่ลงข้อมูล</th>
+                      <th>วันที่อัพเดทข้อมูล</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedHistory.length === 0 ? (
+                      <tr>
+                        <td>ไม่พบรายการ</td>
+                      </tr>
+                    ) : (
+                      paginatedHistory.map((item, index) => (
+                        <tr key={`${item.is}-${index}`}>
+                          <td>
+                            {new Date(item.rental_date).toLocaleString(
+                              "th-TH",
+                              {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              }
+                            )}
+                          </td>
+                          <td>{item.project_name}</td>
+                          <td>{item.owner_first_name}</td>
+                          <td>{Math.floor(item.previous_water_meter)}</td>
+                          <td>{Math.floor(item.current_water_meter)}</td>
+                          <td>
+                            {item.water_image_path && (
+                              <img
+                                src={`${API_BASE_URL}${item.water_image_path}`}
+                                alt="รูปค่าน้ำ"
+                                style={{
+                                  width: "60px",
+                                  height: "auto",
+                                  borderRadius: "6px",
+                                  cursor: "Pointer",
+                                }}
+                                onClick={() =>
+                                  setPopupImage(
+                                    `${API_BASE_URL}${item.water_image_path}`
+                                  )
+                                }
+                              />
+                            )}
+                            {popupImage && (
+                              <div
+                                className="fixed inset-0 flex items-center justify-center z-50"
+                                onClick={() => setPopupImage(null)}
+                              >
+                                <img
+                                  src={popupImage}
+                                  alt="ภาพใหญ่"
+                                  className="max-w-[90vw] max-h-[90vh] rounded-lg shadow-lg"
+                                />
+                              </div>
+                            )}
+                          </td>
+                          <td>{Math.floor(item.water_units)}</td>
+                          <td>{item.water_bill}</td>
+                          <td>{Math.floor(item.previous_electricity_meter)}</td>
+                          <td>{Math.floor(item.current_electricity_meter)}</td>
+                          <td>
+                            {item.electricity_image_path && (
+                              <img
+                                src={`${API_BASE_URL}${item.electricity_image_path}`}
+                                alt="รูปค่าไฟ"
+                                style={{
+                                  width: "60px",
+                                  height: "auto",
+                                  borderRadius: "6px",
+                                  cursor: "Pointer",
+                                }}
+                                onClick={() =>
+                                  setPopupImage(
+                                    `${API_BASE_URL}${item.electricity_image_path}`
+                                  )
+                                }
+                              />
+                            )}
+                            {popupImage && (
+                              <div
+                                className="fixed inset-0 flex items-center justify-center z-50"
+                                onClick={() => setPopupImage(null)}
+                              >
+                                <img
+                                  src={popupImage}
+                                  alt="ภาพใหญ่"
+                                  className="max-w-[90vw] max-h-[90vh] rounded-lg shadow-lg"
+                                />
+                              </div>
+                            )}
+                          </td>
+                          <td>{Math.floor(item.electricity_units)}</td>
+                          <td>{item.electricity_bill}</td>
+                          <td>{item.username}</td>
+                          <td>
+                            {" "}
+                            {new Date(item.created_at).toLocaleString("th-TH", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </td>
+                          <td>
+                            {new Date(item.updated_at).toLocaleString("th-TH", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-6 flex justify-between items-center">
+                  <button
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }
+                    disabled={currentPage === 1}
+                    className={`px-6 py-2 rounded-full text-white transition ${
+                      currentPage === 1
+                        ? "bg-gray-300"
+                        : "bg-green-600 hover:bg-green-700"
+                    }`}
+                  >
+                    ก่อนหน้า
+                  </button>
+                  <span className="text-sm text-gray-600">
+                    หน้า {currentPage} จาก {totalPages}
+                  </span>
+                  <button
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
+                    disabled={currentPage === totalPages}
+                    className={`px-6 py-2 rounded-full text-white transition ${
+                      currentPage === totalPages
+                        ? "bg-gray-300"
+                        : "bg-green-600 hover:bg-green-700"
+                    }`}
+                  >
+                    ถัดไป
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
-        {isTableOpen && (
-          <div className="mt-4 animate-slide-in">
-            {loading ? (
-              <p className="text-gray-600">กำลังโหลด...</p>
-            ) : error ? (
-              <div className="text-red-600">
-                <p>{error}</p>
-                <button onClick={retryFetch} className="">
-                  ลองใหม่
-                </button>
-              </div>
-            ) : (
-              <>
-                <div className="overflow-x-auto">
-                  <table className="">
-                    <thead className="bg-green 50">
-                      <tr>
-                        <th>รอบวันที่</th>
-                        <th>โครงการ</th>
-                        <th>เจ้าของโครงการ</th>
-                        <th>ค่าน้ำรอบที่ผ่านมา</th>
-                        <th>ค่าน้ำรอบปัจจุบัน</th>
-                        <th>รูปค่าน้ำรอบปัจจุบัน</th>
-                        <th>หน่วย</th>
-                        <th>รวมค่าน้ำ</th>
-                        <th>ค่าไฟรอบที่ผ่านมา</th>
-                        <th>ค่าไฟรอบปัจจุบัน</th>
-                        <th>รูปค่าไฟรอบปัจจุบัน</th>
-                        <th>หน่วย</th>
-                        <th>รวมค่าน้ำ</th>
-                        <th>ผู้บันทึก</th>
-                        <th>วันที่ลงข้อมูล</th>
-                        <th>วันที่อัพเดทข้อมูล</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {paginatedHistory.length === 0 ? (
-                        <tr>
-                          <td>ไม่พบรายการ</td>
-                        </tr>
-                      ) : (
-                        paginatedHistory.map((item, index) => (
-                          <tr key={`${item.is}-${index}`}>
-                            <td>
-                              {new Date(item.rental_date).toLocaleString(
-                                "th-TH",
-                                {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                }
-                              )}
-                            </td>
-                            <td>{item.project_name}</td>
-                            <td>{item.owner_first_name}</td>
-                            <td>{Math.floor(item.previous_water_meter)}</td>
-                            <td>{Math.floor(item.current_water_meter)}</td>
-                            <td>
-                              {item.water_image_path && (
-                                <img
-                                  src={`${API_BASE_URL}${item.water_image_path}`}
-                                  alt="รูปค่าน้ำ"
-                                  style={{
-                                    width: "60px",
-                                    height: "auto",
-                                    borderRadius: "6px",
-                                    cursor: "Pointer",
-                                  }}
-                                  onClick={() =>
-                                    setPopupImage(
-                                      `${API_BASE_URL}${item.water_image_path}`
-                                    )
-                                  }
-                                />
-                              )}
-                              {popupImage && (
-                                <div
-                                  className="fixed inset-0 flex items-center justify-center z-50"
-                                  onClick={() => setPopupImage(null)}
-                                >
-                                  <img
-                                    src={popupImage}
-                                    alt="ภาพใหญ่"
-                                    className="max-w-[90vw] max-h-[90vh] rounded-lg shadow-lg"
-                                  />
-                                </div>
-                              )}
-                            </td>
-                            <td>{Math.floor(item.water_units)}</td>
-                            <td>{item.water_bill}</td>
-                            <td>
-                              {Math.floor(item.previous_electricity_meter)}
-                            </td>
-                            <td>
-                              {Math.floor(item.current_electricity_meter)}
-                            </td>
-                            <td>
-                              {item.electricity_image_path && (
-                                <img
-                                  src={`${API_BASE_URL}${item.electricity_image_path}`}
-                                  alt="รูปค่าไฟ"
-                                  style={{
-                                    width: "60px",
-                                    height: "auto",
-                                    borderRadius: "6px",
-                                    cursor: "Pointer",
-                                  }}
-                                  onClick={() =>
-                                    setPopupImage(
-                                      `${API_BASE_URL}${item.electricity_image_path}`
-                                    )
-                                  }
-                                />
-                              )}
-                              {popupImage && (
-                                <div
-                                  className="fixed inset-0 flex items-center justify-center z-50"
-                                  onClick={() => setPopupImage(null)}
-                                >
-                                  <img
-                                    src={popupImage}
-                                    alt="ภาพใหญ่"
-                                    className="max-w-[90vw] max-h-[90vh] rounded-lg shadow-lg"
-                                  />
-                                </div>
-                              )}
-                            </td>
-                            <td>{Math.floor(item.electricity_units)}</td>
-                            <td>{item.electricity_bill}</td>
-                            <td>{item.username}</td>
-                            <td>
-                              {" "}
-                              {new Date(item.created_at).toLocaleString(
-                                "th-TH",
-                                {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                }
-                              )}
-                            </td>
-                            <td>
-                              {new Date(item.updated_at).toLocaleString(
-                                "th-TH",
-                                {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                }
-                              )}
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="mt-6 flex justify-between items-center">
-                    <button
-                      onClick={() =>
-                        setCurrentPage((prev) => Math.max(prev - 1, 1))
-                      }
-                      disabled={currentPage === 1}
-                      className={`px-6 py-2 rounded-full text-white transition ${
-                        currentPage === 1
-                          ? "bg-gray-300"
-                          : "bg-green-600 hover:bg-green-700"
-                      }`}
-                    >
-                      ก่อนหน้า
-                    </button>
-                    <span className="text-sm text-gray-600">
-                      หน้า {currentPage} จาก {totalPages}
-                    </span>
-                    <button
-                      onClick={() =>
-                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                      }
-                      disabled={currentPage === totalPages}
-                      className={`px-6 py-2 rounded-full text-white transition ${
-                        currentPage === totalPages
-                          ? "bg-gray-300"
-                          : "bg-green-600 hover:bg-green-700"
-                      }`}
-                    >
-                      ถัดไป
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        )}
+        {/* )} */}
       </div>
+
+      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 }
