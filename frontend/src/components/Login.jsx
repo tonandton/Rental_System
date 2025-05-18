@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { toast } from "react-toastify";
 
 function Login({ setToken, setRole, setUser }) {
   const [username, setUsername] = useState("");
@@ -61,9 +62,11 @@ function Login({ setToken, setRole, setUser }) {
       }
 
       navigate("/");
+      toast.success("เข้าสู่ระบบสำเร็จ", { autoClose: 3000 });
     } catch (err) {
       setError(err.response?.data?.error || "เกิดข้อผิดพลาดในการเข้าสู่ระบบ");
-      console.error("Login.jsx: Error during login:", err);
+      toast.error("เกิดข้อผิดพลาดในการเข้าสู่ระบบ", { autoClose: 3000 });
+      // console.error("Login.jsx: Error during login:", err);
     }
   };
 
@@ -109,7 +112,7 @@ function Login({ setToken, setRole, setUser }) {
           <div className="mb-5 relative">
             <label>รหัสผ่าน</label>
             <input
-              type={showPassword ? "test" : "password"}
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="p-3 pr-10 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-green-400"

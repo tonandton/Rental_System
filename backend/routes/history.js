@@ -205,11 +205,11 @@ module.exports = (authenticateToken, restrictTo, pool) => {
         const water_units =
           current_water_meter && previous_water_meter
             ? current_water_meter - previous_water_meter
-            : 0;
+            : current_water_meter;
         const electricity_units =
           current_electricity_meter && previous_electricity_meter
             ? current_electricity_meter - previous_electricity_meter
-            : 0;
+            : current_water_meter;
         const water_bill = water_units * project.water_unit_rate;
         const electricity_bill =
           electricity_units * project.electricity_unit_rate;

@@ -1,210 +1,283 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useState } from "react";
+import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/solid";
+import { toast } from "react-toastify";
 
-function FilterForm({ projects, onFilterChange, role, token }) {
-  const [month, setMonth] = useState("");
-  const [year, setYear] = useState("");
-  const [projectId, setProjectId] = useState("");
-  const [status, setStatus] = useState("");
-  const [ownerName, setOwnerName] = useState("");
-  const [recorderUsername, setRecorderUsername] = useState("");
-  const [username, setUsername] = useState("");
-  const [owners, setOwners] = useState([]);
-  const [users, setUsers] = useState([]);
+function FilterForm({
+  projects,
+  owners,
+  filters,
+  setFilters,
+  setCurrentPage,
+  tableRef,
+}) {
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [tempFilter, setTempFilter] = useState({ ...filters });
 
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  //   Dropdown option
+  const months = [
+    { value: "", label: "ทั้งหมด" },
+    { value: "1", label: "มกราคม" },
+    { value: "2", label: "กุมภาพันธ์" },
+    { value: "3", label: "มีนาคม" },
+    { value: "4", label: "เมษายน" },
+    { value: "5", label: "พฤษภาคม" },
+    { value: "6", label: "มิถุนายน" },
+    { value: "7", label: "กรกฎาคม" },
+    { value: "8", label: "สิงหาคม" },
+    { value: "9", label: "กันยายน" },
+    { value: "10", label: "ตุลาคม" },
+    { value: "11", label: "พฤศจิกายน" },
+    { value: "12", label: "ธันวาคม" },
+  ];
 
-  // ดึงข้อมูลเจ้าของโครงการและผู้ใช้
-  useEffect(() => {
-    const fetchOwners = async () => {
-      if (!token) {
-        console.warn("Token is missing. Skipping fetchOwners.");
-        return;
-      }
+  const currentYear = new Date().getFullYear();
+  const years = [
+    { value: "", label: "ทั้งหมด" },
+    ...Array.from({ length: 4 }, (_, i) => ({
+      value: String(currentYear - 1 + i),
+      label: String(currentYear - 1 + i),
+    })),
+  ];
 
-      try {
-        const response = await axios.get(`${API_BASE_URL}/api/project-owners`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setOwners(response.data);
-      } catch (err) {
-        console.error("Fetch owners error:", err);
-      }
-    };
-
-    const fetchUsers = async () => {
-      if (role === "superadmin" || role === "admin") {
-        try {
-          const response = await axios.get(`${API_BASE_URL}/api/users`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          setUsers(response.data);
-        } catch (err) {
-          console.error("Fetch users error:", err);
-        }
-      }
-    };
-
-    fetchOwners();
-    fetchUsers();
-  }, [token, role]);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onFilterChange({
-      month,
-      year,
-      projectId,
-      status,
-      ownerName,
-      recorderUsername,
-      username,
-    });
+  const handleTempFilterChange = (e) => {
+    const { name, value } = e.target;
+    setTempFilter((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleReset = () => {
-    setMonth("");
-    setYear("");
-    setProjectId("");
-    setStatus("");
-    setOwnerName("");
-    setRecorderUsername("");
-    setUsername("");
-    onFilterChange({});
+  const vaildateFilers = () => {
+    if (tempFilter.startDate && tempFilter.endDate) {
+      const start = new Date(tempFilter.startDate);
+      const end = new Date(tempFilter.endDate);
+
+      if (start > end) {
+        toast.error("วันที่เริ่มต้องไม่มากกว่าวันที่สิ้นสุด", {
+          autoClose: 3000,
+        });
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleApplyFilter = () => {
+    setFilters(tempFilter);
+    setCurrentPage(1);
+    toast.success("ค้นหาข้อมูลเรียบร้อยแล้ว", { autoClose: 2000 });
+    setTimeout(() => {
+      tableRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 300);
+  };
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters((prev) => ({ ...prev, [name]: value }));
+    setCurrentPage(1); // Reset to page 1 on filter change
+  };
+
+  const resetFilter = () => {
+    const resetFilters = {
+      startDate: "",
+      endDate: "",
+      month: "",
+      year: "",
+      projectId: "",
+      ownerId: "",
+    };
+    setTempFilter(resetFilters);
+    setFilters(resetFilters);
+    setCurrentPage(1);
+    toast.success("รีเซ็ตตัวกรองเรียบร้อย", { autoClose: 3000 });
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="mb-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-white p-6 rounded-lg shadow-md"
-    >
-      <div>
-        <label className="block text-sm font-medium text-gray-700">เดือน</label>
-        <select
-          value={month}
-          onChange={(e) => setMonth(e.target.value)}
-          className="mt-1 p-2 border rounded-lg w-full"
-        >
-          <option value="">ทุกเดือน</option>
-          {[...Array(12).keys()].map((m) => (
-            <option key={m + 1} value={m + 1}>
-              {new Date(0, m).toLocaleString("th-TH", { month: "long" })}
-            </option>
-          ))}
-        </select>
+    <div className="bg-white shadow-xl rounded-xl p-6 mb-8 border border-green-100">
+      <div
+        className="flex justify-between items-center cursor-pointer mb-2"
+        onClick={() => setIsFilterOpen(!isFilterOpen)}
+      >
+        <h2 className="text-xl font-semibold text-gray-800 tracking-wide">
+          🔍 ค้นหารายการ
+        </h2>
+        {isFilterOpen ? (
+          <ChevronUpIcon className="h-6 w-6 text-green-600" />
+        ) : (
+          <ChevronDownIcon className="h-6 w-6 text-green-600" />
+        )}
       </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          ปี (พ.ศ.)
-        </label>
-        <input
-          type="number"
-          placeholder="เช่น 2568"
-          value={year}
-          onChange={(e) => setYear(e.target.value)}
-          className="mt-1 p-2 border rounded-lg w-full"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          โครงการ
-        </label>
-        <select
-          value={projectId}
-          onChange={(e) => setProjectId(e.target.value)}
-          className="mt-1 p-2 border rounded-lg w-full"
-        >
-          <option value="">ทุกโครงการ</option>
-          {projects.map((project) => (
-            <option key={project.id} value={project.id}>
-              {project.name}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">สถานะ</label>
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          className="mt-1 p-2 border rounded-lg w-full"
-        >
-          <option value="">ทุกสถานะ</option>
-          <option value="pending">รอดำเนินการ</option>
-          <option value="completed">สำเร็จ</option>
-          <option value="cancelled">ยกเลิก</option>
-        </select>
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          เจ้าของโครงการ
-        </label>
-        <select
-          value={ownerName}
-          onChange={(e) => setOwnerName(e.target.value)}
-          className="mt-1 p-2 border rounded-lg w-full"
-        >
-          <option value="">ทุกเจ้าของ</option>
-          {Array.isArray(owners) &&
-            owners.map((owner) => (
-              <option key={owner.owner_name} value={owner.owner_name}>
-                {owner.owner_name}
-              </option>
-            ))}
-        </select>
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          ผู้บันทึก
-        </label>
-        <select
-          value={recorderUsername}
-          onChange={(e) => setRecorderUsername(e.target.value)}
-          className="mt-1 p-2 border rounded-lg w-full"
-        >
-          <option value="">ทุกผู้บันทึก</option>
-          {users.map((user) => (
-            <option key={user.username} value={user.username}>
-              {user.username}
-            </option>
-          ))}
-        </select>
-      </div>
-      {(role === "superadmin" || role === "admin") && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            ผู้ใช้
-          </label>
-          <select
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="mt-1 p-2 border rounded-lg w-full"
-          >
-            <option value="">ทุกผู้ใช้</option>
-            {users.map((user) => (
-              <option key={user.username} value={user.username}>
-                {user.username}
-              </option>
-            ))}
-          </select>
+      {isFilterOpen && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 animate-slide-in">
+          <div>
+            <label htmlFor="startDate">วันที่เริ่ม</label>
+
+            <input
+              type="date"
+              name="startDate"
+              value={tempFilter.startDate}
+              onChange={handleTempFilterChange}
+              className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="endDate">วันที่สิ้นสุด</label>
+
+            <input
+              type="date"
+              name="endDate"
+              value={tempFilter.endDate}
+              onChange={handleTempFilterChange}
+              className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
+            />
+          </div>
+
+          <div className="relative mt-1">
+            <label htmlFor="month">เดือน</label>
+            <div className="relative">
+              <select
+                name="month"
+                value={tempFilter.month}
+                onChange={handleTempFilterChange}
+                className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
+              >
+                {months.map((month) => (
+                  <option key={month.value} value={month.value}>
+                    {month.label}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
+                <svg
+                  className="h-5 w-5 text-green-400"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 12a1 1 0 01-.7-.3l-4-4a1 1 0 011.4-1.4L10 9.58l3.3-3.3a1 1 0 011.4 1.42l-4 4a1 1 0 01-.7.3z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div className="relative mt-1">
+            <label htmlFor="year">ปี</label>
+            <div className="relative">
+              <select
+                name="year"
+                value={tempFilter.year}
+                onChange={handleTempFilterChange}
+                className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
+              >
+                {years.map((year) => (
+                  <option key={year.value} value={year.value}>
+                    {year.label}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
+                <svg
+                  className="h-5 w-5 text-green-400"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 12a1 1 0 01-.7-.3l-4-4a1 1 0 011.4-1.4L10 9.58l3.3-3.3a1 1 0 011.4 1.42l-4 4a1 1 0 01-.7.3z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative mt-1">
+            <label htmlFor="projectId">โครงการ</label>
+            <div className="relative">
+              <select
+                name="projectId"
+                value={tempFilter.projectId}
+                onChange={handleTempFilterChange}
+                className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
+              >
+                <option value="">ทุกโครงการ</option>
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
+                <svg
+                  className="h-5 w-5 text-green-400"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 12a1 1 0 01-.7-.3l-4-4a1 1 0 011.4-1.4L10 9.58l3.3-3.3a1 1 0 011.4 1.42l-4 4a1 1 0 01-.7.3z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div className="relative mt-1">
+            <label>เจ้าของโครงการ</label>
+            <div className="relative">
+              <select
+                name="ownerId"
+                value={tempFilter.ownerId}
+                onChange={handleTempFilterChange}
+                className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
+              >
+                <option value="">ทั้งหมด</option>
+                {owners.map((owner) => (
+                  <option key={owner.id} value={owner.id}>
+                    {owner.first_name} {owner.last_name}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
+                <svg
+                  className="h-5 w-5 text-green-400"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 12a1 1 0 01-.7-.3l-4-4a1 1 0 011.4-1.4L10 9.58l3.3-3.3a1 1 0 011.4 1.42l-4 4a1 1 0 01-.7.3z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div className="col-span-1 sm:col-span-2 md:col-span-3 flex flex-wrap gap-4 mt-2">
+            <button
+              onClick={() => {
+                handleApplyFilter();
+                setFilters(tempFilter);
+                setCurrentPage(1);
+              }}
+              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+            >
+              🔍 ค้นหา
+            </button>
+            <button
+              onClick={resetFilter}
+              className="bg-yellow-300 text-gray-700 px-6 py-2 rounded-md hover:bg-yellow-400 transition"
+            >
+              🧹 รีเซ็ต
+            </button>
+          </div>
         </div>
       )}
-      <div className="flex space-x-2 items-end">
-        <button
-          type="submit"
-          className="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 w-full"
-        >
-          กรอง
-        </button>
-        <button
-          type="button"
-          onClick={handleReset}
-          className="bg-yellow-300 text-gray-700 p-2 rounded-lg hover:bg-yellow-400 w-full"
-        >
-          ล้าง
-        </button>
-      </div>
-    </form>
+    </div>
   );
 }
 

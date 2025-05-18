@@ -8,6 +8,9 @@ import AddProject from "./components/AddProject";
 import Projects from "./components/Projects";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AddRentalHistory from "./components/AddRentalHistory";
+import UserMangement from "./components/UserManagement";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "./index.css";
 
 function App() {
@@ -63,6 +66,20 @@ function App() {
             }
           />
           <Route
+            path="/users"
+            element={
+              <ProtectedRoute token={token}>
+                {["superadmin", "admin"].includes(role) ? (
+                  <UserMangement token={token} role={role} />
+                ) : (
+                  <div className="p-8 text-red-600 font-semibold text-center">
+                    คุณไม่มีสิทธิ์เข้าถึงหน้านี้
+                  </div>
+                )}
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/projects"
             element={<Projects token={token} role={role} user={user} />}
           />
@@ -72,6 +89,15 @@ function App() {
           />
         </Routes>
       </Router>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        draggable
+      />
     </ErrorBoundary>
   );
 }

@@ -1,14 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { ToastContainer } from "react-toastify";
 import axios from "axios";
+import FilterForm from "./FilterForm";
+import HistoryTable from "./HistoryTable";
 
 function Main({ token, role, setToken, setRole }) {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [history, setHistory] = useState([]);
   const [projects, setProjects] = useState([]);
   const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const tableRef = useRef(null);
 
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  // console.log(history);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,6 +47,27 @@ function Main({ token, role, setToken, setRole }) {
     fetchData();
   }, [token, role]);
 
+  const retryFetch = async () => {
+    setError("");
+    setLoading(true);
+
+    try {
+      const baseParams = role === "user" ? { ownerId: user.id } : {};
+      const params = { ...baseParams, ...filter };
+      const historyRes = await axios.get(`${API_BASE_URL}/api/history`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params,
+      });
+      console.log("Retry history:", historyRes.data); // Debug
+      setHistory(historyRes.data);
+      setLoading(false);
+    } catch (error) {
+      console.error("Retry error:", error);
+      setError(error.response?.data?.error || "เกิดข้อพลาดในการดึงข้อมูล");
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-2 sm:px-4 py-8">
       <h1 className="text-3xl font-bold mb-8 text-gray-800">ภาพรวมระบบเช่า</h1>
@@ -48,7 +76,7 @@ function Main({ token, role, setToken, setRole }) {
       ) : error ? (
         <p className="text-red-600">{error}</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           {/* การ์ดโครงการ */}
           <div className="bg-white shadow-md rounded-lg p-6 hover:shadow-lg transition">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">
@@ -59,10 +87,10 @@ function Main({ token, role, setToken, setRole }) {
             </p>
             <p className="text-gray-600 mt-2">โครงการที่จัดการในระบบ</p>
           </div>
-          {/* การ์ดประวัติการเช่า */}
+          {/* การ์ดประวัติ*/}
           <div className="bg-white shadow-md rounded-lg p-6 hover:shadow-lg transition">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">
-              ประวัติการเช่าล่าสุด
+              ประวัติค่าน้ำล่าสุด
             </h2>
             {history.length === 0 ? (
               <p className="text-gray-600">ไม่มีประวัติ</p>
@@ -75,7 +103,28 @@ function Main({ token, role, setToken, setRole }) {
                   >
                     <span className="font-medium">{item.project_name}</span> -{" "}
                     {new Date(item.rental_date).toLocaleDateString("th-TH")} -{" "}
-                    {item.amount.toLocaleString("th-TH")} บาท
+                    {item.current_water_meter.toLocaleString("th-TH")} บาท
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <div className="bg-white shadow-md rounded-lg p-6 hover:shadow-lg transition">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              ประวัติค่าไฟล่าสุด
+            </h2>
+            {history.length === 0 ? (
+              <p className="text-gray-600">ไม่มีประวัติ</p>
+            ) : (
+              <ul className="space-y-2">
+                {history.map((item, index) => (
+                  <li
+                    key={`${item.id}-${index}`}
+                    className="text-sm text-gray-700"
+                  >
+                    <span className="font-medium">{item.project_name}</span> -{" "}
+                    {new Date(item.rental_date).toLocaleDateString("th-TH")} -{" "}
+                    {item.current_electricity_meter.toLocaleString("th-TH")} บาท
                   </li>
                 ))}
               </ul>
@@ -95,6 +144,20 @@ function Main({ token, role, setToken, setRole }) {
           )}
         </div>
       )}
+
+      <HistoryTable
+        history={history}
+        loading={loading}
+        error={error}
+        retryFetch={retryFetch}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        itemsPerPage={itemsPerPage}
+        tableRef={tableRef}
+        API_BASE_URL={API_BASE_URL}
+      />
+
+      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 }
