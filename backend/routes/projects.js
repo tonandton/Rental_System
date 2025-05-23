@@ -81,11 +81,14 @@ module.exports = (authenticateToken, restrictTo, pool) => {
         water_unit_rate,
         electricity_unit_rate,
         owner_name,
+        address, // ✅ เพิ่ม
       } = req.body;
 
       try {
         const projectResult = await pool.query(
-          "INSERT INTO projects (user_id, name, description, start_date, end_date, water_unit_rate, electricity_unit_rate) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id",
+          `INSERT INTO projects 
+          (user_id, name, description, start_date, end_date, water_unit_rate, electricity_unit_rate, address) 
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
           [
             req.user.id,
             name,
@@ -94,6 +97,7 @@ module.exports = (authenticateToken, restrictTo, pool) => {
             end_date,
             water_unit_rate,
             electricity_unit_rate,
+            address,
           ]
         );
         const projectId = projectResult.rows[0].id;
@@ -110,19 +114,6 @@ module.exports = (authenticateToken, restrictTo, pool) => {
       }
     }
   );
-
-  // Get project owner - แสดงโครงการของตัวแทน
-  router.get("/project-owners", authenticateToken, async (req, res) => {
-    try {
-      const result = await pool.query(
-        `SELECT DISTINCT u.id, u.first_name, u.last_name FROM users u JOIN project_owners po ON u.id = po.user_id ORDER BY u.first_name`
-      );
-      res.json(result.rows);
-    } catch (err) {
-      console.error("Get project owners error:", err);
-      res.status(500).json({ error: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
-    }
-  });
 
   // upload project image - อัปโหลดภาพโครงการ
   router.post(
@@ -151,6 +142,103 @@ module.exports = (authenticateToken, restrictTo, pool) => {
         res.json({ message: "Image uploaded", image_path: imagePath });
       } catch (err) {
         console.error("Upload image error:", err);
+        res.status(500).json({ error: "Server error" });
+      }
+    }
+  );
+
+  // edit project - แก้ไขโครงการ
+  router.put(
+    "/projects/:id",
+    authenticateToken,
+    restrictTo("superadmin", "admin"),
+    async (req, res) => {
+      const projectId = req.params.id;
+      const {
+        name,
+        description,
+        start_date,
+        end_date,
+        water_unit_rate,
+        electricity_unit_rate,
+        address,
+        is_active,
+      } = req.body;
+
+      try {
+        await pool.query(
+          `UPDATE projects 
+         SET name = $1, description = $2, start_date = $3, end_date = $4,
+             water_unit_rate = $5, electricity_unit_rate = $6, address = $7, is_active = $8
+         WHERE id = $9`,
+          [
+            name,
+            description,
+            start_date,
+            end_date,
+            water_unit_rate,
+            electricity_unit_rate,
+            address,
+            is_active,
+            projectId,
+          ]
+        );
+        res.json({ message: "Project updated" });
+      } catch (err) {
+        console.error("Update project error:", err);
+        res.status(500).json({ error: "Server error" });
+      }
+    }
+  );
+
+  // Get project owner - แสดงโครงการของตัวแทน
+  router.get("/project-owners", authenticateToken, async (req, res) => {
+    try {
+      const result = await pool.query(
+        `SELECT DISTINCT u.id, u.first_name, u.last_name FROM users u JOIN project_owners po ON u.id = po.user_id ORDER BY u.first_name`
+      );
+      res.json(result.rows);
+    } catch (err) {
+      console.error("Get project owners error:", err);
+      res.status(500).json({ error: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
+    }
+  });
+
+  //เปลี่ยนสถานะ active / non-active:
+  router.patch(
+    "/projects/:id/status",
+    authenticateToken,
+    restrictTo("superadmin", "admin"),
+    async (req, res) => {
+      const projectId = req.params.id;
+      const { is_active } = req.body;
+
+      try {
+        await pool.query("UPDATE projects SET is_active = $1 WHERE id = $2", [
+          is_active,
+          projectId,
+        ]);
+        res.json({ message: "Project status updated" });
+      } catch (err) {
+        console.error("Toggle project status error:", err);
+        res.status(500).json({ error: "Server error" });
+      }
+    }
+  );
+
+  // Delete Porject
+  router.delete(
+    "/projects/:id",
+    authenticateToken,
+    restrictTo("superadmin", "admin"),
+    async (req, res) => {
+      const projectId = req.params.id;
+
+      try {
+        await pool.query("DELETE FROM projects WHERE id = $1", [projectId]);
+        res.json({ message: "Project deleted" });
+      } catch (err) {
+        console.error("Delete project error:", err);
         res.status(500).json({ error: "Server error" });
       }
     }

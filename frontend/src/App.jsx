@@ -5,13 +5,13 @@ import Main from "./components/Main";
 import Login from "./components/Login";
 import ErrorBoundary from "./components/ErrorBoundary";
 import AddProject from "./components/AddProject";
-import Projects from "./components/Projects";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AddRentalHistory from "./components/AddRentalHistory";
 import UserMangement from "./components/UserManagement";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./index.css";
+import Projects from "./components/Projects";
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token") || "");
@@ -52,6 +52,20 @@ function App() {
             }
           />
           <Route
+            path="/projects"
+            element={
+              <ProtectedRoute token={token}>
+                {["superadmin", "admin"].includes(role) ? (
+                  <Projects token={token} role={role} />
+                ) : (
+                  <div className="p-8 text-red-600 font-semibold text-center">
+                    คุณไม่มีสิทธิ์เข้าถึงหน้านี้
+                  </div>
+                )}
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/add-project"
             element={
               <ProtectedRoute token={token}>
@@ -66,7 +80,7 @@ function App() {
             }
           />
           <Route
-            path="/users"
+            path="/manage-users"
             element={
               <ProtectedRoute token={token}>
                 {["superadmin", "admin"].includes(role) ? (
@@ -78,10 +92,6 @@ function App() {
                 )}
               </ProtectedRoute>
             }
-          />
-          <Route
-            path="/projects"
-            element={<Projects token={token} role={role} user={user} />}
           />
           <Route
             path="/add-rental-history"

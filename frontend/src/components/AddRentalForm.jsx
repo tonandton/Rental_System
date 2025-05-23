@@ -1,6 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
-import { Calendar, Droplet, Turtle, Warehouse, Zap } from "lucide-react";
+import { Calendar, Droplet, Warehouse, Zap } from "lucide-react";
 import { toast } from "react-toastify";
 
 function AddRentalForm({

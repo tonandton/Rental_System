@@ -21,30 +21,31 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
 
   const navItems = [
     { path: "/", label: "หน้าแรก", roles: ["superadmin", "admin", "user"] },
-    {
-      path: "/monthly-report",
-      label: "รายงานรอบเดือน",
-      roles: ["superadmin", "admin", "user"],
-    },
+
     { path: "/manage-users", label: "จัดการผู้ใช้", roles: ["superadmin"] },
-    {
-      path: "/add-project",
-      label: "เพิ่มโครงการ",
-      roles: ["superadmin", "admin"],
-    },
     {
       path: "/projects",
       label: "จัดการโครงการ",
       roles: ["superadmin", "admin"],
     },
+    // {
+    //   path: "/monthly-report",
+    //   label: "รายงานรอบเดือน",
+    //   roles: ["superadmin", "admin", "user"],
+    // },
+    // {
+    //   path: "/bills",
+    //   label: "ใบแจ้งหนี้",
+    //   roles: ["superadmin", "admin", "user"],
+    // },
     {
-      path: "/bills",
-      label: "ใบแจ้งหนี้",
-      roles: ["superadmin", "admin", "user"],
+      path: "/manage-users",
+      label: "จัดการผู้ใช้งาน",
+      roles: ["superadmin", "admin"],
     },
     {
       path: "/add-rental-history",
-      label: "บันทึกประวัติ",
+      label: "บันทึกรายการ",
       roles: ["superadmin", "admin", "user", "employee"],
     },
   ];

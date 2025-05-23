@@ -73,7 +73,7 @@ function HistoryTable({
                     <th>รวมค่าไฟ</th>
                     <th>ผู้บันทึก</th>
                     <th>วันที่ลงข้อมูล</th>
-                    <th>วันที่อัพเดทข้อมูล</th>
+                    {/* <th>วันที่อัพเดทข้อมูล</th> */}
                   </tr>
                 </thead>
                 <tbody>
@@ -133,7 +133,7 @@ function HistoryTable({
                         <td>{Math.floor(item.previous_electricity_meter)}</td>
                         <td>{Math.floor(item.current_electricity_meter)}</td>
                         <td>
-                          {item.electricity_image_path && (
+                          {item.electricity_image_path ? (
                             <img
                               src={`${API_BASE_URL}${item.electricity_image_path}`}
                               alt="รูปค่าไฟ"
@@ -149,6 +149,8 @@ function HistoryTable({
                                 )
                               }
                             />
+                          ) : (
+                            "-"
                           )}
                           {popupImage && (
                             <div
@@ -176,7 +178,7 @@ function HistoryTable({
                             minute: "2-digit",
                           })}
                         </td>
-                        <td>
+                        {/* <td>
                           {new Date(item.updated_at).toLocaleString("th-TH", {
                             year: "numeric",
                             month: "short",
@@ -184,7 +186,7 @@ function HistoryTable({
                             hour: "2-digit",
                             minute: "2-digit",
                           })}
-                        </td>
+                        </td> */}
                       </tr>
                     ))
                   )}

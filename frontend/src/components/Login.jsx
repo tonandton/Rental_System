@@ -5,13 +5,13 @@ import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { toast } from "react-toastify";
 
 function Login({ setToken, setRole, setUser }) {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
     const rememberedUsername = localStorage.getItem("rememberedUsername");
@@ -64,7 +64,7 @@ function Login({ setToken, setRole, setUser }) {
       navigate("/");
       toast.success("เข้าสู่ระบบสำเร็จ", { autoClose: 3000 });
     } catch (err) {
-      setError(err.response?.data?.error || "เกิดข้อผิดพลาดในการเข้าสู่ระบบ");
+      // setError(err.response?.data?.error || "เกิดข้อผิดพลาดในการเข้าสู่ระบบ");
       toast.error("เกิดข้อผิดพลาดในการเข้าสู่ระบบ", { autoClose: 3000 });
       // console.error("Login.jsx: Error during login:", err);
     }

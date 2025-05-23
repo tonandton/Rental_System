@@ -10,7 +10,7 @@ INSERT INTO users (username, password, role, email, first_name, last_name, creat
     ('admin', '$2b$10$TyuCzUgHgQgC5mQVSAO.JO.ZIWYom.DfezdDc1vfjukkD8mF48vs.', 'admin', 'admin@example.com', 'แอดมิน', 'ทั่วไป',CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
     ('user1', '$2b$10$W0P/dkr/P0JuzIO4l3ta9.PXJ5FVTKkfJdwmLeubW15GkTeMdMDeO', 'user', 'user1@example.com', 'นาย', 'หนึ่ง',CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
     ('user2', '$2b$10$W0P/dkr/P0JuzIO4l3ta9.PXJ5FVTKkfJdwmLeubW15GkTeMdMDeO', 'user', 'user2@example.com', 'เบิร์ด', 'สอง',CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    ('emplyee1', '$2b$10$W0P/dkr/P0JuzIO4l3ta9.PXJ5FVTKkfJdwmLeubW15GkTeMdMDeO', 'employee', 'user3@example.com', 'ช่าง', 'สาม', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+    ('employee1', '$2b$10$W0P/dkr/P0JuzIO4l3ta9.PXJ5FVTKkfJdwmLeubW15GkTeMdMDeO', 'employee', 'user3@example.com', 'ช่าง', 'สาม', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- เพิ่มที่อยู่
 INSERT INTO addresses (user_id, address_line1, city, postal_code, country) VALUES
