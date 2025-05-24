@@ -5,6 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 import FilterForm from "./FilterForm";
 import AddRentalForm from "./AddRentalForm";
 import HistoryTable from "./HistoryTable";
+import { ListChecks } from "lucide-react";
 
 function AddRentalHistory({ token, role, user }) {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -95,7 +96,9 @@ function AddRentalHistory({ token, role, user }) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg-px-8 py-8">
-      <h1 className="text-3xl font-bold mb-8 text-gray-800">บันทึกรายการ</h1>
+      <h1 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+        <ListChecks size={20} className="text-green-600" /> บันทึกรายการ
+      </h1>
 
       <FilterForm
         projects={projects}

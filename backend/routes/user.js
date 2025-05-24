@@ -103,11 +103,27 @@ module.exports = (authenticateToken, restrictTo, pool) => {
       const { username, email, role, first_name, last_name, is_active } =
         req.body;
       try {
-        await pool.query(
-          `UPDATE users SET username = $1, email = $2, role = $3, first_name = $4, last_name = $5, is_active = $6 WHERE id = $7`,
+        // ตรวจสอบว่าผู้ใช้มีอยู่
+        const userCheck = await pool.query(
+          "SELECT id FROM users WHERE id = $1",
+          [userId]
+        );
+        if (userCheck.rows.length === 0) {
+          return res.status(404).json({ error: "ไม่พบผู้ใช้" });
+        }
+
+        // อัปเดตผู้ใช้
+        const result = await pool.query(
+          "UPDATE users SET username = $1, email = $2, role = $3, first_name = $4, last_name = $5, is_active = $6 WHERE id = $7 RETURNING id, username, email, role, first_name, last_name, is_active",
           [username, email, role, first_name, last_name, is_active, userId]
         );
-        res.json({ message: "User updated" });
+
+        if (result.rows.length === 0) {
+          return res.status(500).json({ error: "ไม่สามารถอัปเดตผู้ใช้ได้" });
+        }
+
+        // คืนข้อมูลผู้ใช้ที่อัปเดต
+        res.json(result.rows[0]);
       } catch (error) {
         console.error("Upadte user error:", error);
         res.status(500).json({ error: "Server Error" });
@@ -125,13 +141,34 @@ module.exports = (authenticateToken, restrictTo, pool) => {
       const { is_active } = req.body;
 
       try {
+        // ตรวจสอบว่า user มีอยู่
+        const userCheck = await pool.query(
+          "SELECT id FROM users WHERE id = $1",
+          [userId]
+        );
+        if (userCheck.rows.length === 0) {
+          return res.status(404).json({ error: "ไม่พบผู้ใช้" });
+        }
+
+        // แปลง is_active เป็น boolean
+        const isActiveBool = is_active === true;
         await pool.query("UPDATE users SET is_active = $1 WHERE id = $2", [
-          is_active,
+          isActiveBool,
           userId,
         ]);
-        res.json({ message: "อัปเดทสถานะผู้ใช้เรียบร้อยแล้ว" });
+
+        // คืนข้อมูลผู้ใช้ที่อัปเดต
+        const updatedUser = await pool.query(
+          "SELECT id, username, role, email, first_name, last_name, is_active FROM users WHERE id = $1",
+          [userId]
+        );
+
+        res.json({
+          message: "อัปเดทสถานะผู้ใช้เรียบร้อยแล้ว",
+          user: updatedUser.rows[0],
+        });
       } catch (error) {
-        console.error("Update user status error:", err);
+        console.error("Update user status error:", error);
         res.status(500).json({ error: "Server error" });
       }
     }
@@ -143,13 +180,25 @@ module.exports = (authenticateToken, restrictTo, pool) => {
     authenticateToken,
     restrictTo("superadmin"),
     async (req, res) => {
-      const userId = req.params.id;
+      if (isNaN(userId)) {
+        return res.status(400).json({ error: "รหัสผู้ใช้ไม่ถูกต้อง" });
+      }
       try {
+        // ตรวจสอบว่าผู้ใช้มีอยู่
+        const userCheck = await pool.query(
+          "SELECT id FROM users WHERE id = $1",
+          [userId]
+        );
+        if (userCheck.rows.length === 0) {
+          return res.status(404).json({ error: "ไม่พบผู้ใช้" });
+        }
+
+        // ลบผู้ใช้
         await pool.query("DELETE FROM users WHERE id = $1", [userId]);
-        res.json({ message: "User deleted" });
+        res.json({ message: "ลบผู้ใช้สำเร็จ" });
       } catch (err) {
         console.error("Delete user error:", err);
-        res.status(500).json({ error: "Server error" });
+        res.status(500).json({ error: "เกิดข้อผิดพลาดในระบบ" });
       }
     }
   );

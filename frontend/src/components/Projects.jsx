@@ -2,6 +2,15 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import AddProject from "./AddProject";
+import {
+  Edit,
+  House,
+  Plus,
+  ToggleLeft,
+  ToggleRight,
+  Trash2,
+  UserPlus,
+} from "lucide-react";
 
 function Projects({ token }) {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -52,8 +61,6 @@ function Projects({ token }) {
       id: project.id,
       name: project.name,
       description: project.description,
-      start_date: project.start_date,
-      end_date: project.end_date,
       water_unit_rate: project.water_unit_rate,
       electricity_unit_rate: project.electricity_unit_rate,
       owner_id: project.owner_id || project.user_id,
@@ -103,109 +110,219 @@ function Projects({ token }) {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg-px-8 py-8">
-      <div className="bg-white shadow-lg rounded-xl p-6 border border-green100">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">
-          🏠 จัดการโครงการ
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="bg-white shadow-lg rounded-xl p-6 border border-green-100 mt-4 animate-slide-in">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <House size={20} className="text-green-600" /> จัดการโครงการ
         </h2>
-        {error && <p className="text-red-600 mb-4">{error}</p>}
+        {error && (
+          <p className="text-red-600 mb-4 bg-red-100 p-3 rounded-md">{error}</p>
+        )}
         <button
           onClick={() => setIsModalOpen(true)}
-          className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 mb-4"
+          className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition"
         >
-          ➕ เพิ่มโครงการใหม่
+          <Plus size={16} className="inline-block mr-1" /> เพิ่มโครงการ
         </button>
-        <div className="overflow-x-auto ">
-          <table className="min-w-[640px] w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-green-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
-                  ชื่อโครงการ
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
-                  เจ้าของ
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
-                  คำอธิบาย
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
-                  ค่าน้ำ/หน่วย
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
-                  ค่าไฟ/หน่วย
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
-                  การจัดการ
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {loading ? (
+        <div className="mt-6">
+          {/* ตารางแบบเดสก์ท็อป */}
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="min-w-[640px] w-full divide-y divide-gray-200 text-sm">
+              <thead className="bg-green-50">
                 <tr>
-                  <td
-                    colSpan="4"
-                    className="px-4 py-3 text-center text-sm text-gray-500"
-                  >
-                    กำลังโหลด...
-                  </td>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                    ชื่อโครงการ
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                    เจ้าของ
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                    คำอธิบาย
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                    ค่าน้ำ/หน่วย
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                    ค่าไฟ/หน่วย
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                    การจัดการ
+                  </th>
                 </tr>
-              ) : projects.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan="4"
-                    className="px-4 py-3 text-center text-sm text-gray-500"
-                  >
-                    ไม่พบโครงการ
-                  </td>
-                </tr>
-              ) : (
-                projects.map((project) => (
-                  <tr key={project.id}>
-                    <td className="px-4 py-3 text-sm">{project.name}</td>
-                    <td className="px-4 py-3 text-sm">
-                      {project.owner_first_name || "-"}{" "}
-                      {project.owner_last_name || "-"}
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      {project.description || "-"}
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      {project.water_unit_rate || "-"}
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      {project.electricity_unit_rate || "-"}
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      <button
-                        onClick={() => openEditModal(project)}
-                        className="text-blue-600 hover:underline"
-                      >
-                        ✏️ แก้ไข
-                      </button>
-                      <button
-                        onClick={() => deleteProject(project.id)}
-                        className="text-red-600 hover:underline ml-2"
-                      >
-                        🗑️ ลบ
-                      </button>
-                      <button
-                        onClick={() =>
-                          toggleActiveStatus(project.id, project.is_active)
-                        }
-                        className={`ml-2 ${
-                          project.is_active
-                            ? "text-yellow-600"
-                            : "text-green-600"
-                        } hover:underline`}
-                      >
-                        {project.is_active ? "⛔ ปิดใช้งาน" : "✅ เปิดใช้งาน"}
-                      </button>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan="4"
+                      className="px-4 py-3 text-center text-sm text-gray-500"
+                    >
+                      กำลังโหลด...
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : projects.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan="4"
+                      className="px-4 py-3 text-center text-sm text-gray-500"
+                    >
+                      ไม่พบโครงการ
+                    </td>
+                  </tr>
+                ) : (
+                  projects.map((project) => (
+                    <tr key={project.id}>
+                      <td className="px-4 py-3 text-sm">{project.name}</td>
+                      <td className="px-4 py-3 text-sm">
+                        {project.owner_first_name || "-"}{" "}
+                        {project.owner_last_name || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {project.description || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {project.water_unit_rate || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {project.electricity_unit_rate || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-sm flex space-x-2">
+                        <button
+                          onClick={() => openEditModal(project)}
+                          className="text-blue-600 hover:text-blue-800 flex items-center text-sm"
+                          aria-label="แก้ไขโครงการ"
+                        >
+                          <Edit size={16} className="mr-1" /> แก้ไข
+                        </button>
+                        <button
+                          onClick={() => deleteProject(project.id)}
+                          className="text-red-600 hover:text-red-800 flex items-center text-sm"
+                          aria-label="ลบโครงการ"
+                        >
+                          <Trash2 size={16} className="mr-1" /> ลบ
+                        </button>
+                        <button
+                          onClick={() =>
+                            toggleActiveStatus(project.id, project.is_active)
+                          }
+                          className={`flex items-center text-sm ${
+                            project.is_active
+                              ? "text-yellow-600 hover:text-yellow-800"
+                              : "text-green-600 hover:text-green-800"
+                          }`}
+                          aria-label={
+                            project.is_active
+                              ? "ปิดใช้งานโครงการ"
+                              : "เปิดใช้งานโครงการ"
+                          }
+                        >
+                          {project.is_active ? (
+                            <>
+                              <ToggleLeft size={16} className="mr-1" />{" "}
+                              ปิดใช้งาน
+                            </>
+                          ) : (
+                            <>
+                              <ToggleRight size={16} className="mr-1" />{" "}
+                              เปิดใช้งาน
+                            </>
+                          )}
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="sm:hidden space-y-4">
+          {loading ? (
+            <div className="text-center text-sm text-gray-500">
+              กำลังโหลด...
+            </div>
+          ) : projects.length === 0 ? (
+            <div className="text-center text-sm text-gray-500">
+              ไม่พบโครงการ
+            </div>
+          ) : (
+            projects.map((project) => (
+              <div
+                key={project.id}
+                className="bg-white p-4 rounded-lg shadow border border-green-100"
+              >
+                <div className="flex justify-between items-center">
+                  <span className="font-medium text-gray-800">
+                    {project.name}
+                  </span>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs ${
+                      project.is_active
+                        ? "bg-green-100 text-green-700"
+                        : "bg-red-100 text-red-700"
+                    }`}
+                  >
+                    {project.is_active ? "ใช้งาน" : "ไม่ได้ใช้งาน"}
+                  </span>
+                </div>
+                <div className="text-sm text-gray-600 mt-1">
+                  เจ้าของ: {project.owner_first_name || "-"}{" "}
+                  {project.owner_last_name || "-"}
+                </div>
+                <div className="text-sm text-gray-600">
+                  คำอธิบาย: {project.description || "-"}
+                </div>
+                <div className="text-sm text-gray-600">
+                  ค่าน้ำ/หน่วย: {project.water_unit_rate || "-"}
+                </div>
+                <div className="text-sm text-gray-600">
+                  ค่าไฟ/หน่วย: {project.electricity_unit_rate || "-"}
+                </div>
+                <div className="mt-3 flex space-x-2 flex-wrap gap-2">
+                  <button
+                    onClick={() => openEditModal(project)}
+                    className="text-blue-600 hover:text-blue-800 flex items-center text-sm"
+                    aria-label="แก้ไขโครงการ"
+                  >
+                    <Edit size={16} className="mr-1" /> แก้ไข
+                  </button>
+                  <button
+                    onClick={() => deleteProject(project.id)}
+                    className="text-red-600 hover:text-red-800 flex items-center text-sm"
+                    aria-label="ลบโครงการ"
+                  >
+                    <Trash2 size={16} className="mr-1" /> ลบ
+                  </button>
+                  <button
+                    onClick={() =>
+                      toggleActiveStatus(project.id, project.is_active)
+                    }
+                    className={`flex items-center text-sm ${
+                      project.is_active
+                        ? "text-yellow-600 hover:text-yellow-800"
+                        : "text-green-600 hover:text-green-800"
+                    }`}
+                    aria-label={
+                      project.is_active
+                        ? "ปิดใช้งานโครงการ"
+                        : "เปิดใช้งานโครงการ"
+                    }
+                  >
+                    {project.is_active ? (
+                      <>
+                        <ToggleLeft size={16} className="mr-1" /> ปิดใช้งาน
+                      </>
+                    ) : (
+                      <>
+                        <ToggleRight size={16} className="mr-1" /> เปิดใช้งาน
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         {isModalOpen && (

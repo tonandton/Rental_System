@@ -21,8 +21,6 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
 
   const navItems = [
     { path: "/", label: "หน้าแรก", roles: ["superadmin", "admin", "user"] },
-
-    { path: "/manage-users", label: "จัดการผู้ใช้", roles: ["superadmin"] },
     {
       path: "/projects",
       label: "จัดการโครงการ",

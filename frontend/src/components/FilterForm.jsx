@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/solid";
 import { toast } from "react-toastify";
+import { RefreshCw, Search } from "lucide-react";
 
 function FilterForm({
   projects,
@@ -95,8 +96,8 @@ function FilterForm({
         className="flex justify-between items-center cursor-pointer mb-2"
         onClick={() => setIsFilterOpen(!isFilterOpen)}
       >
-        <h2 className="text-xl font-semibold text-gray-800 tracking-wide">
-          🔍 ค้นหารายการ
+        <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+          <Search size={20} className="text-green-600" /> ค้นหารายการ
         </h2>
         {isFilterOpen ? (
           <ChevronUpIcon className="h-6 w-6 text-green-600" />
@@ -260,19 +261,19 @@ function FilterForm({
           <div className="col-span-1 sm:col-span-2 md:col-span-3 flex flex-wrap gap-4 mt-2">
             <button
               onClick={() => {
-                handleApplyFilter();
-                setFilters(tempFilter);
-                setCurrentPage(1);
+                if (vaildateFilers()) {
+                  handleApplyFilter();
+                }
               }}
-              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition"
             >
-              🔍 ค้นหา
+              <Search size={16} className="inline-block mr-1" /> ค้นหา
             </button>
             <button
               onClick={resetFilter}
-              className="bg-yellow-300 text-gray-700 px-6 py-2 rounded-md hover:bg-yellow-400 transition"
+              className="bg-yellow-300 text-gray-700 px-4 py-2 rounded-md hover:bg-yellow-400 transition"
             >
-              🧹 รีเซ็ต
+              <RefreshCw size={16} className="inline-block mr-1" /> รีเซ็ต
             </button>
           </div>
         </div>

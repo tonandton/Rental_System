@@ -76,28 +76,26 @@ module.exports = (authenticateToken, restrictTo, pool) => {
       const {
         name,
         description,
-        start_date,
-        end_date,
         water_unit_rate,
         electricity_unit_rate,
         owner_name,
         address, // ✅ เพิ่ม
+        is_active,
       } = req.body;
 
       try {
         const projectResult = await pool.query(
           `INSERT INTO projects 
-          (user_id, name, description, start_date, end_date, water_unit_rate, electricity_unit_rate, address) 
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+          (user_id, name, description, water_unit_rate, electricity_unit_rate, address, is_active) 
+          VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
           [
             req.user.id,
             name,
             description,
-            start_date,
-            end_date,
             water_unit_rate,
             electricity_unit_rate,
             address,
+            is_active,
           ]
         );
         const projectId = projectResult.rows[0].id;
@@ -157,8 +155,6 @@ module.exports = (authenticateToken, restrictTo, pool) => {
       const {
         name,
         description,
-        start_date,
-        end_date,
         water_unit_rate,
         electricity_unit_rate,
         address,
@@ -168,14 +164,11 @@ module.exports = (authenticateToken, restrictTo, pool) => {
       try {
         await pool.query(
           `UPDATE projects 
-         SET name = $1, description = $2, start_date = $3, end_date = $4,
-             water_unit_rate = $5, electricity_unit_rate = $6, address = $7, is_active = $8
-         WHERE id = $9`,
+         SET name = $1, description = $2, water_unit_rate = $3, electricity_unit_rate = $4, address = $5, is_active = $6
+         WHERE id = $7`,
           [
             name,
             description,
-            start_date,
-            end_date,
             water_unit_rate,
             electricity_unit_rate,
             address,

@@ -1,6 +1,14 @@
 import { useState } from "react";
 import axios from "axios";
-import { Calendar, Droplet, Warehouse, Zap } from "lucide-react";
+import {
+  Calendar,
+  Droplet,
+  Plus,
+  RefreshCw,
+  Save,
+  Warehouse,
+  Zap,
+} from "lucide-react";
 import { toast } from "react-toastify";
 
 function AddRentalForm({
@@ -222,7 +230,9 @@ function AddRentalForm({
         className="flex justify-between items-center cursor-pointer"
         onClick={() => setIsFormOpen(!isFormOpen)}
       >
-        <h2 className="text-xl font-semibold text-gray-800">➕ เพิ่มรายการ</h2>
+        <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+          <Plus size={20} className="text-green-600" /> เพิ่มรายการ
+        </h2>
         {/* {isFormOpen ? (
             <ChevronUpIcon className="h-6 w-6 text-green-600" />
           ) : (
@@ -237,22 +247,22 @@ function AddRentalForm({
             onClick={() => setActiveTab("water")}
             className={`px-5 py-2 rounded-md font-medium ${
               activeTab === "water"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-blue-100"
-            }`}
+                ? "bg-indigo-600 text-white"
+                : "bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
+            } transition`}
           >
-            <Droplet size={16} /> ค่าน้ำ
+            <Droplet size={16} className="inline-block mr-1" /> ค่าน้ำ
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("electricity")}
             className={`px-5 py-2 rounded-md font-medium ${
               activeTab === "electricity"
-                ? "bg-amber-500 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-amber-100"
-            }`}
+                ? "bg-yellow-600 text-white"
+                : "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
+            } transition`}
           >
-            <Zap size={16} /> ค่าไฟ
+            <Zap size={16} className="inline-block mr-1" /> ค่าไฟ
           </button>
         </div>
 
@@ -491,9 +501,9 @@ function AddRentalForm({
             <div className="mt-6 flex space-x-4">
               <button
                 type="submit"
-                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition"
               >
-                📝 บันทึก
+                <Save size={16} className="inline-block mr-1" /> บันทึก
               </button>
               <button
                 type="button"
@@ -509,9 +519,9 @@ function AddRentalForm({
                     status: "pending",
                   })
                 }
-                className="bg-yellow-300 text-gray-700 px-6 py-2 rounded-md hover:bg-yellow-400 transition"
+                className="bg-yellow-300 text-gray-700 px-4 py-2 rounded-md hover:bg-yellow-400 transition"
               >
-                🧹 รีเซ็ต
+                <RefreshCw size={16} className="inline-block mr-1" /> รีเซ็ต
               </button>
             </div>
           </form>

@@ -9,6 +9,10 @@ import {
   User,
   Image,
   MapPinHouse,
+  Building2,
+  Save,
+  Plus,
+  RefreshCw,
 } from "lucide-react";
 
 function AddProject({ token, project = null, onClose }) {
@@ -17,8 +21,6 @@ function AddProject({ token, project = null, onClose }) {
   const [formData, setFormData] = useState({
     name: project?.name || "",
     description: project?.description || "",
-    start_date: project?.start_date ? project.start_date.split("T")[0] : "",
-    end_date: project?.end_date ? project.end_date.split("T")[0] : "",
     water_unit_rate: project?.water_unit_rate || "",
     electricity_unit_rate: project?.electricity_unit_rate || "",
     owner_name: project?.owner_id || "",
@@ -120,14 +122,6 @@ function AddProject({ token, project = null, onClose }) {
     setLoading(true);
     setError("");
 
-    // ตรวจสอบวันที่
-    if (formData.end_date && formData.start_date > formData.end_date) {
-      setError("วันที่สิ้นสุดต้องไม่เร็วกว่าวันที่เริ่ม");
-      setLoading(false);
-      toast.error("วันที่ไม่ถูกต้อง", { autoClose: 3000 });
-      return;
-    }
-
     try {
       let projectId = project?.id;
       if (isEditMode) {
@@ -159,7 +153,7 @@ function AddProject({ token, project = null, onClose }) {
             imageFormData,
             {
               headers: {
-                Authorizatin: `Bearer ${token}`,
+                Authorization: `Bearer ${token}`,
                 "Content-Type": "multipart/form-data",
               },
             }
@@ -178,11 +172,12 @@ function AddProject({ token, project = null, onClose }) {
         setFormData({
           name: "",
           description: "",
-          start_date: "",
-          end_date: "",
           water_unit_rate: "",
           electricity_unit_rate: "",
           owiner_name: "",
+          image_path: "",
+          address: "",
+          is_active: true,
         });
         setImage(null);
       }
@@ -208,11 +203,11 @@ function AddProject({ token, project = null, onClose }) {
       <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
         {isEditMode ? (
           <>
-            <Building size={20} className="text-green-600" /> แก้ไขโครงการ
+            <Building2 size={20} className="text-green-600" /> แก้ไขโครงการ
           </>
         ) : (
           <>
-            <Building size={20} className="text-green-600" /> เพิ่มโครงการใหม่
+            <Building2 size={20} className="text-green-600" /> เพิ่มโครงการใหม่
           </>
         )}
       </h2>
@@ -436,9 +431,14 @@ function AddProject({ token, project = null, onClose }) {
               {loading ? (
                 "กำลังบันทึก..."
               ) : isEditMode ? (
-                <>💾 บันทึกการแก้ไข</>
+                <>
+                  <Save size={16} className="inline-block mr-1" />{" "}
+                  บันทึกการแก้ไข
+                </>
               ) : (
-                <>➕ เพิ่มโครงการ</>
+                <>
+                  <Plus size={16} className="inline-block mr-1" /> เพิ่มโครงการ
+                </>
               )}
             </button>
             {isEditMode && onClose && (
@@ -447,7 +447,7 @@ function AddProject({ token, project = null, onClose }) {
                 onClick={onClose}
                 className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition"
               >
-                ยกเลิก
+                <X size={16} className="inline-block mr-1" /> ยกเลิก
               </button>
             )}
             <button
@@ -456,16 +456,16 @@ function AddProject({ token, project = null, onClose }) {
                 setFormData({
                   name: "",
                   description: "",
-                  start_date: "",
-                  end_date: "",
                   water_unit_rate: "",
                   electricity_unit_rate: "",
                   owner_name: "",
+                  address: "",
+                  is_active: true,
                 })
               }
               className="bg-yellow-300 text-gray-700 px-4 py-2 rounded-md hover:bg-yellow-400 transition"
             >
-              🧹 รีเซ็ต
+              <RefreshCw size={16} className="inline-block mr-1" /> รีเซ็ต
             </button>
           </div>
         </form>
