@@ -182,6 +182,8 @@ module.exports = (authenticateToken, restrictTo, pool) => {
         previous_electricity_meter,
         current_electricity_meter,
         status,
+        water_description,
+        electricity_description,
       } = req.body;
       try {
         const projectResult = await pool.query(
@@ -220,7 +222,7 @@ module.exports = (authenticateToken, restrictTo, pool) => {
         const now = new Date();
 
         const result = await pool.query(
-          "INSERT INTO rental_history (user_id, recorder_id, project_id, rental_date, amount, previous_water_meter, current_water_meter, water_units, water_bill, previous_electricity_meter, current_electricity_meter, electricity_units, electricity_bill, status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING id",
+          "INSERT INTO rental_history (user_id, recorder_id, project_id, rental_date, amount, previous_water_meter, current_water_meter, water_units, water_bill, previous_electricity_meter, current_electricity_meter, electricity_units, electricity_bill, water_description, electricity_description, status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) RETURNING id",
           [
             req.user.id,
             req.user.id,
@@ -235,6 +237,8 @@ module.exports = (authenticateToken, restrictTo, pool) => {
             toNullableNumber(current_electricity_meter),
             electricity_units,
             electricity_bill,
+            water_description || null,
+            electricity_description || null,
             status,
             now,
             now,
@@ -267,12 +271,13 @@ module.exports = (authenticateToken, restrictTo, pool) => {
           console.error("Multer error:", err);
           return res.status(400).json({ error: err.meesage });
         }
+        next();
       }),
         console.log("Files received:", req.files); // Debug
-      next();
     },
     async (req, res) => {
       const historyId = req.params.id;
+      const { water_description, electricity_description } = req.body;
       try {
         console.log("Files received:", req.files); // Debug
         const historyResult = await pool.query(
@@ -313,6 +318,12 @@ module.exports = (authenticateToken, restrictTo, pool) => {
           updates.electricity_image_path = electricityImagePath;
           console.log("Electricity image saved:", electricityImagePath); // Debug
         }
+        if (water_description) {
+          updates.water_description = water_description;
+        }
+        if (electricity_description) {
+          updates.electricity_description = electricity_description;
+        }
 
         if (Object.keys(updates).length > 0) {
           const fields = Object.keys(updates)
@@ -327,10 +338,135 @@ module.exports = (authenticateToken, restrictTo, pool) => {
           );
         }
 
-        res.json({ message: "Images uploaded", ...updates });
+        res.json({ message: "Images and descriptions uploaded", ...updates });
       } catch (err) {
         console.error("Upload history images error:", err);
         res.status(500).json({ error: "Server error" });
+      }
+    }
+  );
+
+  router.put(
+    "/history/:id",
+    authenticateToken,
+    restrictTo("superadmin", "admin"),
+    async (req, res) => {
+      const historyId = req.params.id;
+      const {
+        project_id,
+        rental_date,
+        amount,
+        previous_water_meter,
+        current_water_meter,
+        previous_electricity_meter,
+        current_electricity_meter,
+        status,
+        water_description,
+        electricity_description,
+      } = req.body;
+
+      // ตรวจสอบสิทธิ์
+      try {
+        // ตรวจสอบว่ามี record อยู่
+        const historyResult = await pool.querty(
+          "SELECT user_id, project_id FROM rental_history WHERE id = $1",
+          [historyId]
+        );
+        const history = historyResult.rows[0];
+        if (!history)
+          return res.status(404).json({ error: "Rental history not found" });
+
+        // ตรวจสอบสิทธิ์
+        if (req.user.role === "superadmin") {
+          return; // หรือ return next(); ถ้าใช้ middleware
+        }
+        // ถ้าเป็น user ต้องเป็นเจ้าของโครงการ หรือเจ้าของข้อมูล
+        if (req.user.role === "user") {
+          const ownerResult = await pool.query(
+            "SELECT 1 FROM project_owners WHERE project_id = $1 AND user_id = $2",
+            [history.project_id, req.user.id]
+          );
+          if (!ownerResult.rows.length && history.user_id !== req.user.id) {
+            return res.status(403).json({ error: "Unauthorized" });
+          }
+          // ถ้าเป็น admin ต้องเป็นเจ้าของข้อมูล
+        } else if (
+          req.user.role === "admin" &&
+          history.user_id !== req.user.id
+        ) {
+          return res.status(403).json({ error: "Unauthorized" });
+        }
+
+        // ดึงข้อมูล project เพื่อคำนวน bill
+        const projectResult = await pool.query(
+          "SELECT water_unit_rate, electricity_unit_rate FROM projects WHERE id = $1"
+        );
+        const project = projectResult.rows[0];
+        if (!project)
+          return res.status(404).json({ error: "Project not found" });
+
+        const water_units =
+          current_water_meter && previous_water_meter
+            ? current_water_meter - previous_water_meter
+            : current_water_meter || 0;
+        const electricity_units =
+          current_electricity_meter && previous_electricity_meter
+            ? current_electricity_meter - previous_electricity_meter
+            : current_electricity_meter || 0;
+        const water_bill = water_units & project.water_unit_rate;
+        const electricity_bill =
+          electricity_units * project.electricity_unit_rate;
+
+        const toNullableNumber = (value) =>
+          value === "" || value === undefined ? null : Number(value);
+        const now = new Date();
+
+        await pool.query(
+          `UPDATE rental_history SET 
+          project_id = $1,
+          rental_date = $2,
+          amount = $3,
+          previous_water_meter = $4,
+          current_water_meter = $5,
+          water_units = $6,
+          water_bill = $7,
+          previous_electricity_meter = $8,
+          current_electricity_meter = $9,
+          electricity_units = $10,
+          electricity_bill = $11,
+          water_description = $12,
+          electricity_description = $13,
+          status = $14,
+          updated_at = $15
+          WHERE id = $16`,
+          [
+            project_id,
+            rental_date,
+            toNullableNumber(amount),
+            toNullableNumber(previous_water_meter),
+            toNullableNumber(current_water_meter),
+            water_units,
+            water_bill,
+            toNullableNumber(previous_electricity_meter),
+            toNullableNumber(current_electricity_meter),
+            electricity_units,
+            electricity_bill,
+            water_description || null,
+            electricity_description || null,
+            status,
+            now,
+            historyId,
+          ]
+        );
+
+        res.json({
+          message: "Rental history updated",
+          water_bill,
+          electricity_bill,
+        });
+      } catch (error) {
+        console.error("Update history error:", error);
+        res.status(500).json({ error: "เกิดข้อผิดพลาดในการอัปเดตข้อมูล" });
       }
     }
   );

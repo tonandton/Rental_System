@@ -1,4 +1,4 @@
-import { FileText } from "lucide-react";
+import { Edit, FileText } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 
@@ -12,6 +12,7 @@ function HistoryTable({
   itemsPerPage,
   tableRef,
   API_BASE_URL,
+  onEdit,
 }) {
   const [popupImage, setPopupImage] = useState(null);
 
@@ -64,18 +65,21 @@ function HistoryTable({
                     <th>รอบวันที่</th>
                     <th>โครงการ</th>
                     <th>เจ้าของโครงการ</th>
-                    <th>มิเตอร์รอบที่ผ่านมา</th>
-                    <th>มิเตอร์รอบปัจจุบัน</th>
-                    <th>รูปมิเตอร์รอบปัจจุบัน</th>
+                    <th>มิเตอร์น้ำรอบที่ผ่านมา</th>
+                    <th>มิเตอร์น้ำรอบปัจจุบัน</th>
+                    <th>รูปมิเตอร์น้ำรอบปัจจุบัน</th>
                     <th>หน่วย</th>
                     <th>รวมค่าน้ำ</th>
+                    <th>หมายเหตุเพิ่มเติมสำหรับมิเตอร์น้ำ</th>
                     <th>มิเตอร์ไฟรอบที่ผ่านมา</th>
                     <th>มิเตอร์ไฟรอบปัจจุบัน</th>
                     <th>รูปมิเตอร์ไฟรอบปัจจุบัน</th>
                     <th>หน่วย</th>
                     <th>รวมค่าไฟ</th>
+                    <th>หมายเหตุเพิ่มเติมสำหรับมิเตอร์ไฟ</th>
                     <th>ผู้บันทึก</th>
                     <th>วันที่ลงข้อมูล</th>
+                    <th>Action</th>
                     {/* <th>วันที่อัพเดทข้อมูล</th> */}
                   </tr>
                 </thead>
@@ -94,6 +98,7 @@ function HistoryTable({
                             day: "numeric",
                           })}
                         </td>
+
                         <td>{item.project_name}</td>
                         <td>{item.owner_first_name}</td>
                         <td>{Math.floor(item.previous_water_meter)}</td>
@@ -147,6 +152,8 @@ function HistoryTable({
                         </td>
                         <td>{Math.floor(item.water_units)}</td>
                         <td>{item.water_bill}</td>
+                        <td>{item.water_description || "-"}</td>
+
                         <td>{Math.floor(item.previous_electricity_meter)}</td>
                         <td>{Math.floor(item.current_electricity_meter)}</td>
                         <td>
@@ -198,6 +205,7 @@ function HistoryTable({
                         </td>
                         <td>{Math.floor(item.electricity_units)}</td>
                         <td>{item.electricity_bill}</td>
+                        <td>{item.electricity_descripiton || "-"}</td>
                         <td>{item.username}</td>
                         <td>
                           {" "}
@@ -218,6 +226,16 @@ function HistoryTable({
                             minute: "2-digit",
                           })}
                         </td> */}
+                        <td>
+                          <button
+                            onClick={() => onEdit(item)}
+                            className="text-green-600 hover:text-green-800 flex items-center"
+                            aria-label="แก้ไขรายการ"
+                          >
+                            <Edit size={16} className="mr-1" />
+                            แก้ไขรายการบันทึก
+                          </button>
+                        </td>
                       </tr>
                     ))
                   )}
@@ -225,6 +243,7 @@ function HistoryTable({
               </table>
             </div>
 
+            {/* ตารางสำหรับมือถือ */}
             <div className="sm:hidden space-y-4">
               {loading ? (
                 <div className="text-center text-sm text-gray-500">
@@ -270,6 +289,12 @@ function HistoryTable({
                       ค่าน้ำ: {item.water_bill}
                     </div>
                     <div className="text-sm text-gray-600">
+                      หมายเหตุเพิ่มเติมสำหรับมิเตอร์น้ำ:{" "}
+                      {item.water_description || (
+                        <span className="text-rose-600">{"ไม่มีข้อมูล"}</span>
+                      )}
+                    </div>
+                    <div className="text-sm text-gray-600">
                       มิเตอร์ไฟก่อนหน้า:{" "}
                       {Math.floor(item.previous_electricity_meter)}
                     </div>
@@ -282,6 +307,12 @@ function HistoryTable({
                     </div>
                     <div className="text-sm text-gray-600">
                       ค่าไฟ: {item.electricity_bill}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      หมายเหตุเพิ่มเติมสำหรับมิเตอร์ไฟ:{" "}
+                      {item.water_description || (
+                        <span className="text-rose-600">{"ไม่มีข้อมูล"}</span>
+                      )}
                     </div>
                     <div className="text-sm text-gray-600">
                       ผู้บันทึก: {item.username}
@@ -323,11 +354,20 @@ function HistoryTable({
                           <Image size={16} className="mr-1" /> ดูรูปมิเตอร์ไฟ
                         </button>
                       )}
+                      <button
+                        onClick={() => onEdit(item)}
+                        className="text-green-600 hover:text-green-800 flex items-center text-sm"
+                        aria-label="แก้ไขรายการ"
+                      >
+                        <Edit size={16} className="mr-1" /> แก้ไขรายการบันทึก
+                      </button>
                     </div>
                   </div>
                 ))
               )}
             </div>
+
+            {/* โ */}
 
             {/* Pagination */}
             {totalPages > 1 && (

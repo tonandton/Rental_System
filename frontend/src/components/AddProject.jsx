@@ -13,6 +13,7 @@ import {
   Save,
   Plus,
   RefreshCw,
+  X,
 } from "lucide-react";
 
 function AddProject({ token, project = null, onClose }) {
@@ -233,43 +234,38 @@ function AddProject({ token, project = null, onClose }) {
 
             <div>
               <label className="block font-medium text-gray-700 mb-1">
-                <Building size={16} className="inline-block mr-1" /> คำอธิบาย
+                <User size={16} className="inline-block mr-1" /> เจ้าของโครงการ
               </label>
-              <input
-                type="text"
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                required
-                className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
-              />
+              <div className="relative">
+                <select
+                  name="owner_name"
+                  value={formData.owner_name}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition appearance-none pr-10"
+                >
+                  <option value="">เลือกเจ้าของโครงการ</option>
+                  {owners.map((owner) => (
+                    <option key={owner.id} value={owner.id}>
+                      {owner.first_name} {owner.last_name}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
+                  <svg
+                    className="h-5 w-5 text-gray-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 12a1 1 0 01-.7-.3l-4-4a1 1 0 011.4-1.4L10 9.58l3.3-3.3a1 1 0 011.4 1.42l-4 4a1 1 0 01-.7.3z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+              </div>
             </div>
-
-            {/* <div>
-              <label className="block font-medium text-gray-700 mb-1">
-                <Calendar size={16} className="inline-block mr-1" /> วันที่เริ่ม
-              </label>
-              <input
-                type="date"
-                name="start_date"
-                value={formData.start_date}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
-              />
-            </div>
-            <div>
-              <label className="block font-medium text-gray-700 mb-1">
-                <Calendar size={16} className="inline-block mr-1" />{" "}
-                วันที่สิ้นสุด
-              </label>
-              <input
-                type="date"
-                name="end_date"
-                value={formData.end_date}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
-              />
-            </div> */}
 
             <div>
               <label className="block font-medium text-gray-700 mb-1">
@@ -319,38 +315,44 @@ function AddProject({ token, project = null, onClose }) {
 
             <div>
               <label className="block font-medium text-gray-700 mb-1">
-                <User size={16} className="inline-block mr-1" /> เจ้าของโครงการ
+                <Building size={16} className="inline-block mr-1" />{" "}
+                หมายเหตุเพิ่มเติมสำหรับโครงการ
               </label>
-              <div className="relative">
-                <select
-                  name="owner_name"
-                  value={formData.owner_name}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition appearance-none pr-10"
-                >
-                  <option value="">เลือกเจ้าของโครงการ</option>
-                  {owners.map((owner) => (
-                    <option key={owner.id} value={owner.id}>
-                      {owner.first_name} {owner.last_name}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
-                  <svg
-                    className="h-5 w-5 text-gray-400"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 12a1 1 0 01-.7-.3l-4-4a1 1 0 011.4-1.4L10 9.58l3.3-3.3a1 1 0 011.4 1.42l-4 4a1 1 0 01-.7.3z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-              </div>
+              <input
+                type="text"
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                required
+                className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
+              />
             </div>
+
+            {/* <div>
+              <label className="block font-medium text-gray-700 mb-1">
+                <Calendar size={16} className="inline-block mr-1" /> วันที่เริ่ม
+              </label>
+              <input
+                type="date"
+                name="start_date"
+                value={formData.start_date}
+                onChange={handleInputChange}
+                className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
+              />
+            </div>
+            <div>
+              <label className="block font-medium text-gray-700 mb-1">
+                <Calendar size={16} className="inline-block mr-1" />{" "}
+                วันที่สิ้นสุด
+              </label>
+              <input
+                type="date"
+                name="end_date"
+                value={formData.end_date}
+                onChange={handleInputChange}
+                className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
+              />
+            </div> */}
 
             <div>
               <label className="block font-medium text-gray-700 mb-1">

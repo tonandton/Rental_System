@@ -5,7 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 import FilterForm from "./FilterForm";
 import AddRentalForm from "./AddRentalForm";
 import HistoryTable from "./HistoryTable";
-import { ListChecks } from "lucide-react";
+import { Edit, ListChecks } from "lucide-react";
 
 function AddRentalHistory({ token, role, user }) {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -17,6 +17,7 @@ function AddRentalHistory({ token, role, user }) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const tableRef = useRef(null);
+  const [editItem, setEditItem] = useState(null);
 
   // Filter state
   const [filters, setFilters] = useState({
@@ -94,6 +95,14 @@ function AddRentalHistory({ token, role, user }) {
     }
   };
 
+  const handleEdit = (item) => {
+    setEditItem(item);
+  };
+
+  const handleCloseEditModal = () => {
+    setEditItem(null);
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg-px-8 py-8">
       <h1 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
@@ -130,7 +139,32 @@ function AddRentalHistory({ token, role, user }) {
         itemsPerPage={itemsPerPage}
         tableRef={tableRef}
         API_BASE_URL={API_BASE_URL}
+        onEdit={setEditItem}
       />
+
+      {/* โมเดลแก้ไข */}
+      {editItem && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-slide-in overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-md sm:max-w-lg mx-4 my-4 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <Edit size={20} className="text-green-600" /> แก้ไขรายการ
+            </h2>
+            <AddRentalForm
+              token={token}
+              role={role}
+              user={user}
+              projects={projects}
+              setHistory={setHistory}
+              filters={filters}
+              setCurrentPage={setCurrentPage}
+              tableRef={tableRef}
+              initialData={editItem}
+              isEditMode={true}
+              onClose={handleCloseEditModal}
+            />
+          </div>
+        </div>
+      )}
 
       <ToastContainer position="top-right" autoClose={3000} />
     </div>

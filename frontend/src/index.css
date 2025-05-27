@@ -68,7 +68,11 @@ button {
 }
 
 input {
-  @apply block w-full pl-3 pr-3 py-2 rounded-md border border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 text-sm transition duration-150 ease-in-out;
+  @apply block w-full pl-3 pr-3 py-2 rounded-md border border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 text-sm transition duration-150 ease-in-out focus:outline-none;
+}
+
+textarea {
+  @apply block w-full pl-3 pr-3 py-2 rounded-md border border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 text-sm transition duration-150 ease-in-out focus:outline-none;
 }
 
 select {
