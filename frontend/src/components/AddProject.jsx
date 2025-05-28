@@ -24,7 +24,7 @@ function AddProject({ token, project = null, onClose }) {
     description: project?.description || "",
     water_unit_rate: project?.water_unit_rate || "",
     electricity_unit_rate: project?.electricity_unit_rate || "",
-    owner_name: project?.owner_id || "",
+    owner_id: project?.owner_id || "",
     address: project?.address || "", // ✅
     is_active: project?.is_active ?? true, // ✅
   });
@@ -75,7 +75,9 @@ function AddProject({ token, project = null, onClose }) {
   const fetchProjectOwners = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/project-owners`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       // console.log("Fetched project owners: ", response.data);
       setOwners(response.data);
@@ -86,6 +88,10 @@ function AddProject({ token, project = null, onClose }) {
           setFormData((prev) => ({ ...prev, owner_name: owner.id }));
         }
       }
+
+      // เพิ่มใน onClose หรือหลัง success
+      // if (onClose) onClose(); // ปิด modal
+      // fetchProjects(); // โหลดข้อมูลใหม่
     } catch (error) {
       console.error("Fetch project owners error:", error);
       setError("ไม่สามารถโหลดข้อมูลเจ้าของโครงการ");
@@ -95,7 +101,7 @@ function AddProject({ token, project = null, onClose }) {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, owner_id: value }));
   };
 
   const handleImageChange = (e) => {
@@ -175,7 +181,7 @@ function AddProject({ token, project = null, onClose }) {
           description: "",
           water_unit_rate: "",
           electricity_unit_rate: "",
-          owiner_name: "",
+          owiner_id: "",
           image_path: "",
           address: "",
           is_active: true,
@@ -238,8 +244,8 @@ function AddProject({ token, project = null, onClose }) {
               </label>
               <div className="relative">
                 <select
-                  name="owner_name"
-                  value={formData.owner_name}
+                  name="owner_id"
+                  value={formData.owner_id}
                   onChange={handleInputChange}
                   className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition appearance-none pr-10"
                 >

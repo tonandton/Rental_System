@@ -21,94 +21,104 @@ function App() {
   );
 
   return (
-    <ErrorBoundary>
-      <Router>
-        <Navbar
-          token={token}
-          role={role}
-          user={user}
-          setToken={setToken}
-          setRole={setRole}
-          setUser={setUser}
-        />
-        <Routes>
-          <Route
-            path="/login"
-            element={
-              <Login setToken={setToken} setRole={setRole} setUser={setUser} />
-            }
+    <div>
+      <ErrorBoundary>
+        <Router>
+          <Navbar
+            token={token}
+            role={role}
+            user={user}
+            setToken={setToken}
+            setRole={setRole}
+            setUser={setUser}
           />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute token={token}>
-                <Main
-                  token={token}
-                  role={role}
+          <Routes>
+            <Route
+              path="/login"
+              element={
+                <Login
                   setToken={setToken}
                   setRole={setRole}
+                  setUser={setUser}
                 />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/projects"
-            element={
-              <ProtectedRoute token={token}>
-                {["superadmin", "admin"].includes(role) ? (
-                  <Projects token={token} role={role} />
-                ) : (
-                  <div className="p-8 text-red-600 font-semibold text-center">
-                    คุณไม่มีสิทธิ์เข้าถึงหน้านี้
-                  </div>
-                )}
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/add-project"
-            element={
-              <ProtectedRoute token={token}>
-                {["superadmin", "admin"].includes(role) ? (
-                  <AddProject token={token} role={role} />
-                ) : (
-                  <div className="p-8 text-red-600 font-semibold text-center">
-                    คุณไม่มีสิทธิ์เข้าถึงหน้านี้
-                  </div>
-                )}
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/manage-users"
-            element={
-              <ProtectedRoute token={token}>
-                {["superadmin", "admin"].includes(role) ? (
-                  <UserMangement token={token} role={role} />
-                ) : (
-                  <div className="p-8 text-red-600 font-semibold text-center">
-                    คุณไม่มีสิทธิ์เข้าถึงหน้านี้
-                  </div>
-                )}
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/add-rental-history"
-            element={<AddRentalHistory token={token} role={role} user={user} />}
-          />
-        </Routes>
-      </Router>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        pauseOnHover
-        draggable
-      />
-    </ErrorBoundary>
+              }
+            />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute token={token}>
+                  <Main
+                    token={token}
+                    role={role}
+                    setToken={setToken}
+                    setRole={setRole}
+                  />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/projects"
+              element={
+                <ProtectedRoute token={token}>
+                  {["superadmin", "admin"].includes(role) ? (
+                    <Projects token={token} role={role} />
+                  ) : (
+                    <div className="p-8 text-red-600 font-semibold text-center">
+                      คุณไม่มีสิทธิ์เข้าถึงหน้านี้
+                    </div>
+                  )}
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/add-project"
+              element={
+                <ProtectedRoute token={token}>
+                  {["superadmin", "admin"].includes(role) ? (
+                    <AddProject token={token} role={role} />
+                  ) : (
+                    <div className="p-8 text-red-600 font-semibold text-center">
+                      คุณไม่มีสิทธิ์เข้าถึงหน้านี้
+                    </div>
+                  )}
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/manage-users"
+              element={
+                <ProtectedRoute token={token}>
+                  {["superadmin", "admin"].includes(role) ? (
+                    <UserMangement token={token} role={role} />
+                  ) : (
+                    <div className="p-8 text-red-600 font-semibold text-center">
+                      คุณไม่มีสิทธิ์เข้าถึงหน้านี้
+                    </div>
+                  )}
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/add-rental-history"
+              element={
+                <AddRentalHistory token={token} role={role} user={user} />
+              }
+            />
+          </Routes>
+        </Router>
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
+      </ErrorBoundary>
+    </div>
   );
 }
 

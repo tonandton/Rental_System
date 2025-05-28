@@ -97,6 +97,7 @@ function AddRentalHistory({ token, role, user }) {
 
   const handleEdit = (item) => {
     setEditItem(item);
+    console.log(item);
   };
 
   const handleCloseEditModal = () => {
@@ -139,7 +140,8 @@ function AddRentalHistory({ token, role, user }) {
         itemsPerPage={itemsPerPage}
         tableRef={tableRef}
         API_BASE_URL={API_BASE_URL}
-        onEdit={setEditItem}
+        // onEdit={setEditItem}
+        onEdit={handleEdit}
       />
 
       {/* โมเดลแก้ไข */}

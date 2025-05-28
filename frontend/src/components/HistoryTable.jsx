@@ -15,7 +15,6 @@ function HistoryTable({
   onEdit,
 }) {
   const [popupImage, setPopupImage] = useState(null);
-
   useEffect(() => {
     if (error) {
       toast.error(`โหลดข้อมูลล้มเหลว: ${error}`, { autoClose: 3000 });
@@ -205,7 +204,7 @@ function HistoryTable({
                         </td>
                         <td>{Math.floor(item.electricity_units)}</td>
                         <td>{item.electricity_bill}</td>
-                        <td>{item.electricity_descripiton || "-"}</td>
+                        <td>{item.electricity_description || "-"}</td>
                         <td>{item.username}</td>
                         <td>
                           {" "}
@@ -310,7 +309,7 @@ function HistoryTable({
                     </div>
                     <div className="text-sm text-gray-600">
                       หมายเหตุเพิ่มเติมสำหรับมิเตอร์ไฟ:{" "}
-                      {item.water_description || (
+                      {item.electricity_description || (
                         <span className="text-rose-600">{"ไม่มีข้อมูล"}</span>
                       )}
                     </div>
@@ -366,8 +365,6 @@ function HistoryTable({
                 ))
               )}
             </div>
-
-            {/* โ */}
 
             {/* Pagination */}
             {totalPages > 1 && (

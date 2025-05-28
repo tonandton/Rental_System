@@ -78,7 +78,7 @@ module.exports = (authenticateToken, restrictTo, pool) => {
         description,
         water_unit_rate,
         electricity_unit_rate,
-        owner_name,
+        owner_id,
         address, // ✅ เพิ่ม
         is_active,
       } = req.body;
@@ -102,7 +102,7 @@ module.exports = (authenticateToken, restrictTo, pool) => {
 
         await pool.query(
           "INSERT INTO project_owners (project_id, user_id) VALUES ($1, $2)",
-          [projectId, owner_name || req.user.id]
+          [projectId, owner_id || req.user.id]
         );
 
         res.status(201).json({ id: projectId, message: "Project created" });
@@ -159,6 +159,7 @@ module.exports = (authenticateToken, restrictTo, pool) => {
         electricity_unit_rate,
         address,
         is_active,
+        owner_id,
       } = req.body;
 
       try {
@@ -176,6 +177,16 @@ module.exports = (authenticateToken, restrictTo, pool) => {
             projectId,
           ]
         );
+
+        await pool.query("DELETE FROM project_owners WHERE project_id = $1", [
+          projectId,
+        ]);
+
+        await pool.query(
+          "INSERT INTO project_owners (project_id, user_id) VALUES ($1, $2)",
+          [projectId, owner_id]
+        );
+
         res.json({ message: "Project updated" });
       } catch (err) {
         console.error("Update project error:", err);
@@ -186,9 +197,20 @@ module.exports = (authenticateToken, restrictTo, pool) => {
 
   // Get project owner - แสดงโครงการของตัวแทน
   router.get("/project-owners", authenticateToken, async (req, res) => {
+    // try {
+    //   const result = await pool.query(
+    //     `SELECT DISTINCT u.id, u.first_name, u.last_name FROM users u JOIN project_owners po ON u.id = po.user_id ORDER BY u.first_name`
+    //   );
+    //   res.json(result.rows);
+
     try {
+      // ให้เฉพาะ superadmin หรือ admin เข้าถึง
+      if (!["superadmin", "admin"].includes(req.user.role)) {
+        return res.status(403).json({ error: "Unauthorized" });
+      }
+
       const result = await pool.query(
-        `SELECT DISTINCT u.id, u.first_name, u.last_name FROM users u JOIN project_owners po ON u.id = po.user_id ORDER BY u.first_name`
+        `SELECT id, first_name, last_name FROM users ORDER BY first_name`
       );
       res.json(result.rows);
     } catch (err) {

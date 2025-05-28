@@ -67,20 +67,36 @@ function AddRentalForm({
     electricity_image: null,
   });
 
+  // ฟังก์ชันแปลงวันที่ให้เป็น YYYY-MM-DD
+  const formatDateForInput = (dateStr) => {
+    if (!dateStr) return "";
+    // ถ้าเป็น YYYY-MM-DD ใช้เลย
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+    // จัดการกรณีอื่น (เช่น TIMESTAMP)
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return "";
+    // แปลงเป็น local date (UTC+7)
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   useEffect(() => {
     if (initialData && isEditMode) {
       setFormData({
-        project_id: initialData.project_id || "",
-        rental_date: initialData.rental_date
-          ? new Date(initialData.rental_date).toISOString().split("T")[0]
+        project_id: initialData.project_id
+          ? String(initialData.project_id)
           : "",
+        rental_date: formatDateForInput(initialData.rental_date),
         amount: initialData.amount || "",
-        previous_water_meter: initialData.previous_water || "",
-        current_water_meter: initialData.current_water || "",
-        previous_electricity_meter: initialData.previous_electricity || "",
-        current_electricity_meter: initialData.current_electricity || "",
+        previous_water_meter: initialData.previous_water_meter || "",
+        current_water_meter: initialData.current_water_meter || "",
+        previous_electricity_meter:
+          initialData.previous_electricity_meter || "",
+        current_electricity_meter: initialData.current_electricity_meter || "",
         water_description: initialData.water_description || "",
-        electricity_description: initialData.electricity || "",
+        electricity_description: initialData.electricity_description || "",
         status: initialData.status || "pending",
       });
       // โหลด preview รูปภาพถ้ามี
@@ -97,7 +113,7 @@ function AddRentalForm({
         }));
       }
     }
-  }, [initialData, isEditMode, API_BASE_URL]);
+  }, [initialData, isEditMode, API_BASE_URL, projects]);
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
@@ -175,12 +191,13 @@ function AddRentalForm({
       const url = isEditMode
         ? `${API_BASE_URL}/api/history/${initialData.id}`
         : `${API_BASE_URL}/api/history`;
-      const method = isEditMode ? "PUT" : "POST";
+      const headers = { Authorization: `Bearer ${token}` };
 
       // สร้าง record ใน rental_history
-      const response = await axios[method](url, sanitizedFormData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = isEditMode
+        ? await axios.put(url, sanitizedFormData, { headers })
+        : await axios.post(url, sanitizedFormData, { headers });
+
       const historyId = response.data.id || initialData.id;
       // console.log("History created, ID:", historyId); // Debug
 
@@ -233,10 +250,15 @@ function AddRentalForm({
         `${isEditMode ? "แก้ไข" : "บันทึก"}${
           activeTab === "water" ? "ค่าน้ำ" : "ค่าไฟ"
         }สำเร็จแล้ว!`,
-        { autoClose: 3000 }
+        {
+          autoClose: 3000,
+          pauseOnHover: true,
+          draggable: true,
+          closeOnClick: true,
+        }
       );
 
-      /// อัปเดทประวัติิ
+      /// อัปเดทประวัติ
       const baseParams = role === "user" ? { ownerId: user.id } : {};
       const historyRes = await axios.get(`${API_BASE_URL}/api/history`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -269,7 +291,15 @@ function AddRentalForm({
   // ฟังก์ชันแปลงวันที่เป็น พ.ศ.
   const formatDateBE = (dateStr) => {
     if (!dateStr) return "-";
-    const date = new Date(dateStr);
+    let date;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      // ถ้าเป็น YYYY-MM-DD สร้างวันที่โดยไม่ให้ timezone กระทบ
+      const [year, month, day] = dateStr.split("-");
+      date = new Date(year, month - 1, day);
+    } else {
+      date = new Date(dateStr);
+    }
+    if (isNaN(date.getTime())) return "-";
     const day = date.getDate();
     const month = date.toLocaleString("th-TH", { month: "short" });
     const year = date.getFullYear() + 543;
@@ -281,6 +311,9 @@ function AddRentalForm({
     if (!isEditMode || !initialData) return null;
 
     const project = projects.find((p) => p.id === initialData.project_id);
+    // console.log(projects.find((p) => p.id));
+    // console.log(initialData.project_id);
+
     return (
       <div className="mt-4 p-3 bg-gray-100 rounded-md shadow-sm border border-gray-200 text-sm">
         <h3 className="text-base font-semibold text-gray-800 flex items-center gap-2 mb-2">
@@ -416,37 +449,39 @@ function AddRentalForm({
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 gap-4">
                 <div className="relative mt-1">
-                  <label>
-                    <Warehouse size={16} />
-                    โครงการ
-                  </label>
-                  <div className="relative">
-                    <select
-                      name="project_id"
-                      value={formData.project_id}
-                      onChange={handleFormChange}
-                      required
-                    >
-                      <option value="">เลือกโครงการ</option>
-                      {projects.map((project) => (
-                        <option key={project.id} value={project.id}>
-                          {project.name}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
-                      <svg
-                        className="h-5 w-5 text-gray-400"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
+                  <div>
+                    <label>
+                      <Warehouse size={16} />
+                      โครงการ
+                    </label>
+                    <div className="relative">
+                      <select
+                        name="project_id"
+                        value={formData.project_id}
+                        onChange={handleFormChange}
+                        required
                       >
-                        <path
-                          fillRule="evenodd"
-                          d="M10 12a1 1 0 01-.7-.3l-4-4a1 1 0 011.4-1.4L10 9.58l3.3-3.3a1 1 0 011.4 1.42l-4 4a1 1 0 01-.7.3z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
+                        <option value="">เลือกโครงการ</option>
+                        {projects.map((project) => (
+                          <option key={project.id} value={project.id}>
+                            {project.name}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
+                        <svg
+                          className="h-5 w-5 text-gray-400"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 12a1 1 0 01-.7-.3l-4-4a1 1 0 011.4-1.4L10 9.58l3.3-3.3a1 1 0 011.4 1.42l-4 4a1 1 0 01-.7.3z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
                     </div>
                   </div>
                 </div>

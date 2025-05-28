@@ -70,9 +70,9 @@ module.exports = (authenticateToken, restrictTo, pool) => {
       } = req.query;
 
       let query = `
-     SELECT rh.id, rh.rental_date, rh.amount, rh.created_at, rh.updated_at, rh.previous_water_meter, rh.current_water_meter, rh.water_units, rh.water_bill, 
+     SELECT rh.id, rh.project_id, rh.rental_date, rh.amount, rh.created_at, rh.updated_at, rh.previous_water_meter, rh.current_water_meter, rh.water_units, rh.water_bill, 
              rh.previous_electricity_meter, rh.current_electricity_meter, rh.electricity_units, rh.electricity_bill, 
-             rh.water_image_path, rh.electricity_image_path, rh.status, p.name AS project_name, u.username, 
+             rh.water_image_path, rh.electricity_image_path, rh.water_description, rh.electricity_description, rh.status, p.name AS project_name, u.username, 
              ru.username AS recorder_username, ou.first_name AS owner_first_name, ou.last_name AS owner_last_name, po.user_id AS owner_id
       FROM rental_history rh
       JOIN projects p ON rh.project_id = p.id
@@ -349,7 +349,7 @@ module.exports = (authenticateToken, restrictTo, pool) => {
   router.put(
     "/history/:id",
     authenticateToken,
-    restrictTo("superadmin", "admin"),
+    restrictTo("superadmin", "admin", "user"),
     async (req, res) => {
       const historyId = req.params.id;
       const {
@@ -368,8 +368,8 @@ module.exports = (authenticateToken, restrictTo, pool) => {
       // ตรวจสอบสิทธิ์
       try {
         // ตรวจสอบว่ามี record อยู่
-        const historyResult = await pool.querty(
-          "SELECT user_id, project_id FROM rental_history WHERE id = $1",
+        const historyResult = await pool.query(
+          "SELECT user_id, project_id, water_description, electricity_description FROM rental_history WHERE id = $1",
           [historyId]
         );
         const history = historyResult.rows[0];
@@ -377,9 +377,6 @@ module.exports = (authenticateToken, restrictTo, pool) => {
           return res.status(404).json({ error: "Rental history not found" });
 
         // ตรวจสอบสิทธิ์
-        if (req.user.role === "superadmin") {
-          return; // หรือ return next(); ถ้าใช้ middleware
-        }
         // ถ้าเป็น user ต้องเป็นเจ้าของโครงการ หรือเจ้าของข้อมูล
         if (req.user.role === "user") {
           const ownerResult = await pool.query(
@@ -399,12 +396,14 @@ module.exports = (authenticateToken, restrictTo, pool) => {
 
         // ดึงข้อมูล project เพื่อคำนวน bill
         const projectResult = await pool.query(
-          "SELECT water_unit_rate, electricity_unit_rate FROM projects WHERE id = $1"
+          "SELECT water_unit_rate, electricity_unit_rate FROM projects WHERE id = $1",
+          [project_id]
         );
         const project = projectResult.rows[0];
         if (!project)
           return res.status(404).json({ error: "Project not found" });
 
+        // คำนวน units และ bill
         const water_units =
           current_water_meter && previous_water_meter
             ? current_water_meter - previous_water_meter
@@ -413,7 +412,7 @@ module.exports = (authenticateToken, restrictTo, pool) => {
           current_electricity_meter && previous_electricity_meter
             ? current_electricity_meter - previous_electricity_meter
             : current_electricity_meter || 0;
-        const water_bill = water_units & project.water_unit_rate;
+        const water_bill = water_units * project.water_unit_rate;
         const electricity_bill =
           electricity_units * project.electricity_unit_rate;
 
@@ -421,42 +420,94 @@ module.exports = (authenticateToken, restrictTo, pool) => {
           value === "" || value === undefined ? null : Number(value);
         const now = new Date();
 
+        // Partial update: อัปเดตเฉพาะ field ที่ส่งมา
+        const updates = {};
+        const params = [];
+        let paramIndex = 1;
+
+        if (project_id) {
+          updates.project_id = `$${paramIndex++}`;
+          params.push(project_id);
+        }
+        if (rental_date) {
+          updates.rental_date = `$${paramIndex++}`;
+          params.push(rental_date);
+        }
+        if (amount !== undefined) {
+          updates.amount = `$${paramIndex++}`;
+          params.push(toNullableNumber(amount));
+        }
+        if (previous_water_meter !== undefined) {
+          updates.previous_water_meter = `$${paramIndex++}`;
+          params.push(toNullableNumber(previous_water_meter));
+        }
+        if (current_water_meter !== undefined) {
+          updates.current_water_meter = `$${paramIndex++}`;
+          params.push(toNullableNumber(current_water_meter));
+        }
+        if (water_units !== undefined) {
+          updates.water_units = `$${paramIndex++}`;
+          params.push(water_units);
+        }
+        if (water_bill !== undefined) {
+          updates.water_bill = `$${paramIndex++}`;
+          params.push(water_bill);
+        }
+        if (previous_electricity_meter !== undefined) {
+          updates.previous_electricity_meter = `$${paramIndex++}`;
+          params.push(toNullableNumber(previous_electricity_meter));
+        }
+        if (current_electricity_meter !== undefined) {
+          updates.current_electricity_meter = `$${paramIndex++}`;
+          params.push(toNullableNumber(current_electricity_meter));
+        }
+        if (electricity_units !== undefined) {
+          updates.electricity_units = `$${paramIndex++}`;
+          params.push(electricity_units);
+        }
+        if (electricity_bill !== undefined) {
+          updates.electricity_bill = `$${paramIndex++}`;
+          params.push(electricity_bill);
+        }
+        if (water_description !== undefined) {
+          updates.water_description = `$${paramIndex++}`;
+          params.push(water_description || null);
+        } else {
+          updates.water_description = `$${paramIndex++}`;
+          params.push(history.water_description);
+        }
+        if (electricity_description !== undefined) {
+          updates.electricity_description = `$${paramIndex++}`;
+          params.push(electricity_description || null);
+        } else {
+          updates.electricity_description = `$${paramIndex++}`;
+          params.push(history.electricity_description);
+        }
+        if (status) {
+          updates.status = `$${paramIndex++}`;
+          params.push(status);
+        }
+        updates.updated_at = `$${paramIndex++}`;
+        params.push(now);
+
+        if (Object.keys(updates).length === 0) {
+          return res.status(400).json({ error: "No fields to update" });
+        }
+
+        const setClause = Object.keys(updates)
+          .map((key) => `${key} = ${updates[key]}`)
+          .join(", ");
+        params.push(historyId);
+
+        console.log(
+          "Updating rental_history with query:",
+          `UPDATE rental_history SET ${setClause} WHERE id = $${paramIndex}`
+        );
+        console.log("Update params:", params);
+
         await pool.query(
-          `UPDATE rental_history SET 
-          project_id = $1,
-          rental_date = $2,
-          amount = $3,
-          previous_water_meter = $4,
-          current_water_meter = $5,
-          water_units = $6,
-          water_bill = $7,
-          previous_electricity_meter = $8,
-          current_electricity_meter = $9,
-          electricity_units = $10,
-          electricity_bill = $11,
-          water_description = $12,
-          electricity_description = $13,
-          status = $14,
-          updated_at = $15
-          WHERE id = $16`,
-          [
-            project_id,
-            rental_date,
-            toNullableNumber(amount),
-            toNullableNumber(previous_water_meter),
-            toNullableNumber(current_water_meter),
-            water_units,
-            water_bill,
-            toNullableNumber(previous_electricity_meter),
-            toNullableNumber(current_electricity_meter),
-            electricity_units,
-            electricity_bill,
-            water_description || null,
-            electricity_description || null,
-            status,
-            now,
-            historyId,
-          ]
+          `UPDATE rental_history SET ${setClause} WHERE id = $${paramIndex}`,
+          params
         );
 
         res.json({
@@ -466,7 +517,12 @@ module.exports = (authenticateToken, restrictTo, pool) => {
         });
       } catch (error) {
         console.error("Update history error:", error);
-        res.status(500).json({ error: "เกิดข้อผิดพลาดในการอัปเดตข้อมูล" });
+        res
+          .status(500)
+          .json({
+            error: "เกิดข้อผิดพลาดในการอัปเดตข้อมูล",
+            details: error.message,
+          });
       }
     }
   );
