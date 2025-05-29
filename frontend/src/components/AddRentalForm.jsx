@@ -99,6 +99,7 @@ function AddRentalForm({
         electricity_description: initialData.electricity_description || "",
         status: initialData.status || "pending",
       });
+
       // โหลด preview รูปภาพถ้ามี
       if (initialData.water_image_path) {
         setPreviews((prev) => ({
@@ -112,8 +113,30 @@ function AddRentalForm({
           electricity_image: `${API_BASE_URL}${initialData.electricity_image_path}`,
         }));
       }
+
+      // setFiles({ water_image: null, electricity_image: null }); // รีเซ็ตไฟล์ใหม่ที่อัปโหลด
+      // setPreviews({
+      //   water_image: initialData.water_image_path
+      //     ? `${API_BASE_URL}${initialData.water_image_path}`
+      //     : null,
+      //   electricity_image: initialData.electricity_image_path
+      //     ? `${API_BASE_URL}${initialData.electricity_image_path}`
+      //     : null,
+      // });
     }
   }, [initialData, isEditMode, API_BASE_URL, projects]);
+
+  useEffect(() => {
+    return () => {
+      // Cleanup preview URL เมื่อ component unmount (เช่น ปิด modal)
+      if (previews.water_image?.startsWith("blob:")) {
+        URL.revokeObjectURL(previews.water_image);
+      }
+      if (previews.electricity_image?.startsWith("blob:")) {
+        URL.revokeObjectURL(previews.electricity_image);
+      }
+    };
+  }, []);
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
@@ -130,6 +153,7 @@ function AddRentalForm({
       setPreviews((prev) => ({ ...prev, [name]: url }));
       // console.log("Preview URL:", url); // Debug
       setFiles((prev) => ({ ...prev, [name]: file }));
+      toast.info(`เลือกไฟล์ ${file.name} สำเร็จ`, { autoClose: 2000 });
     } else {
       // console.log("No file selected for:", name); // Debug
       setPreviews((prev) => ({ ...prev, [name]: null }));
@@ -179,10 +203,12 @@ function AddRentalForm({
     const sanitizedFormData = {
       ...formData,
       amount: safeNumber(formData.amount),
-      previous_water: safeNumber(formData.previous_water),
-      current_water: safeNumber(formData.current_water),
-      previous_electricity: safeNumber(formData.previous_electricity),
-      current_electricity: safeNumber(formData.current_electricity),
+      previous_water_meter: safeNumber(formData.previous_water_meter),
+      current_water_meter: safeNumber(formData.current_water_meter),
+      previous_electricity_meter: safeNumber(
+        formData.previous_electricity_meter
+      ),
+      current_electricity_meter: safeNumber(formData.current_electricity_meter),
       water_description: formData.water_description || null,
       electricity_description: formData.electricity_description || null,
     };
@@ -202,12 +228,17 @@ function AddRentalForm({
       // console.log("History created, ID:", historyId); // Debug
 
       // อัปโหลดรูปภาพ (ถ้ามี)
-      if (files.water_image || files.electricity_image) {
+      if (
+        (files.water_image && files.water_image instanceof File) ||
+        (files.electricity_image && files.electricity_image instanceof File)
+      ) {
         const uploadData = new FormData();
-        if (files.water_image)
+
+        if (files.water_image instanceof File)
           uploadData.append("water_image", files.water_image);
-        if (files.electricity_image)
+        if (files.electricity_image instanceof File)
           uploadData.append("electricity_image", files.electricity_image);
+
         uploadData.append(
           "water_description",
           formData.water_description || ""
@@ -243,9 +274,29 @@ function AddRentalForm({
         electricity_description: "",
         status: "pending",
       });
-
       setFiles({ water_image: null, electricity_image: null });
       setPreviews({ water_image: null, electricity_image: null });
+
+      // if (!isEditMode) {
+      //   setFormData({
+      //     project_id: "",
+      //     rental_date: "",
+      //     amount: "",
+      //     previous_water_meter: "",
+      //     current_water_meter: "",
+      //     previous_electricity_meter: "",
+      //     current_electricity_meter: "",
+      //     electricity_image_path: "",
+      //     water_image_path: "",
+      //     water_description: "",
+      //     electricity_description: "",
+      //     status: "pending",
+      //   });
+
+      //   setFiles({ water_image: null, electricity_image: null });
+      //   setPreviews({ water_image: null, electricity_image: null });
+      // }
+
       toast.success(
         `${isEditMode ? "แก้ไข" : "บันทึก"}${
           activeTab === "water" ? "ค่าน้ำ" : "ค่าไฟ"
@@ -269,6 +320,7 @@ function AddRentalForm({
 
       if (isEditMode && onClose) {
         onClose(); // ปิดฟอร์มถ้าอยู่ในโหมดแก้ไข
+        // setEditItem(null); // ลบบรรทัดที่อ้างถึง previews
       }
 
       // เลื่อนไปที่ตาราง
@@ -315,11 +367,11 @@ function AddRentalForm({
     // console.log(initialData.project_id);
 
     return (
-      <div className="mt-4 p-3 bg-gray-100 rounded-md shadow-sm border border-gray-200 text-sm">
-        <h3 className="text-base font-semibold text-gray-800 flex items-center gap-2 mb-2">
-          <Info size={14} className="text-green-600" /> ข้อมูลเดิม
+      <div className="mt-6 p-4 bg-gray-50 border border-dashed border-green-300 rounded-md text-sm text-gray-700">
+        <h3 className="text-base font-semibold text-green-700 mb-2 flex items-center gap-2">
+          <Info size={16} className="text-green-600" /> ข้อมูลเดิม
         </h3>
-        <div className="grid grid-cols-1 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
           <div>
             <span className="font-medium">โครงการ: </span>{" "}
             {project?.name || "ไม่ระบุ"}
@@ -390,29 +442,7 @@ function AddRentalForm({
   };
 
   return (
-    <div
-      className={
-        isEditMode
-          ? "space-y-3"
-          : "bg-white shadow-lg rounded-xl p-4 sm:p-6 mb-8 border border-green-100 animate-slide-in"
-      }
-    >
-      {!isEditMode && (
-        <div
-          className="flex justify-between items-center cursor-pointer"
-          onClick={() => setIsFormOpen(!isFormOpen)}
-        >
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-800 flex items-center gap-2">
-            <Plus size={18} className="text-green-600" /> เพิ่มรายการ
-          </h2>
-          {isFormOpen ? (
-            <ChevronUpIcon className="h-6 w-6 text-green-600" />
-          ) : (
-            <ChevronDownIcon className="h-6 w-6 text-green-600" />
-          )}
-        </div>
-      )}
-
+    <div className="bg-white shadow-lg rounded-xl p-4 sm:p-6 border border-gray-200 animate-slide-in space-y-3">
       {(isFormOpen || isEditMode) && (
         <div className={isEditMode ? "" : "mt-4 animate-slide-in"}>
           {error && (
@@ -556,7 +586,7 @@ function AddRentalForm({
                     </label>
                     <textarea
                       name="water_description"
-                      value={formData.water_description}
+                      value={formData.water_description || ""}
                       onChange={handleFormChange}
                       className="mt-1 block w-full rounded-md border-indigo-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 transition text-sm sm:text-base"
                       rows="3"
@@ -651,7 +681,7 @@ function AddRentalForm({
                     </label>
                     <textarea
                       name="electricity_description"
-                      value={formData.electricity_description}
+                      value={formData.electricity_description || ""}
                       onChange={handleFormChange}
                       className="mt-1 block w-full rounded-md border-amber-300 shadow-sm focus:border-amber-600 focus:ring-amber-600 transition text-sm sm:text-base"
                       rows="3"
@@ -710,7 +740,7 @@ function AddRentalForm({
 
               <PreviousData />
 
-              <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <div className="mt-6 flex flex-wrap gap-3 sm:gap-4">
                 <button
                   type="submit"
                   className="bg-green-600 text-white px-3 py-1.5 rounded-md hover:bg-green-700 transition text-sm sm:text-base"
@@ -718,22 +748,23 @@ function AddRentalForm({
                     isEditMode ? "บันทึกกรายการแก้ไข" : "บันทึกรายการ"
                   }
                 >
-                  <Save size={16} className="inline-block mr-1" />{" "}
+                  <Save size={16} className="inline mr-1" />{" "}
                   {isEditMode ? "บันทึกการแก้ไข" : "บันทึกข้อมูล"}
                 </button>
-                {isEditMode && onClose && (
+                {(!isEditMode || (isEditMode && onClose)) && (
                   <button
                     type="button"
                     onClick={onClose}
                     className="bg-gray-300 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-400 transition text-sm sm:text-base"
                     aria-label="ยกเลิกการแก้ไข"
                   >
-                    <X size={16} className="inline-block mr-1" /> ยกเลิก
+                    <X size={16} className="inline-block mr-1" />
+                    {isEditMode ? "ยกเลิก" : "ล้างข้อมูล"}
                   </button>
                 )}
                 <button
                   type="button"
-                  onClick={() =>
+                  onClick={() => {
                     setFormData({
                       project_id: "",
                       rental_date: "",
@@ -742,11 +773,15 @@ function AddRentalForm({
                       current_water_meter: "",
                       previous_electricity_meter: "",
                       current_electricity_meter: "",
+                      electricity_image_path: "",
+                      water_image_path: "",
                       water_description: "",
                       electricity_description: "",
                       status: "pending",
-                    })
-                  }
+                    });
+                    setFiles({ water_image: null, electricity_image: null });
+                    setPreviews({ water_image: null, electricity_image: null });
+                  }}
                   className="bg-yellow-300 text-gray-700 px-3 py-1.5 rounded-md hover:bg-yellow-400 transition text-sm sm:text-base"
                   aria-label="รีเซ็ตฟอร์ม"
                 >

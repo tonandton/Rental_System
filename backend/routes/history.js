@@ -272,8 +272,8 @@ module.exports = (authenticateToken, restrictTo, pool) => {
           return res.status(400).json({ error: err.meesage });
         }
         next();
-      }),
-        console.log("Files received:", req.files); // Debug
+      });
+      console.log("Files received:", req.files); // Debug
     },
     async (req, res) => {
       const historyId = req.params.id;
@@ -517,12 +517,10 @@ module.exports = (authenticateToken, restrictTo, pool) => {
         });
       } catch (error) {
         console.error("Update history error:", error);
-        res
-          .status(500)
-          .json({
-            error: "เกิดข้อผิดพลาดในการอัปเดตข้อมูล",
-            details: error.message,
-          });
+        res.status(500).json({
+          error: "เกิดข้อผิดพลาดในการอัปเดตข้อมูล",
+          details: error.message,
+        });
       }
     }
   );

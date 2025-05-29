@@ -1,4 +1,4 @@
-import { Edit, FileText } from "lucide-react";
+import { Edit, FileText, Image as ImageIcon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 
@@ -122,7 +122,7 @@ function HistoryTable({
                           ) : (
                             "-"
                           )}
-                          {/* {popupImage && (
+                          {popupImage && (
                             <div
                               className="fixed inset-0 flex items-center justify-center z-50"
                               onClick={() => setPopupImage(null)}
@@ -133,8 +133,8 @@ function HistoryTable({
                                 className="max-w-[90vw] max-h-[90vh] rounded-lg shadow-lg"
                               />
                             </div>
-                          )} */}
-                          {popupImage && (
+                          )}
+                          {/* {popupImage && (
                             <div
                               className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-slide-in"
                               onClick={() => setPopupImage(null)}
@@ -147,7 +147,7 @@ function HistoryTable({
                                 />
                               </div>
                             </div>
-                          )}
+                          )} */}
                         </td>
                         <td>{Math.floor(item.water_units)}</td>
                         <td>{item.water_bill}</td>
@@ -175,7 +175,7 @@ function HistoryTable({
                           ) : (
                             "-"
                           )}
-                          {/* {popupImage && (
+                          {popupImage && (
                             <div
                               className="fixed inset-0 flex items-center justify-center z-50"
                               onClick={() => setPopupImage(null)}
@@ -186,8 +186,8 @@ function HistoryTable({
                                 className="max-w-[90vw] max-h-[90vh] rounded-lg shadow-lg"
                               />
                             </div>
-                          )} */}
-                          {popupImage && (
+                          )}
+                          {/* {popupImage && (
                             <div
                               className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-slide-in"
                               onClick={() => setPopupImage(null)}
@@ -200,7 +200,7 @@ function HistoryTable({
                                 />
                               </div>
                             </div>
-                          )}
+                          )} */}
                         </td>
                         <td>{Math.floor(item.electricity_units)}</td>
                         <td>{item.electricity_bill}</td>
@@ -337,7 +337,8 @@ function HistoryTable({
                           className="text-blue-600 hover:text-blue-800 flex items-center text-sm"
                           aria-label="ดูรูปมิเตอร์น้ำ"
                         >
-                          <Image size={16} className="mr-1" /> ดูรูปมิเตอร์น้ำ
+                          <ImageIcon size={16} className="mr-1" />{" "}
+                          ดูรูปมิเตอร์น้ำ
                         </button>
                       )}
                       {item.electricity_image_path && (
@@ -350,7 +351,8 @@ function HistoryTable({
                           className="text-blue-600 hover:text-blue-800 flex items-center text-sm"
                           aria-label="ดูรูปมิเตอร์ไฟ"
                         >
-                          <Image size={16} className="mr-1" /> ดูรูปมิเตอร์ไฟ
+                          <ImageIcon size={16} className="mr-1" />{" "}
+                          ดูรูปมิเตอร์ไฟ
                         </button>
                       )}
                       <button

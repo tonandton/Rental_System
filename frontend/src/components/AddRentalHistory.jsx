@@ -18,6 +18,7 @@ function AddRentalHistory({ token, role, user }) {
   const itemsPerPage = 10;
   const tableRef = useRef(null);
   const [editItem, setEditItem] = useState(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // Filter state
   const [filters, setFilters] = useState({
@@ -27,20 +28,6 @@ function AddRentalHistory({ token, role, user }) {
     year: "",
     projectId: "",
     ownerId: "",
-  });
-
-  // Form state
-  const [formData, setFormData] = useState({
-    project_id: "",
-    rental_date: "",
-    amount: "",
-    previous_water_meter: "",
-    current_water_meter: "",
-    previous_electricity_meter: "",
-    current_electricity_meter: "",
-    electricity_image_path: "",
-    water_image_path: "",
-    status: "pending",
   });
 
   useEffect(() => {
@@ -95,20 +82,28 @@ function AddRentalHistory({ token, role, user }) {
     }
   };
 
-  const handleEdit = (item) => {
-    setEditItem(item);
-    console.log(item);
-  };
+  // const handleEdit = (item) => {
+  //   setEditItem(item);
+  //   console.log(item);
+  // };
 
-  const handleCloseEditModal = () => {
-    setEditItem(null);
-  };
+  const handleCloseEditModal = () => setEditItem(null);
+  const handleCloseAddModal = () => setIsAddModalOpen(false);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg-px-8 py-8">
       <h1 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
         <ListChecks size={20} className="text-green-600" /> บันทึกรายการ
       </h1>
+
+      <div className="mb-4">
+        <button
+          onClick={() => setIsAddModalOpen(true)}
+          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+        >
+          + เพิ่มรายการ
+        </button>
+      </div>
 
       <FilterForm
         projects={projects}
@@ -119,7 +114,7 @@ function AddRentalHistory({ token, role, user }) {
         tableRef={tableRef}
       />
 
-      <AddRentalForm
+      {/* <AddRentalForm
         token={token}
         role={role}
         user={user}
@@ -128,7 +123,7 @@ function AddRentalHistory({ token, role, user }) {
         filters={filters}
         setCurrentPage={setCurrentPage}
         tableRef={tableRef}
-      />
+      /> */}
 
       <HistoryTable
         history={history}
@@ -140,11 +135,34 @@ function AddRentalHistory({ token, role, user }) {
         itemsPerPage={itemsPerPage}
         tableRef={tableRef}
         API_BASE_URL={API_BASE_URL}
-        // onEdit={setEditItem}
-        onEdit={handleEdit}
+        onEdit={setEditItem}
+        // onEdit={handleEdit}
       />
 
-      {/* โมเดลแก้ไข */}
+      {/* Add Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-slide-in overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-md sm:max-w-lg mx-4 my-4 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <Edit size={20} className="text-green-600" /> เพิ่มรายการ
+            </h2>
+            <AddRentalForm
+              token={token}
+              role={role}
+              user={user}
+              projects={projects}
+              setHistory={setHistory}
+              filters={filters}
+              setCurrentPage={setCurrentPage}
+              tableRef={tableRef}
+              isEditMode={false}
+              onClose={handleCloseAddModal}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
       {editItem && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-slide-in overflow-y-auto">
           <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-md sm:max-w-lg mx-4 my-4 max-h-[90vh] overflow-y-auto">
@@ -156,6 +174,7 @@ function AddRentalHistory({ token, role, user }) {
               role={role}
               user={user}
               projects={projects}
+              key={editItem?.id || "new"}
               setHistory={setHistory}
               filters={filters}
               setCurrentPage={setCurrentPage}

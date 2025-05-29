@@ -102,8 +102,15 @@ function Main({ token, role, setToken, setRole }) {
                     className="text-sm text-gray-700"
                   >
                     <span className="font-medium">{item.project_name}</span> -{" "}
-                    {new Date(item.rental_date).toLocaleDateString("th-TH")} -{" "}
-                    {item.current_water_meter.toLocaleString("th-TH")} บาท
+                    {item.rental_date
+                      ? new Date(item.rental_date).toLocaleDateString("th-TH")
+                      : "-"}{" "}
+                    -{" "}
+                    {item.current_water_meter !== null &&
+                    item.current_water_meter !== undefined
+                      ? item.current_water_meter.toLocaleString("th-TH")
+                      : "-"}{" "}
+                    บาท
                   </li>
                 ))}
               </ul>
@@ -123,8 +130,15 @@ function Main({ token, role, setToken, setRole }) {
                     className="text-sm text-gray-700"
                   >
                     <span className="font-medium">{item.project_name}</span> -{" "}
-                    {new Date(item.rental_date).toLocaleDateString("th-TH")} -{" "}
-                    {item.current_electricity_meter.toLocaleString("th-TH")} บาท
+                    {item.rental_date
+                      ? new Date(item.rental_date).toLocaleDateString("th-TH")
+                      : "-"}{" "}
+                    -{" "}
+                    {item.current_electricity_meter !== null &&
+                    item.current_electricity_meter !== undefined
+                      ? item.current_electricity_meter.toLocaleString("th-TH")
+                      : "-"}{" "}
+                    บาท
                   </li>
                 ))}
               </ul>
