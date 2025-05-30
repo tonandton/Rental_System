@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import { RefreshCw, Search } from "lucide-react";
 
 function ProjectFilterForm({ filters, setFilters, owners, tableRef }) {
-  const [isFilterOpen, setIsFilterOpen] = useState(true);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [tempFilter, setTempFilter] = useState({ ...filters });
 
   const handleTempFilterChange = (e) => {

@@ -3,8 +3,6 @@ import axios from "axios";
 import {
   Calendar,
   Camera,
-  ChevronDownIcon,
-  ChevronUpIcon,
   Droplet,
   Info,
   Plus,
