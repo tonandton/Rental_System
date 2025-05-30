@@ -44,26 +44,61 @@ module.exports = (authenticateToken, restrictTo, pool) => {
   // จัดการโครงการ (superadmin, admin, user)
   router.get("/projects", authenticateToken, async (req, res) => {
     try {
+      const { name, address, status, ownerId } = req.query;
+
       let query = `
       SELECT DISTINCT ON (p.id) p.*, u.first_name AS owner_first_name, u.last_name AS owner_last_name
       FROM projects p
       LEFT JOIN project_owners po ON p.id = po.project_id
       LEFT JOIN users u ON po.user_id = u.id
+      WHERE 1=1
     `;
+
       const params = [];
+      let paramIndex = 1;
+
+      // เงื่อนไขสิทธิ์สำหรับ user (เห็นเฉพาะโครงการของตัวเอง)
       if (req.user.role === "user") {
-        query += " WHERE po.user_id = $1";
+        query += ` AND po.user_id = $${paramIndex}`;
         params.push(req.user.id);
+        paramIndex++;
       }
 
-      query += " ORDER BY p.id";
+      // กรองชื่อโครงการ
+      if (name) {
+        query += ` AND LOWER(p.name) ILIKE $${paramIndex}`;
+        params.push(`%${name.toLowerCase()}%`);
+        paramIndex++;
+      }
+
+      // กรองที่อยู่
+      if (address) {
+        query += ` AND LOWER(p.address) ILIKE $${paramIndex}`;
+        params.push(`%${address.toLowerCase()}%`);
+        paramIndex++;
+      }
+
+      // กรองสถานะ
+      if (status === "true" || status === "false") {
+        query += ` AND p.is_active = $${paramIndex}`;
+        params.push(status === "true");
+        paramIndex++;
+      }
+
+      // กรองเจ้าของโครงการ
+      if (ownerId) {
+        query += ` AND po.user_id = $${paramIndex}`;
+        params.push(ownerId);
+        paramIndex++;
+      }
+
+      query += ` ORDER BY p.id`;
 
       const result = await pool.query(query, params);
       res.json(result.rows);
     } catch (err) {
       console.error("Get projects error:", err);
-      // res.status(500).json({ error: "Server error" });
-      res.status(500).json({ error: err });
+      res.status(500).json({ error: "Server error" });
     }
   });
 

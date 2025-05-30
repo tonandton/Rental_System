@@ -11,15 +11,24 @@ import {
   Trash2,
   UserPlus,
 } from "lucide-react";
+import ProjectFilterForm from "./FilterFormProject";
 
-function Projects({ token }) {
+function Projects({ token, role, user }) {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [projects, setProjects] = useState([]);
+  const [owners, setOwners] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [editProject, setEditProject] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    name: "",
+    address: "",
+    status: "",
+    ownerId: "",
+  });
   const modalRef = useRef(null);
+  const tableRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -36,25 +45,46 @@ function Projects({ token }) {
   }, [isModalOpen]);
 
   useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const [projectRes, ownerRes] = await Promise.all([
+          axios.get(`${API_BASE_URL}/api/projects`, {
+            headers: { Authorization: `Bearer ${token}` },
+            params: filters,
+          }),
+          axios.get(`${API_BASE_URL}/api/project-owners`, {
+            headers: { Authorization: `Bearer ${token}` },
+            params: filters,
+          }),
+        ]);
+        setProjects(projectRes.data);
+        setOwners(ownerRes.data);
+      } catch (err) {
+        console.error("Error fetching projects:", err);
+        setError(err.response?.data?.error || "ไม่สามารถโหลดข้อมูลโครงการ");
+        toast.error("โหลดข้อมูลโครงการล้มเหลว", { autoClose: 3000 });
+      }
+    };
+
     fetchProjects();
-  }, []);
+  }, [token, filters]);
 
-  const fetchProjects = async () => {
-    setLoading(true);
+  // const fetchProjects = async () => {
+  //   setLoading(true);
 
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/projects`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      console.log("Fetched Projects:", response.data);
-      setProjects(response.data);
-      setLoading(false);
-    } catch (error) {
-      setError(error.response?.data?.error || "ไม่สามารถโหลดข้อมูลโครงการ");
-      toast.error("โหลดข้อมูลโครงการล้มเหลว", { autoClose: 3000 });
-      setLoading(false);
-    }
-  };
+  //   try {
+  //     const response = await axios.get(`${API_BASE_URL}/api/projects`, {
+  //       headers: { Authorization: `Bearer ${token}` },
+  //     });
+  //     console.log("Fetched Projects:", response.data);
+  //     setProjects(response.data);
+  //     setLoading(false);
+  //   } catch (error) {
+  //     setError(error.response?.data?.error || "ไม่สามารถโหลดข้อมูลโครงการ");
+  //     toast.error("โหลดข้อมูลโครงการล้มเหลว", { autoClose: 3000 });
+  //     setLoading(false);
+  //   }
+  // };
 
   const openEditModal = (project) => {
     setEditProject({
@@ -111,6 +141,14 @@ function Projects({ token }) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <ProjectFilterForm
+        projects={projects}
+        owners={owners}
+        filters={filters}
+        setFilters={setFilters}
+        setCurrentPage={() => {}}
+        tableRef={tableRef}
+      />
       <div className="bg-white shadow-lg rounded-xl p-6 border border-green-100 mt-4 animate-slide-in">
         <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
           <House size={20} className="text-green-600" /> จัดการโครงการ
@@ -127,7 +165,10 @@ function Projects({ token }) {
         <div className="mt-6">
           {/* ตารางแบบเดสก์ท็อป */}
           <div className="hidden sm:block overflow-x-auto">
-            <table className="min-w-[640px] w-full divide-y divide-gray-200 text-sm">
+            <table
+              className="min-w-[640px] w-full divide-y divide-gray-200 text-sm"
+              ref={tableRef}
+            >
               <thead className="bg-green-50">
                 <tr>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
@@ -135,6 +176,9 @@ function Projects({ token }) {
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
                     เจ้าของ
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                    สถานที่
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
                     คำอธิบาย
@@ -176,6 +220,9 @@ function Projects({ token }) {
                       <td className="px-4 py-3 text-sm">
                         {project.owner_first_name || "-"}{" "}
                         {project.owner_last_name || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {project.address || "-"}
                       </td>
                       <td className="px-4 py-3 text-sm">
                         {project.description || "-"}
@@ -269,6 +316,9 @@ function Projects({ token }) {
                 <div className="text-sm text-gray-600 mt-1">
                   เจ้าของ: {project.owner_first_name || "-"}{" "}
                   {project.owner_last_name || "-"}
+                </div>
+                <div className="text-sm text-gray-600">
+                  สถานที่: {project.address || "-"}
                 </div>
                 <div className="text-sm text-gray-600">
                   คำอธิบาย: {project.description || "-"}

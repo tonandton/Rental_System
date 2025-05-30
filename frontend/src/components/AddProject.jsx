@@ -25,8 +25,8 @@ function AddProject({ token, project = null, onClose }) {
     water_unit_rate: project?.water_unit_rate || "",
     electricity_unit_rate: project?.electricity_unit_rate || "",
     owner_id: project?.owner_id || "",
-    address: project?.address || "", // ✅
-    is_active: project?.is_active ?? true, // ✅
+    address: project?.address || "",
+    is_active: project?.is_active ?? true,
   });
 
   const [owners, setOwners] = useState([]);
@@ -101,7 +101,7 @@ function AddProject({ token, project = null, onClose }) {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, owner_id: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleImageChange = (e) => {
@@ -311,7 +311,7 @@ function AddProject({ token, project = null, onClose }) {
               </label>
               <textarea
                 name="address"
-                value={formData.address}
+                value={formData.address || ""}
                 onChange={handleInputChange}
                 rows="3"
                 className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition border"
@@ -449,7 +449,7 @@ function AddProject({ token, project = null, onClose }) {
                 </>
               )}
             </button>
-            {isEditMode && onClose && (
+            {onClose && (
               <button
                 type="button"
                 onClick={onClose}
