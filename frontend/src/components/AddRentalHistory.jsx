@@ -35,6 +35,7 @@ function AddRentalHistory({ token, role, user }) {
       try {
         const baseParams = role === "user" ? { ownerId: user.id } : {};
         const params = { ...baseParams, ...filters };
+
         const [historyRes, projectsRes, ownersRes] = await Promise.all([
           axios.get(`${API_BASE_URL}/api/history`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -43,14 +44,14 @@ function AddRentalHistory({ token, role, user }) {
           axios.get(`${API_BASE_URL}/api/projects`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get(`${API_BASE_URL}/api/project-owners`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
+          // axios.get(`${API_BASE_URL}/api/project-owners`, {
+          //   headers: { Authorization: `Bearer ${token}` },
+          // }),
         ]);
         // console.log("History response:", historyRes.data); // Debug
         setHistory(historyRes.data);
         setProjects(projectsRes.data);
-        setOwners(ownersRes.data);
+        // setOwners(ownersRes.data);
         setLoading(false);
       } catch (error) {
         console.error("Fetch data error:", error);
@@ -113,17 +114,6 @@ function AddRentalHistory({ token, role, user }) {
         setCurrentPage={setCurrentPage}
         tableRef={tableRef}
       />
-
-      {/* <AddRentalForm
-        token={token}
-        role={role}
-        user={user}
-        projects={projects}
-        setHistory={setHistory}
-        filters={filters}
-        setCurrentPage={setCurrentPage}
-        tableRef={tableRef}
-      /> */}
 
       <HistoryTable
         history={history}
