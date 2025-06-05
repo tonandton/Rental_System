@@ -86,16 +86,16 @@ module.exports = (authenticateToken, restrictTo, pool) => {
       let conditions = [];
 
       if (req.user.role === "user") {
-        conditions.push(
-          `EXISTS (
+        conditions.push(`
+        EXISTS (
           SELECT 1 FROM project_owners po2
-          WHERE po2.project_id = rh.project_id AND po2.user_id = $${
-            params.length + 1
-          }
-        )`
-        );
+          WHERE po2.project_id = rh.project_id
+          AND po2.user_id = $${params.length + 1}
+        )
+      `);
         params.push(req.user.id);
       }
+
       if (startDate) {
         conditions.push(`rh.rental_date >= $${params.length + 1}`);
         params.push(startDate);
@@ -349,7 +349,7 @@ module.exports = (authenticateToken, restrictTo, pool) => {
   router.put(
     "/history/:id",
     authenticateToken,
-    restrictTo("superadmin", "admin", "user"),
+    restrictTo("superadmin", "admin", "user", "employee"),
     async (req, res) => {
       const historyId = req.params.id;
       const {

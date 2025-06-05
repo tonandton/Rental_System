@@ -31,43 +31,51 @@ function Projects({ token, role, user }) {
   const tableRef = useRef(null);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handleClickOutside = (e) => {
       if (
         isModalOpen &&
         modalRef.current &&
-        !modalRef.current.contains(event.target)
-      ) {
+        !modalRef.current.contains(e.target)
+      )
         closeModal();
-      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isModalOpen]);
 
   useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const [projectRes, ownerRes] = await Promise.all([
-          axios.get(`${API_BASE_URL}/api/projects`, {
-            headers: { Authorization: `Bearer ${token}` },
-            params: filters,
-          }),
-          axios.get(`${API_BASE_URL}/api/project-owners`, {
-            headers: { Authorization: `Bearer ${token}` },
-            params: filters,
-          }),
-        ]);
-        setProjects(projectRes.data);
-        setOwners(ownerRes.data);
-      } catch (err) {
-        console.error("Error fetching projects:", err);
-        setError(err.response?.data?.error || "ไม่สามารถโหลดข้อมูลโครงการ");
-        toast.error("โหลดข้อมูลโครงการล้มเหลว", { autoClose: 3000 });
-      }
-    };
-
     fetchProjects();
   }, [token, filters]);
+
+  const fetchProjects = async () => {
+    setLoading(true);
+    try {
+      const [projectRes, ownerRes] = await Promise.all([
+        axios.get(`${API_BASE_URL}/api/projects`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Cache-Control": "no-cache",
+          },
+          params: { ...filters, t: Date.now() },
+        }),
+        axios.get(`${API_BASE_URL}/api/project-owners`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Cache-Control": "no-cache",
+          },
+          params: { t: Date.now() },
+        }),
+      ]);
+      setProjects(projectRes.data);
+      setOwners(ownerRes.data);
+      setLoading(false);
+    } catch (err) {
+      const msg = err.response?.data?.error || "ไม่สามารถโหลดข้อมูลโครงการ";
+      setError(msg);
+      toast.error(msg, { autoClose: 3000 });
+      setLoading(false);
+    }
+  };
 
   // const fetchProjects = async () => {
   //   setLoading(true);

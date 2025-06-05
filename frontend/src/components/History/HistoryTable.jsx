@@ -341,6 +341,18 @@ function HistoryTable({
                           ดูรูปมิเตอร์น้ำ
                         </button>
                       )}
+                      {popupImage && (
+                        <div
+                          className="fixed inset-0 flex items-center justify-center z-50"
+                          onClick={() => setPopupImage(null)}
+                        >
+                          <img
+                            src={popupImage}
+                            alt="ภาพใหญ่"
+                            className="max-w-[90vw] max-h-[90vh] rounded-lg shadow-lg"
+                          />
+                        </div>
+                      )}
                       {item.electricity_image_path && (
                         <button
                           onClick={() =>

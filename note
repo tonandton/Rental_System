@@ -3,3 +3,21 @@ usermanage.jsx
 
 node
 2f00c90170ef202ff81642b63c18e19a
+
+src/
+├── components/
+│   ├── Projects/
+│   │   ├── Projects.jsx               ← ตัวหลัก
+│   │   ├── ProjectList.jsx           ← รายการโครงการ
+│   │   ├── ProjectItem.jsx           ← โครงการแต่ละรายการ
+│   │   ├── ProjectActions.jsx        ← ปุ่มแก้ไข/ลบ/สถานะ
+│   │   └── FilterFormProject.jsx     ← ฟอร์มตัวกรอง
+│   ├── AddProject/
+│   │   ├── AddProject.jsx            ← Modal ฟอร์มหลัก
+│   │   └── ProjectFormFields.jsx     ← กล่องฟอร์มทั้งหมด
+│   ├── RentalHistory/
+│   │   ├── RentalHistory.jsx         ← หน้าแสดงหลัก
+│   │   ├── RentalItem.jsx            ← รายการแต่ละบิล
+│   │   ├── FilterFormRental.jsx      ← ฟอร์มตัวกรอง
+│   │   ├── AddRentalForm.jsx         ← ฟอร์มเพิ่มข้อมูล
+│   │   └── PreviousData.jsx          ← แสดงข้อมูลเก่าเวลาแก้ไข

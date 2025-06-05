@@ -1,17 +1,17 @@
 import { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Navbar from "./components/Nav";
-import Main from "./components/Main";
-import Login from "./components/Login";
-import ErrorBoundary from "./components/ErrorBoundary";
-import AddProject from "./components/AddProject";
-import ProtectedRoute from "./components/ProtectedRoute";
-import AddRentalHistory from "./components/AddRentalHistory";
-import UserMangement from "./components/UserManagement";
+import Navbar from "./components/Layout/Nav";
+import Main from "./components/Layout/Main";
+import Login from "./components/Auth/Login";
+import ErrorBoundary from "./components/Layout/ErrorBoundary";
+import AddProject from "./components/Projects/AddProject";
+import Projects from "./components/Projects/Projects";
+import ProtectedRoute from "./components/Auth/ProtectedRoute";
+import AddRentalHistory from "./components/History/AddRentalHistory";
+import UserMangement from "./components/User/UserManagement";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./index.css";
-import Projects from "./components/Projects";
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token") || "");
@@ -19,6 +19,17 @@ function App() {
   const [user, setUser] = useState(
     JSON.parse(localStorage.getItem("user")) || null
   );
+
+  useEffect(() => {
+    if (token) localStorage.setItem("token", token);
+    else localStorage.removeItem("token");
+
+    if (role) localStorage.setItem("role", role);
+    else localStorage.removeItem("role");
+
+    if (user) localStorage.setItem("user", JSON.stringify(user));
+    else localStorage.removeItem("user");
+  }, [token, role, user]);
 
   return (
     <div>

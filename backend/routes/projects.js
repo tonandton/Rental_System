@@ -240,7 +240,9 @@ module.exports = (authenticateToken, restrictTo, pool) => {
 
     try {
       // ให้เฉพาะ superadmin หรือ admin เข้าถึง
-      if (!["superadmin", "admin"].includes(req.user.role)) {
+      if (
+        !["superadmin", "admin", "user", "employee"].includes(req.user.role)
+      ) {
         return res.status(403).json({ error: "Unauthorized" });
       }
 

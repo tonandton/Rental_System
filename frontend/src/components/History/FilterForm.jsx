@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/solid";
 import { toast } from "react-toastify";
 import { RefreshCw, Search } from "lucide-react";
 
 function FilterForm({
+  user,
+  role,
   projects,
   owners,
   filters,
@@ -12,7 +14,25 @@ function FilterForm({
   tableRef,
 }) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [tempFilter, setTempFilter] = useState({ ...filters });
+  const [tempFilter, setTempFilter] = useState({
+    startDate: filters.startDate || "",
+    endDate: filters.endDate || "",
+    month: filters.month || "",
+    year: filters.year || "",
+    projectId: filters.projectId || "",
+    ownerId: filters.ownerId || "",
+  });
+
+  useEffect(() => {
+    setTempFilter({
+      startDate: filters.startDate || "",
+      endDate: filters.endDate || "",
+      month: filters.month || "",
+      year: filters.year || "",
+      projectId: filters.projectId || "",
+      ownerId: filters.ownerId || "",
+    });
+  }, [filters]);
 
   //   Dropdown option
   const months = [
@@ -34,7 +54,7 @@ function FilterForm({
   const currentYear = new Date().getFullYear();
   const years = [
     { value: "", label: "ทั้งหมด" },
-    ...Array.from({ length: 4 }, (_, i) => ({
+    ...Array.from({ length: 5 }, (_, i) => ({
       value: String(currentYear - 1 + i),
       label: String(currentYear - 1 + i),
     })),
@@ -60,15 +80,7 @@ function FilterForm({
     return true;
   };
 
-  const handleApplyFilter = () => {
-    setFilters(tempFilter);
-    setCurrentPage(1);
-    toast.success("ค้นหาข้อมูลเรียบร้อยแล้ว", { autoClose: 2000 });
-    setTimeout(() => {
-      tableRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 300);
-  };
-
+  // Filter RealTime
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
@@ -76,7 +88,7 @@ function FilterForm({
   };
 
   const resetFilter = () => {
-    const resetFilters = {
+    const resetState = {
       startDate: "",
       endDate: "",
       month: "",
@@ -84,10 +96,20 @@ function FilterForm({
       projectId: "",
       ownerId: "",
     };
-    setTempFilter(resetFilters);
-    setFilters(resetFilters);
+    setFilters(resetState);
+    setTempFilter(resetState);
     setCurrentPage(1);
-    toast.success("รีเซ็ตตัวกรองเรียบร้อย", { autoClose: 3000 });
+    tableRef?.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleApplyFilter = () => {
+    if (!vaildateFilers()) return;
+    setFilters(tempFilter);
+    setCurrentPage(1);
+    toast.success("ค้นหาข้อมูลเรียบร้อยแล้ว", { autoClose: 1000 });
+    setTimeout(() => {
+      tableRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 300);
   };
 
   return (
@@ -226,45 +248,53 @@ function FilterForm({
               </div>
             </div>
           </div>
-          <div className="relative mt-1">
-            <label>เจ้าของโครงการ</label>
-            <div className="relative">
-              <select
-                name="ownerId"
-                value={tempFilter.ownerId}
-                onChange={handleTempFilterChange}
+          {role === "user" ? (
+            <div className="mt-1">
+              <label>เจ้าของโครงการ</label>
+              <input
+                type="text"
+                value={`${user.first_name} ${user.last_name}`}
+                disabled
                 className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
-              >
-                <option value="">ทั้งหมด</option>
-                {owners.map((owner) => (
-                  <option key={owner.id} value={owner.id}>
-                    {owner.first_name} {owner.last_name}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
-                <svg
-                  className="h-5 w-5 text-green-400"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
+              />
+            </div>
+          ) : (
+            <div className="relative mt-1">
+              <label>เจ้าของโครงการ</label>
+              <div className="relative">
+                <select
+                  name="ownerId"
+                  value={tempFilter.ownerId}
+                  onChange={handleTempFilterChange}
+                  className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
                 >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 12a1 1 0 01-.7-.3l-4-4a1 1 0 011.4-1.4L10 9.58l3.3-3.3a1 1 0 011.4 1.42l-4 4a1 1 0 01-.7.3z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                  <option value="">ทั้งหมด</option>
+                  {owners.map((owner) => (
+                    <option key={owner.id} value={owner.id}>
+                      {owner.first_name} {owner.last_name}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
+                  <svg
+                    className="h-5 w-5 text-green-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 12a1 1 0 01-.7-.3l-4-4a1 1 0 011.4-1.4L10 9.58l3.3-3.3a1 1 0 011.4 1.42l-4 4a1 1 0 01-.7.3z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
               </div>
             </div>
-          </div>
+          )}
           <div className="col-span-1 sm:col-span-2 md:col-span-3 flex flex-wrap gap-4 mt-2">
             <button
-              onClick={() => {
-                if (vaildateFilers()) {
-                  handleApplyFilter();
-                }
-              }}
+              onClick={handleApplyFilter}
               className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition"
             >
               <Search size={16} className="inline-block mr-1" /> ค้นหา

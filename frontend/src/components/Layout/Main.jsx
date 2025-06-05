@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { ToastContainer } from "react-toastify";
 import axios from "axios";
-import HistoryTable from "./HistoryTable";
+import HistoryTable from "../History/HistoryTable";
 
 function Main({ token, role, setToken, setRole }) {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
