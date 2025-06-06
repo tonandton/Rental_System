@@ -1,12 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { MenuIcon, XIcon } from "lucide-react";
+import {
+  Menu,
+  X,
+  ChevronDown,
+  ChevronUp,
+  Home,
+  FilePlus,
+  Layers,
+  SquareChevronLeft,
+  SquareChevronRight,
+} from "lucide-react";
 
 function Navbar({ token, role, user, setToken, setRole, setUser }) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [dropdownOpen, setDropdownOpen] = useState({});
   const profileRef = useRef(null);
-  const mobileMenuRef = useRef(null);
+  const sidebarRef = useRef(null);
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -20,31 +31,31 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
   };
 
   const navItems = [
-    { path: "/", label: "หน้าแรก", roles: ["superadmin", "admin", "user"] },
     {
-      path: "/projects",
-      label: "จัดการโครงการ",
-      roles: ["superadmin", "admin"],
-    },
-    // {
-    //   path: "/monthly-report",
-    //   label: "รายงานรอบเดือน",
-    //   roles: ["superadmin", "admin", "user"],
-    // },
-    // {
-    //   path: "/bills",
-    //   label: "ใบแจ้งหนี้",
-    //   roles: ["superadmin", "admin", "user"],
-    // },
-    {
-      path: "/manage-users",
-      label: "จัดการผู้ใช้งาน",
-      roles: ["superadmin", "admin"],
+      label: "หน้าแรก",
+      icon: <Home size={18} />,
+      roles: ["superadmin", "admin", "user"],
+      children: [
+        { path: "/", label: "หน้าหลัก" },
+        { path: "/main-history", label: "หน้าแรก น้ำ - ไฟ" },
+      ],
     },
     {
-      path: "/add-rental-history",
+      label: "จัดการ",
+      icon: <Layers size={18} />,
+      roles: ["superadmin", "admin"],
+      children: [
+        { path: "/projects", label: "จัดการโครงการ" },
+        { path: "/manage-users", label: "จัดการผู้ใช้งาน" },
+      ],
+    },
+    {
       label: "บันทึกรายการ",
+      icon: <FilePlus size={18} />,
       roles: ["superadmin", "admin", "user", "employee"],
+      children: [
+        { path: "/add-rental-history", label: "บันทึกค่าเช่า/ค่าน้ำไฟ" },
+      ],
     },
   ];
 
@@ -52,124 +63,141 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
     return `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase();
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      // สำหรับ Desktop Profile
-      if (profileRef.current && !profileRef.current.contains(event.target)) {
-        setIsProfileOpen(false);
-      }
+  const toggleDropdown = (label) => {
+    setDropdownOpen((prev) => ({ ...prev, [label]: !prev[label] }));
+  };
 
-      // สำหรับ Mobile Dropdown
+  useEffect(() => {
+    const handleClickOutsideSidebar = (event) => {
       if (
-        mobileMenuRef.current &&
-        !mobileMenuRef.current.contains(event.target)
+        sidebarRef.current &&
+        !sidebarRef.current.contains(event.target) &&
+        isSidebarOpen &&
+        window.innerWidth < 768 // ทำเฉพาะบนมือถือ
       ) {
-        setIsMenuOpen(false);
+        setIsSidebarOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutsideSidebar);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutsideSidebar);
     };
-  }, []);
+  }, [isSidebarOpen]);
 
   return (
-    <nav className="bg-gradient-to-r from-green-600 to-green-800 text-white shadow-xl sticky top-0 z-50 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
-        <div className="text-lg sm:text-xl md:text-2xl font-extrabold tracking-wide uppercase text-white drop-shadow">
-          WEBILL
+    <div className="flex max-h-screen">
+      {/* Sidebar */}
+      <aside
+        ref={sidebarRef}
+        className={`fixed z-40 top-0 left-0 h-full bg-green-700 text-white transition-all duration-300 ease-in-out shadow-xl
+    ${isSidebarOpen ? "w-64" : "w-0"}
+    md:${isSidebarOpen ? "w-64" : "w-16"}
+    overflow-x-hidden`}
+      >
+        <div className="flex items-center justify-between py-5 px-2 mt-2">
+          <span
+            className={`font-bold text-xl transition-opacity duration-200 ${
+              !isSidebarOpen && "opacity-0 invisible"
+            }`}
+          >
+            {/* WEBILL */}
+          </span>
+          <button
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="text-white focus:outline-none hover:bg-green-600"
+          >
+            {isSidebarOpen ? (
+              <div className="flex items-center">
+                <SquareChevronLeft size={20} />
+                <p className="ml-2 mr-32">MSSOCIETY</p>
+              </div>
+            ) : (
+              <SquareChevronRight size={20} />
+            )}
+          </button>
         </div>
-
-        {/* ปุ่มเมนู (Mobile) */}
-        <div className="md:hidden relative" ref={mobileMenuRef}>
-          {token && (
-            <>
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="flex items-center justify-center w-10 h-10 rounded-full bg-white text-green-700 font-extrabold shadow-md ring-2 ring-white hover:scale-105 transition-transform duration-200"
-              >
-                <span className="text-base">
-                  {getInitials(user?.first_name, user?.last_name)}
-                </span>
-              </button>
-
-              {isMenuOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl z-50 border border-gray-200 animate-slide-in-down overflow-hidden">
-                  {/* ส่วนหัวของโปรไฟล์ */}
-                  <div className="px-4 py-3 bg-green-50 border-b border-gray-200 flex items-center gap-2 font-semibold text-green-800">
-                    <span className="text-xl">👤</span>
-                    {user?.first_name} {user?.last_name}
-                  </div>
-
-                  {/* เมนูรายการ */}
-                  <div className="px-3 py-2 space-y-1">
-                    {navItems
-                      .filter((item) => item.roles.includes(role))
-                      .map((item) => (
-                        <NavLink
-                          key={item.path}
-                          to={item.path}
-                          onClick={() => setIsMenuOpen(false)}
-                          className={({ isActive }) =>
-                            `block px-3 py-2 rounded-md text-sm font-medium transition ${
-                              isActive
-                                ? "bg-green-100 text-green-800"
-                                : "text-gray-700 hover:bg-gray-100"
-                            }`
-                          }
-                        >
-                          {item.label}
-                        </NavLink>
+        <nav className="px-2 space-y-5">
+          {navItems.map(
+            (item) =>
+              item.roles.includes(role) && (
+                <div key={item.label}>
+                  <button
+                    onClick={() => toggleDropdown(item.label)}
+                    className="flex items-center justify-between w-full px-4 py-2 text-left hover:bg-green-600 rounded-md"
+                  >
+                    <div className="flex items-center gap-2">
+                      {item.icon}
+                      {isSidebarOpen && <span>{item.label}</span>}
+                    </div>
+                    {isSidebarOpen &&
+                      (dropdownOpen[item.label] ? (
+                        <ChevronUp size={16} />
+                      ) : (
+                        <ChevronDown size={16} />
                       ))}
-                  </div>
-
-                  {/* ปุ่มออกจากระบบ */}
-                  <div className="border-t border-gray-100 mt-2">
-                    <button
-                      onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:text-red-600 hover:bg-gray-50 transition flex items-center gap-2"
-                    >
-                      🚪 ออกจากระบบ
-                    </button>
+                  </button>
+                  <div
+                    className={`ml-6 mt-1 space-y-1 transition-all duration-300 overflow-hidden ${
+                      dropdownOpen[item.label] && isSidebarOpen
+                        ? "max-h-96"
+                        : "max-h-0"
+                    }`}
+                  >
+                    {item.children.map((child) => (
+                      <NavLink
+                        key={child.path}
+                        to={child.path}
+                        className={({ isActive }) =>
+                          `block px-3 py-1 rounded-md text-sm transition ${
+                            isActive
+                              ? "bg-white text-green-800"
+                              : "text-white hover:bg-green-600"
+                          }`
+                        }
+                      >
+                        {child.label}
+                      </NavLink>
+                    ))}
                   </div>
                 </div>
-              )}
-            </>
+              )
           )}
-        </div>
+        </nav>
+      </aside>
 
-        {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-3 lg:gap-5">
-          {/* Nav Items */}
-          {navItems
-            .filter((item) => item.roles.includes(role))
-            .map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={({ isActive }) =>
-                  `px-3 py-2 rounded-lg text-sm font-medium transition duration-200 ${
-                    isActive
-                      ? "bg-white text-green-800 shadow"
-                      : "hover:bg-green-500 hover:text-white"
-                  }`
-                }
-              >
-                {item.label}
-              </NavLink>
-            ))}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black opacity-50 z-30 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
 
-          {/* Avatar */}
+      {/* Main Content */}
+      <div
+        className={`flex-1 max-h-screen transition-all duration-300 ease-in-out ${
+          isSidebarOpen ? "ml-64" : "ml-0 md:ml-16"
+        }`}
+      >
+        {/* Top Navbar */}
+        <nav className="bg-white text-green-800 shadow flex items-center justify-between px-4 py-3 sticky top-0 z-30">
+          <div className="flex items-center gap-4">
+            {/* ปุ่ม Toggle Sidebar (แสดงเฉพาะมือถือ) */}
+            <button
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="md:hidden text-green-800 focus:outline-none"
+            >
+              {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+            <span className="text-lg font-bold">MESUK SOCIETY</span>
+          </div>
           {token && (
             <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="flex items-center justify-center w-9 h-9 lg:w-10 lg:h-10 rounded-full bg-white text-green-800 font-bold hover:scale-105 transition ring-2 ring-white"
+                className="flex items-center justify-center w-9 h-9 rounded-full bg-green-600 text-white font-bold ring-2 ring-white hover:scale-105 transition"
               >
                 {getInitials(user?.first_name, user?.last_name)}
               </button>
-
-              {/* Profile Dropdown */}
               {isProfileOpen && (
                 <div className="absolute right-0 mt-2 w-64 bg-white text-gray-800 rounded-xl shadow-xl py-3 z-50 border border-gray-100 animate-fade-in">
                   <div className="px-4 py-2 font-semibold border-b flex items-center gap-2">
@@ -185,9 +213,9 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
               )}
             </div>
           )}
-        </div>
+        </nav>
       </div>
-    </nav>
+    </div>
   );
 }
 

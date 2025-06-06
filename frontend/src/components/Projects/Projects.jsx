@@ -148,7 +148,7 @@ function Projects({ token, role, user }) {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="xl:max-w-screen-xl mx-auto px-4 py-8 lg:max-w-screen-lg">
       <ProjectFilterForm
         projects={projects}
         owners={owners}

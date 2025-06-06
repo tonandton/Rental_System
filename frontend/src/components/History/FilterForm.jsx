@@ -106,7 +106,7 @@ function FilterForm({
     if (!vaildateFilers()) return;
     setFilters(tempFilter);
     setCurrentPage(1);
-    toast.success("ค้นหาข้อมูลเรียบร้อยแล้ว", { autoClose: 1000 });
+    toast.success("ค้นหาข้อมูลเรียบร้อยแล้ว", { autoClose: 3000 });
     setTimeout(() => {
       tableRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 300);

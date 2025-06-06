@@ -259,7 +259,7 @@ function UserManagement({ token }) {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="xl:max-w-screen-xl mx-auto px-4 py-8 lg:max-w-screen-lg">
       <div className="bg-white shadow-lg rounded-xl p-6 border border-green-100 mt-4 animate-slide-in">
         <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
           <UserPlus size={20} className="text-green-600" /> การจัดการผู้ใช้

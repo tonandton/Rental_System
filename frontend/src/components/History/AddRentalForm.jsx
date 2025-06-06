@@ -275,26 +275,6 @@ function AddRentalForm({
       setFiles({ water_image: null, electricity_image: null });
       setPreviews({ water_image: null, electricity_image: null });
 
-      // if (!isEditMode) {
-      //   setFormData({
-      //     project_id: "",
-      //     rental_date: "",
-      //     amount: "",
-      //     previous_water_meter: "",
-      //     current_water_meter: "",
-      //     previous_electricity_meter: "",
-      //     current_electricity_meter: "",
-      //     electricity_image_path: "",
-      //     water_image_path: "",
-      //     water_description: "",
-      //     electricity_description: "",
-      //     status: "pending",
-      //   });
-
-      //   setFiles({ water_image: null, electricity_image: null });
-      //   setPreviews({ water_image: null, electricity_image: null });
-      // }
-
       toast.success(
         `${isEditMode ? "แก้ไข" : "บันทึก"}${
           activeTab === "water" ? "ค่าน้ำ" : "ค่าไฟ"
@@ -325,6 +305,7 @@ function AddRentalForm({
       setTimeout(() => {
         tableRef.current?.scrollIntoView({ behavior: "smooth" }, 500);
       });
+      onClose();
       // console.log("Updated history:", historyRes.data); // Debug
     } catch (error) {
       console.error("Submit error:", error);
@@ -537,7 +518,6 @@ function AddRentalForm({
                       onChange={handleFormChange}
                       required
                       min="0"
-                      step="0.01"
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
                     />
                   </div> */}
@@ -557,7 +537,6 @@ function AddRentalForm({
                       value={formData.previous_water_meter}
                       onChange={handleFormChange}
                       min="0"
-                      step="0.01"
                       className="mt-1 block w-full rounded-md border-indigo-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 transition text-sm sm:text-base"
                       aria-label="มิเตอร์น้ำรอบที่ผ่านมา"
                     />
@@ -572,7 +551,6 @@ function AddRentalForm({
                       value={formData.current_water_meter}
                       onChange={handleFormChange}
                       min="0"
-                      step="0.01"
                       className="mt-1 block w-full rounded-md border-indigo-300 shadow-sm focus:border-indigo-600 focus:ring-indigo-600 transition text-sm sm:text-base"
                       aria-label="มิเตอร์น้ำปัจจุบัน"
                     />
@@ -652,7 +630,6 @@ function AddRentalForm({
                       value={formData.previous_electricity_meter}
                       onChange={handleFormChange}
                       min="0"
-                      step="0.01"
                       className="mt-1 block w-full rounded-md border-amber-300 shadow-sm focus:border-amber-600 focus:ring-amber-600 transition text-sm sm:text-base"
                       aria-label="มิเตอร์ไฟรอบที่ผ่านมา"
                     />
@@ -667,7 +644,6 @@ function AddRentalForm({
                       value={formData.current_electricity_meter}
                       onChange={handleFormChange}
                       min="0"
-                      step="0.01"
                       className="mt-1 block w-full rounded-md border-amber-300 shadow-sm focus:border-amber-600 focus:ring-amber-600 transition text-sm sm:text-base"
                       aria-label="มิเตอร์ไฟปัจจุบัน"
                     />
@@ -757,7 +733,7 @@ function AddRentalForm({
                     aria-label="ยกเลิกการแก้ไข"
                   >
                     <X size={16} className="inline-block mr-1" />
-                    {isEditMode ? "ยกเลิก" : "ล้างข้อมูล"}
+                    {isEditMode ? "ยกเลิก" : "ปิดฟอร์ม"}
                   </button>
                 )}
                 <button
