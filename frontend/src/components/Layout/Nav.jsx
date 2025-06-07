@@ -90,8 +90,7 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
       <aside
         ref={sidebarRef}
         className={`fixed z-40 top-0 left-0 h-full bg-green-700 text-white transition-all duration-300 ease-in-out shadow-xl
-    ${isSidebarOpen ? "w-64" : "w-0"}
-    md:${isSidebarOpen ? "w-64" : "w-16"}
+    ${isSidebarOpen ? "w-56" : "w-0 md:w-16"}
     overflow-x-hidden`}
       >
         <div className="flex items-center justify-between py-5 px-2 mt-2">
@@ -175,7 +174,7 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
       {/* Main Content */}
       <div
         className={`flex-1 max-h-screen transition-all duration-300 ease-in-out ${
-          isSidebarOpen ? "ml-64" : "ml-0 md:ml-16"
+          isSidebarOpen ? "ml-56" : "ml-0 md:ml-16"
         }`}
       >
         {/* Top Navbar */}
