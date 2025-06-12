@@ -296,12 +296,13 @@ module.exports = (authenticateToken, restrictTo, pool) => {
           if (!ownerResult.rows.length && history.user_id !== req.user.id) {
             return res.status(403).json({ error: "Unauthorized" });
           }
-        } else if (
-          req.user.role === "admin" &&
-          history.user_id !== req.user.id
-        ) {
-          return res.status(403).json({ error: "Unauthorized" });
         }
+        // else if (
+        //   req.user.role === "admin" &&
+        //   history.user_id !== req.user.id
+        // ) {
+        //   return res.status(403).json({ error: "Unauthorized" });
+        // }
 
         const updates = {};
         if (req.files.water_image) {
@@ -387,11 +388,11 @@ module.exports = (authenticateToken, restrictTo, pool) => {
             return res.status(403).json({ error: "Unauthorized" });
           }
           // ถ้าเป็น admin ต้องเป็นเจ้าของข้อมูล
-        } else if (
-          req.user.role === "admin" &&
-          history.user_id !== req.user.id
-        ) {
-          return res.status(403).json({ error: "Unauthorized" });
+          // } else if (
+          //   req.user.role === "admin" &&
+          //   history.user_id !== req.user.id
+          // ) {
+          //   return res.status(403).json({ error: "Unauthorized" });
         }
 
         // ดึงข้อมูล project เพื่อคำนวน bill

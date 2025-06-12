@@ -77,12 +77,20 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
       ) {
         setIsSidebarOpen(false);
       }
+
+      if (
+        profileRef.current &&
+        !profileRef.current.contains(event.target) &&
+        isProfileOpen
+      ) {
+        setIsProfileOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutsideSidebar);
     return () => {
       document.removeEventListener("mousedown", handleClickOutsideSidebar);
     };
-  }, [isSidebarOpen]);
+  }, [isSidebarOpen, isProfileOpen]);
 
   return (
     <div className="flex max-h-screen">

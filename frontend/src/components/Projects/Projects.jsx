@@ -77,23 +77,6 @@ function Projects({ token, role, user }) {
     }
   };
 
-  // const fetchProjects = async () => {
-  //   setLoading(true);
-
-  //   try {
-  //     const response = await axios.get(`${API_BASE_URL}/api/projects`, {
-  //       headers: { Authorization: `Bearer ${token}` },
-  //     });
-  //     console.log("Fetched Projects:", response.data);
-  //     setProjects(response.data);
-  //     setLoading(false);
-  //   } catch (error) {
-  //     setError(error.response?.data?.error || "ไม่สามารถโหลดข้อมูลโครงการ");
-  //     toast.error("โหลดข้อมูลโครงการล้มเหลว", { autoClose: 3000 });
-  //     setLoading(false);
-  //   }
-  // };
-
   const openEditModal = (project) => {
     setEditProject({
       id: project.id,
@@ -198,6 +181,9 @@ function Projects({ token, role, user }) {
                     ค่าไฟ/หน่วย
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                    สถานะ
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
                     การจัดการ
                   </th>
                 </tr>
@@ -240,6 +226,17 @@ function Projects({ token, role, user }) {
                       </td>
                       <td className="px-4 py-3 text-sm">
                         {project.electricity_unit_rate || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <span
+                          className={`inline-block px-2 py-1 rounded-full text-xs ${
+                            project.is_active
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {project.is_active ? "ใช้งาน" : "ไม่ได้ใช้งาน"}
+                        </span>
                       </td>
                       <td className="px-4 py-3 text-sm flex space-x-2">
                         <button
