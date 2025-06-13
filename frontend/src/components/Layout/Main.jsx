@@ -118,10 +118,13 @@ function Main({ token, role }) {
               📊 <span>Analytics: ดูกราฟสรุปยอดรายเดือน</span>
             </li>
             <li className="flex items-center gap-2">
-              🔔 <span>Notifications: รับแจ้งเตือนการชำระเงิน</span>
+              🔔 <span>Notifications: ระบบแจ้งเตือน</span>
             </li>
             <li className="flex items-center gap-2">
               📄 <span>Reports: สร้างรายงานสรุปประจำปี</span>
+            </li>
+            <li className="flex items-center gap-2">
+              📄 <span>Reports: สร้างรายงานสรุปค่าเดินทาง</span>
             </li>
             <li className="flex items-center gap-2">
               ❓ <span>FAQ: คำถามที่พบบ่อยและวิดีโอสอนการใช้งาน</span>
