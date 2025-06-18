@@ -78,17 +78,35 @@ module.exports = (authenticateToken, restrictTo, pool) => {
       const { username, password, role, email, first_name, last_name } =
         req.body;
       try {
+        if (!password || password.length < 6) {
+          return res
+            .status(400)
+            .json({ error: "รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร" });
+        }
         const hashedPassword = bcrypt.hashSync(password, 10);
         const result = await pool.query(
-          "INSERT INTO users (username, password, role, email, first_name, last_name, is_active) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id",
-          [username, hashedPassword, role, email, first_name, last_name, true]
+          "INSERT INTO users (username, password, role, email, first_name, last_name, is_active) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, username, role, email, first_name, last_name, is_active",
+          [
+            username,
+            hashedPassword,
+            role,
+            email,
+            first_name,
+            last_name || "",
+            true,
+          ]
         );
         res
           .status(201)
           .json({ id: result.rows[0].id, message: "User created" });
       } catch (err) {
         console.error("Create user error:", err);
-        res.status(500).json({ error: "Server error" });
+        res.status(400).json({
+          error:
+            err.constraint === "users_username_key"
+              ? "ชื่อนี้มีในระบบแล้ว"
+              : "ไม่สามารถเพิ่มผู้ใช้",
+        });
       }
     }
   );
@@ -99,9 +117,16 @@ module.exports = (authenticateToken, restrictTo, pool) => {
     authenticateToken,
     restrictTo("superadmin", "admin"),
     async (req, res) => {
-      const userId = req.params.id;
-      const { username, email, role, first_name, last_name, is_active } =
-        req.body;
+      const userId = parseInt(req.params.id);
+      const {
+        username,
+        email,
+        role,
+        first_name,
+        last_name,
+        is_active,
+        password,
+      } = req.body;
       try {
         // ตรวจสอบว่าผู้ใช้มีอยู่
         const userCheck = await pool.query(
@@ -112,21 +137,51 @@ module.exports = (authenticateToken, restrictTo, pool) => {
           return res.status(404).json({ error: "ไม่พบผู้ใช้" });
         }
 
-        // อัปเดตผู้ใช้
-        const result = await pool.query(
-          "UPDATE users SET username = $1, email = $2, role = $3, first_name = $4, last_name = $5, is_active = $6 WHERE id = $7 RETURNING id, username, email, role, first_name, last_name, is_active",
-          [username, email, role, first_name, last_name, is_active, userId]
-        );
+        // เตรียม query และ params
+        let query =
+          "UPDATE users SET username = $1, role = $2, email = $3, first_name = $4, last_name = $5, is_active = $6";
+        const params = [
+          username,
+          role,
+          email,
+          first_name || "",
+          last_name || "",
+          is_active,
+        ];
+        let paramIndex = 7;
+
+        // จัดการรหัสผ่านถ้ามีการส่งมา
+        if (password) {
+          if (password.length < 6) {
+            return res
+              .status(400)
+              .json({ error: "รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร" });
+          }
+          const hashedPassword = bcrypt.hashSync(password, 10);
+          query += `, password = $${paramIndex}`;
+          params.push(hashedPassword);
+          paramIndex++;
+        }
+
+        query += ` WHERE id = $${paramIndex} RETURNING id, username, email, role, first_name, last_name, is_active`;
+        params.push(userId);
+
+        const result = await pool.query(query, params);
 
         if (result.rows.length === 0) {
           return res.status(500).json({ error: "ไม่สามารถอัปเดตผู้ใช้ได้" });
         }
 
         // คืนข้อมูลผู้ใช้ที่อัปเดต
-        res.json(result.rows[0]);
+        res.json({ user: result.rows[0] });
       } catch (error) {
-        console.error("Upadte user error:", error);
-        res.status(500).json({ error: "Server Error" });
+        console.error("Update user error:", error);
+        res.status(500).json({
+          error:
+            error.constraint === "users_username_key"
+              ? "ชื่อนี้มีในระบบแล้ว"
+              : "เกิดข้อผิดพลาดในระบบ",
+        });
       }
     }
   );

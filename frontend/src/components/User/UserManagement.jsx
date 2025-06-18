@@ -30,6 +30,7 @@ function UserManagement({ token }) {
   const [editUser, setEditUser] = useState(null); // สำหรับแก้ไขผู้ใช้
   const [isModalOpen, setIsModalOpen] = useState(false); // ควบคุม modal
   const [showPassword, setShowPassword] = useState(false);
+  const [showEditPassword, setShowEditPassword] = useState(false); // เพิ่ม state สำหรับ toggle รหัสผ่านใน modal แก้ไข
   const [togglingUserId, setTogglingUserId] = useState(null);
   const modalRef = useRef(null);
 
@@ -42,6 +43,7 @@ function UserManagement({ token }) {
       if (modalRef.current && !modalRef.current.contains(event.target)) {
         setIsModalOpen(false);
         setEditUser(null);
+        setShowEditPassword(false); // รีเซ็ต toggle รหัสผ่าน
       }
     };
 
@@ -93,12 +95,14 @@ function UserManagement({ token }) {
   const handleAddUser = async (e) => {
     e.preventDefault();
     if (!newUser.password || newUser.password.length < 6) {
-      toast.error("กรุณากรอกรหัสผ่านอย่างน้อย 6 ตัวอักษร", { autoClose: 3000 });
+      toast.error("กรุณากรอกรหัสผ่านอย่างน้อย 6 ตัวอักษร 🔑", {
+        autoClose: 3000,
+      });
       return;
     }
 
     if (!newUser.username || !newUser.email) {
-      toast.error("กรุณากรอกชื่อผู้ใช้และอีเมล", { autoClose: 3000 });
+      toast.error("กรุณากรอกชื่อผู้ใช้และอีเมล 📝", { autoClose: 3000 });
       return;
     }
 
@@ -114,32 +118,46 @@ function UserManagement({ token }) {
         first_name: "",
         last_name: "",
       });
+      setShowPassword(false); // รีเซ็ต toggle รหัสผ่าน
       setUsers((prev) => [response.data, ...prev]);
-      toast.success("เพิ่มผู้ใช้สำเร็จ", { autoClose: 3000 });
-      // fetchUsers();
+      toast.success("เพิ่มผู้ใช้สำเร็จ 😊", { autoClose: 3000 });
     } catch (error) {
       setError(error.response?.data?.error || "ไม่สามารถเพิ่มผู้ใช้");
-      toast.error("เพิ่มผู้ใช้ล้มเหลว", { autoClose: 3000 });
+      toast.error("เพิ่มผู้ใช้ล้มเหลว 😢", { autoClose: 3000 });
     }
   };
 
   const handleEditUser = async (e) => {
     e.preventDefault();
-    // ตรวจสอบข้อมูลก่อนส่ง
     if (!editUser.username || !editUser.email) {
-      toast.error("กรุณากรอกชื่อผู้ใช้และอีเมล", { autoClose: 3000 });
+      toast.error("กรุณากรอกชื่อผู้ใช้และอีเมล 📝", { autoClose: 3000 });
       return;
     }
+    if (editUser.password && editUser.password.length < 6) {
+      toast.error("รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร 🔑", { autoClose: 3000 });
+      return;
+    }
+
     try {
+      const payload = {
+        username: editUser.username,
+        email: editUser.email,
+        role: editUser.role,
+        first_name: editUser.first_name,
+        last_name: editUser.last_name,
+        is_active: editUser.is_active,
+      };
+      if (editUser.password) {
+        payload.password = editUser.password; // ส่งรหัสผ่านถ้ามี
+      }
+
       const response = await axios.put(
         `${API_BASE_URL}/api/users/${editUser.id}`,
-        editUser,
+        payload,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      // console.log("Edit user response:", response.data); // Debug
-      // รองรับทั้ง { id, username, ... } และ { user: { id, username, ... } }
       const updatedUser = response.data.user || response.data;
       if (!updatedUser.id || !updatedUser.username) {
         throw new Error("Invalid user data returned from API");
@@ -147,9 +165,10 @@ function UserManagement({ token }) {
       setUsers((prev) =>
         prev.map((user) => (user.id === editUser.id ? updatedUser : user))
       );
-      toast.success("แก้ไขผู้ใช้สำเร็จ", { autoClose: 3000 });
+      toast.success("แก้ไขผู้ใช้สำเร็จ 😊", { autoClose: 3000 });
       setEditUser(null);
       setIsModalOpen(false);
+      setShowEditPassword(false);
     } catch (error) {
       console.error(
         "Edit user error:",
@@ -169,22 +188,12 @@ function UserManagement({ token }) {
   const handleDeleteUser = async (userId) => {
     if (window.confirm("ยืนยันการลบผู้ใช้?")) {
       try {
-        const response = await axios.delete(
-          `${API_BASE_URL}/api/users/${userId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        console.log("Delete user response:", response.data); // Debug
+        await axios.delete(`${API_BASE_URL}/api/users/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setUsers((prev) => prev.filter((user) => user.id !== userId));
-        toast.success("ลบผู้ใช้สำเร็จ", { autoClose: 3000 });
+        toast.success("ลบผู้ใช้สำเร็จ 😊", { autoClose: 3000 });
       } catch (error) {
-        console.error(
-          "Delete user error:",
-          error,
-          "Response:",
-          error.response?.data
-        );
         const errorMessage = error.response?.data?.error || "ลบผู้ใช้ล้มเหลว";
         toast.error(errorMessage, { autoClose: 3000 });
       }
@@ -211,16 +220,16 @@ function UserManagement({ token }) {
       );
 
       toast.success(
-        `เปลี่ยนสถานะเป็น ${currentStatus ? "ไม่ได้ใช้งาน" : "ใช้งาน"} สำเร็จ`,
+        `เปลี่ยนสถานะเป็น ${
+          currentStatus ? "ไม่ได้ใช้งาน" : "ใช้งาน"
+        } สำเร็จ 😊`,
         {
           autoClose: 3000,
-          toastId: `toggle-${userId}`, // ป้องกัน toast ซ้ำ
+          toastId: `toggle-${userId}`,
         }
       );
-      // await fetchUsers();
     } catch (err) {
-      console.error("Toggle active error:", err);
-      toast.error("เปลี่ยนสถานะผู้ใช้ล้มเหลว", { autoClose: 3000 });
+      toast.error("เปลี่ยนสถานะผู้ใช้ล้มเหลว 😢", { autoClose: 3000 });
     } finally {
       setTogglingUserId(null);
     }
@@ -242,13 +251,13 @@ function UserManagement({ token }) {
 
   const openEditModal = (user) => {
     if (!user || !user.id || !user.username) {
-      toast.error("ข้อมูลผู้ใช้ไม่สมบูรณ์", { autoClose: 3000 });
+      toast.error("ข้อมูลผู้ใช้ไม่สมบูรณ์ 😢", { autoClose: 3000 });
       return;
     }
     setEditUser({
       id: user.id,
       username: user.username || "",
-      password: "",
+      password: "", // เตรียมช่องรหัสผ่านว่าง
       email: user.email || "",
       role: user.role || "user",
       first_name: user.first_name || "",
@@ -256,6 +265,7 @@ function UserManagement({ token }) {
       is_active: user.is_active ?? true,
     });
     setIsModalOpen(true);
+    setShowEditPassword(false); // รีเซ็ต toggle รหัสผ่าน
   };
 
   return (
@@ -651,6 +661,35 @@ function UserManagement({ token }) {
                   required
                   className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
                 />
+              </div>
+              <div className="relative">
+                <label className="block font-medium text-gray-700 mb-1">
+                  <Key size={16} className="inline-block mr-1" /> รหัสผ่านใหม่
+                  (ถ้าไม่กรอกจะไม่เปลี่ยน)
+                </label>
+                <input
+                  type={showEditPassword ? "text" : "password"}
+                  name="password"
+                  value={editUser.password}
+                  onChange={handleEditInputChange}
+                  placeholder="กรอกรหัสผ่านใหม่ (ถ้ามี)"
+                  className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowEditPassword((prev) => !prev)}
+                  className="absolute right-3 top-7 text-gray-500 hover:text-gray-700"
+                  tabIndex={-1}
+                  aria-label={
+                    showEditPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"
+                  }
+                >
+                  {showEditPassword ? (
+                    <EyeOffIcon size={20} />
+                  ) : (
+                    <EyeIcon size={20} />
+                  )}
+                </button>
               </div>
               <div>
                 <label className="block font-medium text-gray-700 mb-1">
