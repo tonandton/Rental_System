@@ -111,16 +111,6 @@ function AddRentalForm({
           electricity_image: `${API_BASE_URL}${initialData.electricity_image_path}`,
         }));
       }
-
-      // setFiles({ water_image: null, electricity_image: null }); // รีเซ็ตไฟล์ใหม่ที่อัปโหลด
-      // setPreviews({
-      //   water_image: initialData.water_image_path
-      //     ? `${API_BASE_URL}${initialData.water_image_path}`
-      //     : null,
-      //   electricity_image: initialData.electricity_image_path
-      //     ? `${API_BASE_URL}${initialData.electricity_image_path}`
-      //     : null,
-      // });
     }
   }, [initialData, isEditMode, API_BASE_URL, projects]);
 

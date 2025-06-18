@@ -45,7 +45,7 @@ function Main({ token, role }) {
             <ul className="list-disc pl-5 space-y-2">
               <li>
                 <strong>เข้าสู่ระบบ</strong>: ใช้ชื่อผู้ใช้และรหัสผ่านที่{" "}
-                <Link to="/login" className="text-emerald-600 hover:underline">
+                <Link to="/" className="text-emerald-600 hover:underline">
                   หน้าล็อกอิน
                 </Link>
               </li>

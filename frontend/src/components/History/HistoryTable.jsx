@@ -1,6 +1,7 @@
-import { Edit, FileText, Image as ImageIcon } from "lucide-react";
+import { Edit, FileText, Image as ImageIcon, Download } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import axios from "axios";
 
 function HistoryTable({
   history,
@@ -13,20 +14,17 @@ function HistoryTable({
   tableRef,
   API_BASE_URL,
   onEdit,
+  token,
+  queryParams = {},
 }) {
   const [popupImage, setPopupImage] = useState(null);
+  const [exporting, setExporting] = useState(false);
+
   useEffect(() => {
     if (error) {
       toast.error(`โหลดข้อมูลล้มเหลว: ${error}`, { autoClose: 3000 });
     }
   }, [error]);
-
-  // Pagination
-  const totalPages = Math.ceil(history.length / itemsPerPage);
-  const paginatedHistory = history.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
 
   const handleRetry = async () => {
     try {
@@ -37,12 +35,55 @@ function HistoryTable({
     }
   };
 
+  const handleExportExcel = async () => {
+    setExporting(true);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/history/export`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: "blob",
+        params: queryParams, // ส่ง queryParams ที่ต้องการ
+      });
+
+      const url = URL.createObjectURL(response.data);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "rental_history.xlsx";
+      a.click();
+      URL.revokeObjectURL(url);
+
+      toast.success("ดาวน์โหลดไฟล์ Excel สำเร็จ 📊", { autoClose: 3000 });
+    } catch (error) {
+      const msg =
+        error.response?.status === 403
+          ? "คุณไม่มีสิทธิ์ดาวโหลด"
+          : "ดาวน์โหลดไฟล์ Excel ล้มเหลว";
+      toast.error(msg, { autoClose: 3000 });
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // Pagination
+  const totalPages = Math.ceil(history.length / itemsPerPage);
+  const paginatedHistory = history.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <div className="bg-white shadow-lg rounded-xl p-6 border" ref={tableRef}>
       <div>
         <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
           <FileText size={20} className="text-green-600" /> ข้อมูลรายการ
         </h2>
+        <button
+          onClick={handleExportExcel}
+          disabled={loading || exporting}
+          className="w-full sm:w-auto bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 transition flex items-center gap-2"
+        >
+          <Download size={16} />{" "}
+          {exporting ? "กำลังดาวน์โหลด..." : "ดาวน์โหลด Excel 📊"}
+        </button>
       </div>
       <div className="mt-4 animate-slide-in">
         {loading ? (

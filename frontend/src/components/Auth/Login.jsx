@@ -61,7 +61,7 @@ function Login({ setToken, setRole, setUser }) {
         localStorage.removeItem("rememberedPassword");
       }
 
-      navigate("/add-rental-history");
+      navigate("/");
       toast.success("เข้าสู่ระบบสำเร็จ", { autoClose: 3000 });
     } catch (err) {
       // setError(err.response?.data?.error || "เกิดข้อผิดพลาดในการเข้าสู่ระบบ");

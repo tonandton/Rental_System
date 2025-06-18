@@ -1,5 +1,6 @@
 const express = require("express");
 const multer = require("multer");
+const sharp = require("sharp");
 const path = require("path");
 const fs = require("fs");
 const XLSX = require("xlsx");
@@ -31,7 +32,7 @@ module.exports = (authenticateToken, restrictTo, pool) => {
   const upload = multer({
     storage,
     // ขนาดไฟล์สูงสุด 5MB - Max file size 5MB
-    limits: { fileSize: 5 * 1024 * 1024 },
+    limits: { fileSize: 10 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
       const filetypes = /jpeg|jpg|png/;
       const extname = filetypes.test(
@@ -266,14 +267,50 @@ module.exports = (authenticateToken, restrictTo, pool) => {
       upload.fields([
         { name: "water_image", maxCount: 1 },
         { name: "electricity_image", maxCount: 1 },
-      ])(req, res, (err) => {
+      ])(req, res, async (err) => {
         if (err) {
           console.error("Multer error:", err);
-          return res.status(400).json({ error: err.meesage });
+          return res.status(400).json({ error: err.message });
         }
-        next();
+
+        try {
+          // ฟังก์ชันช่วยบีบอัดรูป ถ้าไฟล์ใหญ่กว่า 5MB
+          const compressIfLarge = async (file) => {
+            if (file.size > 5 * 1024 * 1024) {
+              const inputPath = file.path;
+              const outputPath = inputPath.replace(
+                path.extname(inputPath),
+                "_compressed" + path.extname(inputPath)
+              );
+
+              await sharp(inputPath)
+                .jpeg({ quality: 70 }) // ลดคุณภาพเหลือ 70%
+                .toFile(outputPath);
+
+              // ลบไฟล์ต้นฉบับ แล้วแทนที่ด้วยไฟล์บีบอัด
+              fs.unlinkSync(inputPath);
+              // เปลี่ยน path และ filename ให้เป็นไฟล์บีบอัด
+              file.path = outputPath;
+              file.filename = path.basename(outputPath);
+              file.size = fs.statSync(outputPath).size;
+            }
+          };
+
+          if (req.files.water_image) {
+            await compressIfLarge(req.files.water_image[0]);
+          }
+          if (req.files.electricity_image) {
+            await compressIfLarge(req.files.electricity_image[0]);
+          }
+
+          next();
+        } catch (error) {
+          console.error("Compression error:", error);
+          return res
+            .status(500)
+            .json({ error: "เกิดข้อผิดพลาดในการบีบอัดภาพ" });
+        }
       });
-      console.log("Files received:", req.files); // Debug
     },
     async (req, res) => {
       const historyId = req.params.id;
@@ -541,6 +578,7 @@ module.exports = (authenticateToken, restrictTo, pool) => {
         username,
         createdStartDate,
         createdEndDate,
+        limit,
       } = req.query;
 
       let query = `
@@ -626,6 +664,12 @@ module.exports = (authenticateToken, restrictTo, pool) => {
 
       if (conditions.length > 0) query += " WHERE " + conditions.join(" AND ");
       query += " ORDER BY rh.rental_date DESC";
+
+      // ถ้ามี limit ให้เพิ่มเงื่อนไข LIMIT
+      if (limit && !isNaN(limit)) {
+        query += ` LIMIT $${params.length + 1}`;
+        params.push(parseInt(limit));
+      }
 
       const result = await pool.query(query, params);
       const data = result.rows.map((row) => ({

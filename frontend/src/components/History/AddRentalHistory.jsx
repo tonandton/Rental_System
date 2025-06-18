@@ -141,6 +141,8 @@ function AddRentalHistory({ token, role, user }) {
         tableRef={tableRef}
         API_BASE_URL={API_BASE_URL}
         onEdit={setEditItem}
+        token={token} // ส่ง token
+        filters={filters} // ส่ง filters
       />
 
       {/* Add Modal */}
