@@ -14,7 +14,7 @@ import {
 
 function Navbar({ token, role, user, setToken, setRole, setUser }) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState({});
   const profileRef = useRef(null);
   const sidebarRef = useRef(null);
@@ -91,6 +91,24 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
       document.removeEventListener("mousedown", handleClickOutsideSidebar);
     };
   }, [isSidebarOpen, isProfileOpen]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("sidebarOpen");
+    setIsSidebarOpen(saved ? JSON.parse(saved) : true);
+  }, []);
+  useEffect(() => {
+    localStorage.setItem("sidebarOpen", JSON.stringify(isSidebarOpen));
+  }, [isSidebarOpen]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && isSidebarOpen) {
+        setIsSidebarOpen(false);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isSidebarOpen]);
 
   return (
     <div className="flex max-h-screen">
@@ -174,7 +192,9 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
 
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black opacity-50 z-30 md:hidden"
+          className={`fixed inset-0 bg-black opacity-50 z-30 transition-opacity duration-300 ${
+            isSidebarOpen ? "opacity-50" : "opacity-0 pointer-events-none"
+          }`}
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
@@ -182,7 +202,7 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
       {/* Main Content */}
       <div
         className={`flex-1 max-h-screen transition-all duration-300 ease-in-out ${
-          isSidebarOpen ? "ml-56" : "ml-0 md:ml-16"
+          isSidebarOpen ? "ml-56" : "ml-0"
         }`}
       >
         {/* Top Navbar */}
@@ -191,7 +211,7 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
             {/* ปุ่ม Toggle Sidebar (แสดงเฉพาะมือถือ) */}
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="md:hidden text-green-800 focus:outline-none"
+              className="text-green-800 focus:outline-none"
             >
               {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
             </button>

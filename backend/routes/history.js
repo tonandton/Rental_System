@@ -4,6 +4,10 @@ const sharp = require("sharp");
 const path = require("path");
 const fs = require("fs");
 const XLSX = require("xlsx");
+const PDFDocument = require("pdfkit");
+const moment = require("moment");
+const generateInvoiceLayout = require("../utils/pdf/generateInvoiceLayout");
+require("moment/locale/th");
 
 const router = express.Router();
 
@@ -71,16 +75,16 @@ module.exports = (authenticateToken, restrictTo, pool) => {
       } = req.query;
 
       let query = `
-     SELECT rh.id, rh.project_id, rh.rental_date, rh.amount, rh.created_at, rh.updated_at, rh.previous_water_meter, rh.current_water_meter, rh.water_units, rh.water_bill, 
-             rh.previous_electricity_meter, rh.current_electricity_meter, rh.electricity_units, rh.electricity_bill, 
+      SELECT rh.id, rh.project_id, rh.rental_date, rh.amount, rh.created_at, rh.updated_at, rh.previous_water_meter, rh.current_water_meter, rh.water_units, rh.water_bill, 
+               rh.previous_electricity_meter, rh.current_electricity_meter, rh.electricity_units, rh.electricity_bill, 
              rh.water_image_path, rh.electricity_image_path, rh.water_description, rh.electricity_description, rh.status, p.name AS project_name, u.username, 
              ru.username AS recorder_username, ou.first_name AS owner_first_name, ou.last_name AS owner_last_name, po.user_id AS owner_id
-      FROM rental_history rh
-      JOIN projects p ON rh.project_id = p.id
-      JOIN users u ON rh.user_id = u.id
-      JOIN users ru ON rh.recorder_id = ru.id
-      LEFT JOIN project_owners po ON p.id = po.project_id
-      LEFT JOIN users ou ON po.user_id = ou.id
+        FROM rental_history rh
+        JOIN projects p ON rh.project_id = p.id
+        JOIN users u ON rh.user_id = u.id
+        JOIN users ru ON rh.recorder_id = ru.id
+        LEFT JOIN project_owners po ON p.id = po.project_id
+        LEFT JOIN users ou ON po.user_id = ou.id
     `;
 
       const params = [];
@@ -191,6 +195,7 @@ module.exports = (authenticateToken, restrictTo, pool) => {
           "SELECT water_unit_rate, electricity_unit_rate FROM projects WHERE id = $1",
           [project_id]
         );
+
         const project = projectResult.rows[0];
         if (!project)
           return res.status(404).json({ error: "Project not found" });
@@ -582,13 +587,13 @@ module.exports = (authenticateToken, restrictTo, pool) => {
       } = req.query;
 
       let query = `
-          SELECT rh.id, rh.rental_date, rh.amount, rh.created_at, rh.updated_at, rh.previous_water_meter, rh.water_units, rh.water_bill, rh.previous_electricity_meter, rh.current_electricity_meter, rh.electricity_units, rh.electricity_bill, rh.water_image_path, rh.electricity_image_path, rh.water_description, rh.electricity_description, rh.status, p.name AS project_name, u.username, ru.username AS recorder_username, ou.first_name AS owner_first_name, ou.last_name AS owner_last_name
-          FROM rental_history rh
-          JOIN projects p ON rh.project_id = p.id
-          JOIN users u ON rh.user_id = u.id
-          JOIN users ru ON rh.recorder_id = ru.id
-          LEFT JOIN project_owners po ON p.id = po.project_id
-          LEFT JOIN users ou ON po.user_id = ou.id
+          SELECT rh.id, rh.rental_date, rh.amount, rh.created_at, rh.updated_at, rh.previous_water_meter, rh.current_water_meter, rh.water_units, rh.water_bill, rh.previous_electricity_meter, rh.current_electricity_meter, rh.electricity_units, rh.electricity_bill, rh.water_image_path, rh.electricity_image_path, rh.water_description, rh.electricity_description, rh.status, p.name AS project_name, u.username, ru.username AS recorder_username, ou.first_name AS owner_first_name, ou.last_name AS owner_last_name
+        FROM rental_history rh
+        JOIN projects p ON rh.project_id = p.id
+        JOIN users u ON rh.user_id = u.id
+        JOIN users ru ON rh.recorder_id = ru.id
+        LEFT JOIN project_owners po ON p.id = po.project_id
+        LEFT JOIN users ou ON po.user_id = ou.id
           `;
 
       const params = [];
@@ -718,5 +723,42 @@ module.exports = (authenticateToken, restrictTo, pool) => {
       res.status(500).json({ error: "Server error" });
     }
   });
+
+  router.get("/history/:id/invoice", authenticateToken, async (req, res) => {
+    const historyId = req.params.id;
+
+    try {
+      const result = await pool.query(
+        `SELECT rh.*, p.name AS project_name, u.first_name, u.last_name,
+      ou.first_name AS owner_first_name, ou.last_name AS owner_last_name
+      FROM rental_history rh
+      JOIN projects p ON rh.project_id = p.id
+      JOIN users u ON rh.user_id = u.id
+      LEFT JOIN project_owners po ON po.project_id = p.id
+      LEFT JOIN users ou ON ou.id = po.user_id
+      WHERE rh.id = $1`,
+        [historyId]
+      );
+
+      const data = result.rows[0];
+      if (!data) return res.status(404).json({ error: "ไม่พบข้อมูล" });
+
+      // สร้าง PDF
+      const doc = new PDFDocument({ size: "A4", margin: 50 });
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `inline; filename=invoice_${historyId}.pdf`
+      );
+
+      doc.pipe(res);
+      generateInvoiceLayout(doc, data, historyId);
+      doc.end();
+    } catch (err) {
+      console.error("Generate invoice error:", err);
+      res.status(500).json({ error: "เกิดข้อผิดพลาด" });
+    }
+  });
+
   return router;
 };

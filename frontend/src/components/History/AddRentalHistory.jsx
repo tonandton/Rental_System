@@ -105,7 +105,7 @@ function AddRentalHistory({ token, role, user }) {
   };
 
   return (
-    <div className="xl:max-w-screen-xl mx-auto px-4 py-8 lg:max-w-screen-lg">
+    <div className="2xl:max-w-screen-2xl xl:max-w-screen-lg lg:max-w-screen-lg md:max-w-3xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
           <ListChecks size={20} className="text-green-600" />

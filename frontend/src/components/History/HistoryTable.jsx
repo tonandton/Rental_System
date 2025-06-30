@@ -63,6 +63,31 @@ function HistoryTable({
     }
   };
 
+  const downloadInvoicePDF = async (id) => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/history/${id}/invoice`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("ไม่สามารถดาวน์โหลดใบแจ้งหนี้ได้");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    } catch (err) {
+      console.error("PDF download error:", err);
+      alert("ไม่สามารถดาวน์โหลดใบแจ้งหนี้ได้");
+    }
+  };
+
   // Pagination
   const totalPages = Math.ceil(history.length / itemsPerPage);
   const paginatedHistory = history.slice(
@@ -175,20 +200,6 @@ function HistoryTable({
                               />
                             </div>
                           )}
-                          {/* {popupImage && (
-                            <div
-                              className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-slide-in"
-                              onClick={() => setPopupImage(null)}
-                            >
-                              <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl">
-                                <img
-                                  src={popupImage}
-                                  alt="ภาพใหญ่"
-                                  className="max-w-full max-h-[80vh] rounded-lg"
-                                />
-                              </div>
-                            </div>
-                          )} */}
                         </td>
                         <td>{Math.floor(item.water_units)}</td>
                         <td>{item.water_bill}</td>
@@ -228,20 +239,6 @@ function HistoryTable({
                               />
                             </div>
                           )}
-                          {/* {popupImage && (
-                            <div
-                              className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-slide-in"
-                              onClick={() => setPopupImage(null)}
-                            >
-                              <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl">
-                                <img
-                                  src={popupImage}
-                                  alt="ภาพใหญ่"
-                                  className="max-w-full max-h-[80vh] rounded-lg"
-                                />
-                              </div>
-                            </div>
-                          )} */}
                         </td>
                         <td>{Math.floor(item.electricity_units)}</td>
                         <td>{item.electricity_bill}</td>
@@ -259,9 +256,9 @@ function HistoryTable({
                         </td>
                         {/* <td>
                           {new Date(item.updated_at).toLocaleString("th-TH", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
                             hour: "2-digit",
                             minute: "2-digit",
                           })}
@@ -274,6 +271,13 @@ function HistoryTable({
                           >
                             <Edit size={16} className="mr-1" />
                             แก้ไขรายการบันทึก
+                          </button>
+                          <button
+                            onClick={() => downloadInvoicePDF(item.id)}
+                            className="text-blue-600 hover:text-blue-800 flex items-center text-sm mt-2"
+                          >
+                            <FileText size={14} className="mr-1" />
+                            PDF ใบแจ้งหนี้
                           </button>
                         </td>
                       </tr>
@@ -414,6 +418,13 @@ function HistoryTable({
                         aria-label="แก้ไขรายการ"
                       >
                         <Edit size={16} className="mr-1" /> แก้ไขรายการบันทึก
+                      </button>
+                      <button
+                        onClick={() => downloadInvoicePDF(item.id)}
+                        className="text-blue-600 hover:text-blue-800 flex items-center text-sm mt-2"
+                      >
+                        <FileText size={14} className="mr-1" />
+                        PDF ใบแจ้งหนี้
                       </button>
                     </div>
                   </div>
