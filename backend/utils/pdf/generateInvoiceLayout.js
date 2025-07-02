@@ -1,4 +1,5 @@
 // ฟังก์ชัน generate PDF ที่ดูดี + สบายตา + Layout เป็นระบบมืออาชีพ
+const fs = require("fs");
 const path = require("path");
 const moment = require("moment");
 moment.locale("th");
@@ -113,55 +114,57 @@ function generateInvoiceLayout(doc, data, historyId) {
     .text(`รวมทั้งหมด: ${total.toFixed(2)} บาท`, 360, y + 10, {
       underline: true,
     });
+  let imageY = y + 40;
 
-  const supportedExtensions = [".jpg", ".jpeg", ".png"];
-  const extwater = path.extname(data.water_image_path || "").toLowerCase();
-  const extelectric = path
-    .extname(data.electricity_image_path || "")
-    .toLowerCase();
+  // 🛡️ ฟังก์ชันตรวจสอบและแสดงภาพแบบปลอดภัย
+  function safeAddImage(doc, imagePath, label, posY) {
+    const supportedExtensions = [".jpg", ".jpeg", ".png"];
+    const resolvedPath = path.join(__dirname, "../../", imagePath || "");
+    const ext = path.extname(resolvedPath).toLowerCase();
 
-  if (supportedExtensions.includes(extwater)) {
-    doc.image(path.join(__dirname, "../../" + data.water_image_path), 50, y, {
-      fit: [100, 100],
-    });
-  } else {
-    console.warn("⚠️ รูปค่าน้ำไม่รองรับ:", extwater);
-  }
-
-  if (supportedExtensions.includes(extelectric)) {
-    doc.image(
-      path.join(__dirname, "../../" + data.electricity_image_path),
-      50,
-      y,
-      {
-        fit: [120, 120],
+    if (supportedExtensions.includes(ext) && fs.existsSync(resolvedPath)) {
+      try {
+        doc.image(resolvedPath, 50, posY, { fit: [100, 100] });
+        console.log(`✅ แสดงรูป ${label}:`, resolvedPath);
+        return 120;
+      } catch (err) {
+        console.warn(
+          `❌ ไม่สามารถแสดงรูป ${label}:`,
+          resolvedPath,
+          err.message
+        );
       }
-    );
-  } else {
-    console.warn("⚠️ รูปค่าไฟไม่รองรับ:", extelectric);
+    } else {
+      console.warn(`⚠️ ไม่รองรับหรือไม่พบไฟล์รูป ${label}:`, resolvedPath);
+    }
+
+    return 0;
   }
+
+  // 📷 แสดงรูปค่าน้ำ
+  imageY += safeAddImage(doc, data.water_image_path, "ค่าน้ำ", imageY);
+
+  // 📷 แสดงรูปค่าไฟ
+  imageY += safeAddImage(doc, data.electricity_image_path, "ค่าไฟ", imageY);
 
   // หมายเหตุ
   if (data.water_description || data.electricity_description) {
     doc
-      .moveDown(5)
+      .moveDown(13)
       .fontSize(12)
       .fillColor("#555")
-      .text(
-        `หมายเหตุ: ${data.water_description || ""} ${
-          data.electricity_description || ""
-        }`,
-        50
-      );
+      .text(`หมายเหตุค่าน้ำ: ${data.water_description || ""}`, 50)
+      .text(`หมายเหตุค่าไฟ: ${data.electricity_description || ""}`, 50);
   }
 
   // ลายเซ็น
-  doc.moveDown(20).fillColor("fff");
+  doc.moveDown(8).fillColor("fff");
   doc.text("................................................", 350);
-  doc.text("ลายเซ็นเจ้าหน้าที่", 390);
+  doc.text(`(${fullName})`, 390);
+  doc.text("ผู้บันทึก", 410);
 
   // Footer
-  doc.moveDown(4);
+  doc.moveDown(2);
   doc
     .fontSize(10)
     .fillColor("#999")
