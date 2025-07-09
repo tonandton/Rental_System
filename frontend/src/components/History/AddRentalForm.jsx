@@ -461,11 +461,13 @@ function AddRentalForm({
                         required
                       >
                         <option value="">เลือกโครงการ</option>
-                        {projects.map((project) => (
-                          <option key={project.id} value={project.id}>
-                            {project.name}
-                          </option>
-                        ))}
+                        {projects
+                          .filter((project) => project.is_active)
+                          .map((project) => (
+                            <option key={project.id} value={project.id}>
+                              {project.name}
+                            </option>
+                          ))}
                       </select>
                       <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
                         <svg

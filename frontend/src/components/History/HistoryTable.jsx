@@ -88,6 +88,40 @@ function HistoryTable({
     }
   };
 
+  useEffect(() => {
+    const scrollContainer = document.getElementById("scrollable-table");
+    if (!scrollContainer) return;
+
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+
+    scrollContainer.addEventListener("mousedown", (e) => {
+      isDown = true;
+      scrollContainer.classList.add("cursor-grabbing");
+      startX = e.pageX - scrollContainer.offsetLeft;
+      scrollLeft = scrollContainer.scrollLeft;
+    });
+
+    scrollContainer.addEventListener("mouseleave", () => {
+      isDown = false;
+      scrollContainer.classList.remove("cursor-grabbing");
+    });
+
+    scrollContainer.addEventListener("mouseup", () => {
+      isDown = false;
+      scrollContainer.classList.remove("cursor-grabbing");
+    });
+
+    scrollContainer.addEventListener("mousemove", (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - scrollContainer.offsetLeft;
+      const walk = (x - startX) * 2; // scroll speed
+      scrollContainer.scrollLeft = scrollLeft - walk;
+    });
+  }, []);
+
   // Pagination
   const totalPages = Math.ceil(history.length / itemsPerPage);
   const paginatedHistory = history.slice(
@@ -121,9 +155,23 @@ function HistoryTable({
             </button>
           </div>
         ) : (
-          <>
+          <div className="relative">
+            <button
+              onClick={() =>
+                document
+                  .getElementById("scrollable-table")
+                  .scrollBy({ left: -200, behavior: "smooth" })
+              }
+              className="absolute left-0 top-1/2 -translate-y-1/2 bg-white border rounded-full shadow p-2 z-10"
+            >
+              ◀️
+            </button>
+
             {/* ตารางสำหรับเดสก์ท็อป */}
-            <div className="hidden sm:block overflow-x-auto">
+            <div
+              className="hidden sm:block overflow-x-auto"
+              id="scrollable-table"
+            >
               <table className="min-w-[1200px] w-full divide-y divide-gray-200">
                 <thead className="bg-green 50 sticky top-0">
                   <tr>
@@ -285,6 +333,16 @@ function HistoryTable({
                   )}
                 </tbody>
               </table>
+              <button
+                onClick={() =>
+                  document
+                    .getElementById("scrollable-table")
+                    .scrollBy({ left: 200, behavior: "smooth" })
+                }
+                className="absolute right-0 top-1/2 -translate-y-1/2 bg-white border rounded-full shadow p-2 z-10"
+              >
+                ▶️
+              </button>
             </div>
 
             {/* ตารางสำหรับมือถือ */}
@@ -458,7 +516,7 @@ function HistoryTable({
                 </button>
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
     </div>
