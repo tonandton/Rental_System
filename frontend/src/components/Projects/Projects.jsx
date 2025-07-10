@@ -9,7 +9,7 @@ import {
   ToggleLeft,
   ToggleRight,
   Trash2,
-  UserPlus,
+  Image as ImageIcon,
 } from "lucide-react";
 import ProjectFilterForm from "./FilterFormProject";
 
@@ -29,6 +29,7 @@ function Projects({ token, role, user }) {
   });
   const modalRef = useRef(null);
   const tableRef = useRef(null);
+  const [popupImage, setPopupImage] = useState(null);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -184,6 +185,9 @@ function Projects({ token, role, user }) {
                     สถานะ
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                    รูปโครงการ
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
                     การจัดการ
                   </th>
                 </tr>
@@ -238,7 +242,40 @@ function Projects({ token, role, user }) {
                           {project.is_active ? "ใช้งาน" : "ไม่ได้ใช้งาน"}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm flex space-x-2">
+                      <td>
+                        {project.image_path ? (
+                          <img
+                            src={`${API_BASE_URL}${project.image_path}`}
+                            alt="รูปโครงการ"
+                            style={{
+                              width: "60px",
+                              height: "auto",
+                              borderRadius: "6px",
+                              cursor: "Pointer",
+                            }}
+                            onClick={() =>
+                              setPopupImage(
+                                `${API_BASE_URL}${project.image_path}`
+                              )
+                            }
+                          />
+                        ) : (
+                          "-"
+                        )}
+                        {popupImage && (
+                          <div
+                            className="fixed inset-0 flex items-center justify-center z-50"
+                            onClick={() => setPopupImage(null)}
+                          >
+                            <img
+                              src={popupImage}
+                              alt="ภาพใหญ่"
+                              className="max-w-[90vw] max-h-[90vh] rounded-lg shadow-lg"
+                            />
+                          </div>
+                        )}
+                      </td>
+                      <td>
                         <button
                           onClick={() => openEditModal(project)}
                           className="text-blue-600 hover:text-blue-800 flex items-center text-sm"
@@ -334,6 +371,29 @@ function Projects({ token, role, user }) {
                 <div className="text-sm text-gray-600">
                   ค่าไฟ/หน่วย: {project.electricity_unit_rate || "-"}
                 </div>
+                {project.image_path && (
+                  <button
+                    onClick={() =>
+                      setPopupImage(`${API_BASE_URL}${project.image_path}`)
+                    }
+                    className="text-blue-600 hover:text-blue-800 flex items-center text-sm"
+                    aria-label="ดูรูปโครงการ"
+                  >
+                    <ImageIcon size={16} className="mr-1" /> ดูรูปโครงการ
+                  </button>
+                )}
+                {popupImage && (
+                  <div
+                    className="fixed inset-0 flex items-center justify-center z-50"
+                    onClick={() => setPopupImage(null)}
+                  >
+                    <img
+                      src={popupImage}
+                      alt="ภาพใหญ่"
+                      className="max-w-[90vw] max-h-[90vh] rounded-lg shadow-lg"
+                    />
+                  </div>
+                )}
                 <div className="mt-3 flex space-x-2 flex-wrap gap-2">
                   <button
                     onClick={() => openEditModal(project)}

@@ -1,12 +1,18 @@
 const express = require("express");
 const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 const router = express.Router();
 
 module.exports = (authenticateToken, restrictTo, pool) => {
   // ตั้งค่า multer สำหรับอัปโหลดไฟล์
   const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-      const uploadDir = path.join(__dirname, process.env.UPLOAD_DIR);
+      const uploadDir = path.join(
+        __dirname,
+        "../",
+        process.env.UPLOAD_DIR || "uploads"
+      );
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir);
       }

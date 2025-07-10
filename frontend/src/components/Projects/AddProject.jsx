@@ -156,7 +156,7 @@ function AddProject({ token, project = null, onClose }) {
         imageFormData.append("image", image);
         try {
           await axios.post(
-            `${API_BASE_URL}/api/project/${projectId}/upload`,
+            `${API_BASE_URL}/api/projects/${projectId}/upload`,
             imageFormData,
             {
               headers: {
