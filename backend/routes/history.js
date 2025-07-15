@@ -34,9 +34,9 @@ module.exports = (authenticateToken, restrictTo, pool) => {
   //   console.log(storage);
 
   const upload = multer({
-    storage,
-    // ขนาดไฟล์สูงสุด 5MB - Max file size 5MB
-    limits: { fileSize: 10 * 1024 * 1024 },
+    storage: multer.memoryStorage(),
+    // ขนาดไฟล์สูงสุด 10MB
+    limits: { fileSize: 10 * 1024 * 1024 }, // สูงสุด 10MB
     fileFilter: (req, file, cb) => {
       const filetypes = /jpeg|jpg|png/;
       const extname = filetypes.test(
@@ -288,8 +288,10 @@ module.exports = (authenticateToken, restrictTo, pool) => {
                 "_compressed" + path.extname(inputPath)
               );
 
-              await sharp(inputPath)
-                .jpeg({ quality: 70 }) // ลดคุณภาพเหลือ 70%
+              // ✅ ใช้ sharp ลดขนาด
+              await sharp(req.file.buffer)
+                .resize({ width: 1024 }) // ลดขนาดความกว้าง
+                .jpeg({ quality: 80 }) // ลดคุณภาพเพื่อให้ไฟล์เล็กลง
                 .toFile(outputPath);
 
               // ลบไฟล์ต้นฉบับ แล้วแทนที่ด้วยไฟล์บีบอัด

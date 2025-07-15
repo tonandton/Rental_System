@@ -15,18 +15,21 @@ module.exports = (authenticateToken, restrictTo, pool) => {
         [username]
       );
       const user = result.rows[0];
-      const validPassword = await bcrypt.compare(password, user.password);
-      if (!user || !bcrypt.compareSync(password, user.password)) {
-        return res.status(401).json({ error: "รหัสผ่านไม่ถูกต้อง" });
+
+      if (!user) {
+        return res.status(400).json({ error: "ไม่พบผู้ใช้ระบบ" });
       }
 
-      if (!user) return res.status(400).json({ error: "ไม่พบผู้ใช้ระบบ" });
       if (!user.is_active) {
         return res.status(403).json({ error: "บัญชีถูกปิดการใช้งาน" });
       }
-      if (!validPassword)
-        return res.status(400).json({ error: "รหัสผ่านไม่ถูกต้อง" });
 
+      const validPassword = await bcrypt.compare(password, user.password);
+      if (!validPassword) {
+        return res.status(401).json({ error: "รหัสผ่านไม่ถูกต้อง" });
+      }
+
+      // ✅ สร้าง token และตอบกลับ
       const token = jwt.sign(
         {
           id: user.id,
@@ -38,6 +41,7 @@ module.exports = (authenticateToken, restrictTo, pool) => {
         process.env.JWT_SECRET_KEY,
         { expiresIn: "1h" }
       );
+
       res.json({
         token,
         role: user.role,
