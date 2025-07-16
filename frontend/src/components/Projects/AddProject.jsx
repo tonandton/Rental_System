@@ -329,7 +329,6 @@ function AddProject({ token, project = null, onClose }) {
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
-                required
                 className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
               />
             </div>

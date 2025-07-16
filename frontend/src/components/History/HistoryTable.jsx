@@ -130,7 +130,10 @@ function HistoryTable({
   );
 
   return (
-    <div className="bg-white shadow-lg rounded-xl p-6 border" ref={tableRef}>
+    <div
+      className="bg-white shadow-lg rounded-xl p-6 border ml-0 sm:ml-56 sm:max-w-[calc(100%-14rem)]"
+      ref={tableRef}
+    >
       <div>
         <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
           <FileText size={20} className="text-green-600" /> ข้อมูลรายการ
@@ -155,23 +158,25 @@ function HistoryTable({
             </button>
           </div>
         ) : (
-          <div className="relative">
-            <button
-              onClick={() =>
-                document
-                  .getElementById("scrollable-table")
-                  .scrollBy({ left: -200, behavior: "smooth" })
-              }
-              className="absolute left-0 top-1/2 -translate-y-1/2 bg-white border rounded-full shadow p-2 z-10"
-            >
-              ◀
-            </button>
-
+          <div className="relative group">
             {/* ตารางสำหรับเดสก์ท็อป */}
             <div
               className="hidden sm:block overflow-x-auto"
               id="scrollable-table"
             >
+              {/* ปุ่มเลื่อนซ้าย */}
+              <button
+                onClick={() =>
+                  document
+                    .getElementById("scrollable-table")
+                    .scrollBy({ left: -200, behavior: "smooth" })
+                }
+                className="absolute left-0 top-1/2 -translate-y-1/2 bg-white border rounded-full shadow p-2 z-10
+               opacity-0 group-hover:opacity-100 transform -translate-x-4 group-hover:translate-x-0
+               transition-all duration-300 ease-in-out"
+              >
+                ◀
+              </button>
               <table className="min-w-[1200px] w-full divide-y divide-gray-200">
                 <thead className="bg-green 50 sticky top-0">
                   <tr>
@@ -333,13 +338,16 @@ function HistoryTable({
                   )}
                 </tbody>
               </table>
+              {/* ปุ่มเลื่อนขวา */}
               <button
                 onClick={() =>
                   document
                     .getElementById("scrollable-table")
                     .scrollBy({ left: 200, behavior: "smooth" })
                 }
-                className="absolute right-0 top-1/2 -translate-y-1/2 bg-white border rounded-full shadow p-2 z-10"
+                className="absolute right-0 top-1/2 -translate-y-1/2 bg-white border rounded-full shadow p-2 z-10
+               opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0
+               transition-all duration-300 ease-in-out"
               >
                 ▶
               </button>
@@ -463,7 +471,7 @@ function HistoryTable({
                               `${API_BASE_URL}${item.electricity_image_path}`
                             )
                           }
-                          className="text-blue-600 hover:text-blue-800 flex items-center text-sm"
+                          className="text-amber-600 hover:text-amber-800 flex items-center text-sm"
                           aria-label="ดูรูปมิเตอร์ไฟ"
                         >
                           <ImageIcon size={16} className="mr-1" />{" "}

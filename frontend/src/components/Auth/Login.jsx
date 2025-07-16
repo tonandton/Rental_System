@@ -90,7 +90,7 @@ function Login({ setToken, setRole, setUser }) {
           </svg> */}
         </div>
         <h2 className="text-3xl font-extrabold text-center text-green-800 mb-6">
-          ระบบจัดการค่าน้ำ ค่าไฟ
+          ระบบบันทึกข้อมูล MS Society
         </h2>
         {error && (
           <p className="text-red-500 text-sm text-center mb-4">{error}</p>
@@ -153,8 +153,7 @@ function Login({ setToken, setRole, setUser }) {
           </h3>
           <ul className="space-y-1 list-disc list-inside">
             <li>
-              <strong>superadmin</strong> / <code>adminpass</code> —
-              สิทธิ์สูงสุด
+              <strong>superadmin1</strong> / <code>123456</code> — สิทธิ์สูงสุด
             </li>
             <li>
               <strong>admin</strong> / <code>adminpass</code> —

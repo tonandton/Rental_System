@@ -113,7 +113,7 @@ function FilterForm({
   };
 
   return (
-    <div className="bg-white shadow-xl rounded-xl p-6 mb-8 border border-green-100">
+    <div className="bg-white shadow-xl rounded-xl p-6 mb-8 border border-green-100 sm:ml-56 sm:max-w-[calc(100%-14rem)]">
       <div
         className="flex justify-between items-center cursor-pointer mb-2"
         onClick={() => setIsFilterOpen(!isFilterOpen)}

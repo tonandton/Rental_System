@@ -269,7 +269,8 @@ function UserManagement({ token }) {
   };
 
   return (
-    <div className="xl:max-w-screen-xl mx-auto px-4 py-8 lg:max-w-screen-lg">
+    // <div className="xl:max-w-screen-xl mx-auto px-4 py-8 lg:max-w-screen-lg">
+    <div className="mx-auto px-4 py-8 sm:ml-56 sm:max-w-[calc(100%-14rem)]">
       <div className="bg-white shadow-lg rounded-xl p-6 border border-green-100 mt-4 animate-slide-in">
         <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
           <UserPlus size={20} className="text-green-600" /> การจัดการผู้ใช้
@@ -289,6 +290,7 @@ function UserManagement({ token }) {
                 value={newUser.username}
                 onChange={handleInputChange}
                 required
+                placeholder="ชื่อผู้ใช้ในการ Login"
                 className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
               />
             </div>
@@ -302,6 +304,7 @@ function UserManagement({ token }) {
                 value={newUser.password}
                 onChange={handleInputChange}
                 required
+                placeholder="กรอกรหัสผ่านต้องมากกว่า 6 digit"
                 className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition pr-10"
               />
               <button
@@ -672,7 +675,7 @@ function UserManagement({ token }) {
                   name="password"
                   value={editUser.password}
                   onChange={handleEditInputChange}
-                  placeholder="กรอกรหัสผ่านใหม่ (ถ้ามี)"
+                  placeholder="กรอกรหัสผ่านใหม่ต้องมากกว่า 6 digit (ถ้ามี)"
                   className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition pr-10"
                 />
                 <button

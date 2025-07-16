@@ -34,7 +34,7 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
     {
       label: "หน้าแรก",
       icon: <Home size={18} />,
-      roles: ["superadmin", "admin", "user"],
+      roles: ["superadmin", "admin", "user", "employee"],
       children: [
         { path: "/", label: "หน้าหลัก" },
         { path: "/main-history", label: "หน้าแรก น้ำ - ไฟ" },
@@ -69,11 +69,13 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
 
   useEffect(() => {
     const handleClickOutsideSidebar = (event) => {
+      // เฉพาะมือถือเท่านั้น
+      if (window.innerWidth >= 768) return;
+
       if (
         sidebarRef.current &&
         !sidebarRef.current.contains(event.target) &&
-        isSidebarOpen &&
-        window.innerWidth < 768 // ทำเฉพาะบนมือถือ
+        isSidebarOpen
       ) {
         setIsSidebarOpen(false);
       }
@@ -86,6 +88,7 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
         setIsProfileOpen(false);
       }
     };
+
     document.addEventListener("mousedown", handleClickOutsideSidebar);
     return () => {
       document.removeEventListener("mousedown", handleClickOutsideSidebar);
@@ -93,22 +96,15 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
   }, [isSidebarOpen, isProfileOpen]);
 
   useEffect(() => {
-    const saved = localStorage.getItem("sidebarOpen");
-    setIsSidebarOpen(saved ? JSON.parse(saved) : true);
-  }, []);
-  useEffect(() => {
-    localStorage.setItem("sidebarOpen", JSON.stringify(isSidebarOpen));
-  }, [isSidebarOpen]);
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape" && isSidebarOpen) {
-        setIsSidebarOpen(false);
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setIsSidebarOpen(true);
       }
     };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isSidebarOpen]);
+    window.addEventListener("resize", handleResize);
+    handleResize(); // เรียกตอน mount ด้วย
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   return (
     <div className="flex max-h-screen">
@@ -128,7 +124,7 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
             {/* WEBILL */}
           </span>
           <button
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            // onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             className="text-white focus:outline-none hover:bg-green-600"
           >
             {isSidebarOpen ? (
@@ -190,11 +186,9 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
         </nav>
       </aside>
 
-      {isSidebarOpen && (
+      {isSidebarOpen && window.innerWidth < 768 && (
         <div
-          className={`fixed inset-0 bg-black opacity-50 z-30 transition-opacity duration-300 ${
-            isSidebarOpen ? "opacity-50" : "opacity-0 pointer-events-none"
-          }`}
+          className="fixed inset-0 bg-black opacity-50 z-30"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
@@ -211,7 +205,7 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
             {/* ปุ่ม Toggle Sidebar (แสดงเฉพาะมือถือ) */}
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="text-green-800 focus:outline-none"
+              className="text-green-800 focus:outline-none md:hidden"
             >
               {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
             </button>

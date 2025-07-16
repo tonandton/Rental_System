@@ -710,18 +710,16 @@ function AddRentalForm({
                 <button
                   type="submit"
                   className="bg-green-600 text-white px-3 py-1.5 rounded-md hover:bg-green-700 transition text-sm sm:text-base"
-                  aria-label={
-                    isEditMode ? "บันทึกกรายการแก้ไข" : "บันทึกรายการ"
-                  }
+                  aria-label={isEditMode ? "บันทึกกรายการแก้ไข" : "เพิ่มรายการ"}
                 >
                   <Save size={16} className="inline mr-1" />{" "}
-                  {isEditMode ? "บันทึกการแก้ไข" : "บันทึกข้อมูล"}
+                  {isEditMode ? "บันทึกการแก้ไข" : "เพิ่มข้อมูล"}
                 </button>
                 {(!isEditMode || (isEditMode && onClose)) && (
                   <button
                     type="button"
                     onClick={onClose}
-                    className="bg-gray-300 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-400 transition text-sm sm:text-base"
+                    className="bg-red-300 text-red-700 px-3 py-1.5 rounded-md hover:bg-red-400 transition text-sm sm:text-base"
                     aria-label="ยกเลิกการแก้ไข"
                   >
                     <X size={16} className="inline-block mr-1" />

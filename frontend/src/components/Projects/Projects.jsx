@@ -132,7 +132,8 @@ function Projects({ token, role, user }) {
   };
 
   return (
-    <div className="xl:max-w-screen-xl mx-auto px-4 py-8 lg:max-w-screen-lg">
+    // <div className="xl:max-w-screen-xl mx-auto px-4 py-8 lg:max-w-screen-lg">
+    <div className="mx-auto px-4 py-8 sm:ml-56 sm:max-w-[calc(100%-14rem)]">
       <ProjectFilterForm
         projects={projects}
         owners={owners}
