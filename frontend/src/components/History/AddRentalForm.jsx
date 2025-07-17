@@ -713,7 +713,7 @@ function AddRentalForm({
                   aria-label={isEditMode ? "บันทึกกรายการแก้ไข" : "เพิ่มรายการ"}
                 >
                   <Save size={16} className="inline mr-1" />{" "}
-                  {isEditMode ? "บันทึกการแก้ไข" : "เพิ่มข้อมูล"}
+                  {isEditMode ? "บันทึกการแก้ไข" : "บันทึกข้อมูล"}
                 </button>
                 {(!isEditMode || (isEditMode && onClose)) && (
                   <button

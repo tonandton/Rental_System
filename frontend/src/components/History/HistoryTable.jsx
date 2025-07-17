@@ -181,6 +181,7 @@ function HistoryTable({
                 <thead className="bg-green 50 sticky top-0">
                   <tr>
                     <th>รอบวันที่</th>
+                    <th>เลขที่</th>
                     <th>โครงการ</th>
                     <th>เจ้าของโครงการ</th>
                     <th>มิเตอร์น้ำรอบที่ผ่านมา</th>
@@ -216,7 +217,7 @@ function HistoryTable({
                             day: "numeric",
                           })}
                         </td>
-
+                        <td>{item.id}</td>
                         <td>{item.project_name}</td>
                         <td>{item.owner_first_name}</td>
                         <td>{Math.floor(item.previous_water_meter)}</td>
