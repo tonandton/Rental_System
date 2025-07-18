@@ -14,13 +14,18 @@ import {
   Plus,
   RefreshCw,
   X,
+  House,
+  Trees,
 } from "lucide-react";
+import projectTypes from "../../utils/projectTypes";
 
 function AddProject({ token, project = null, onClose }) {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const isEditMode = !!project;
   const [formData, setFormData] = useState({
     name: project?.name || "",
+    name_unit: project?.name_unit || "",
+    name_type: project?.name_type || "",
     description: project?.description || "",
     water_unit_rate: project?.water_unit_rate || "",
     electricity_unit_rate: project?.electricity_unit_rate || "",
@@ -178,6 +183,8 @@ function AddProject({ token, project = null, onClose }) {
       } else {
         setFormData({
           name: "",
+          name_unit: "",
+          name_type: "",
           description: "",
           water_unit_rate: "",
           electricity_unit_rate: "",
@@ -236,6 +243,55 @@ function AddProject({ token, project = null, onClose }) {
                 required
                 className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
               />
+            </div>
+
+            <div>
+              <label className="block font-medium text-gray-700 mb-1">
+                <House size={16} className="inline-block mr-1" /> อาคาร / ห้อง
+              </label>
+              <input
+                type="text"
+                name="name_unit"
+                value={formData.name_unit}
+                onChange={handleInputChange}
+                className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
+              />
+            </div>
+
+            <div>
+              <label className="block font-medium text-gray-700 mb-1">
+                <Trees size={16} className="inline-block mr-1" />
+                ประเภทโครงการ
+              </label>
+              <div className="relative">
+                <select
+                  name="name_type"
+                  value={formData.name_type}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition appearance-none pr-10"
+                >
+                  <option value="">เลือกประเภทโครงการ</option>
+                  {projectTypes.map((pt) => (
+                    <option key={pt.id} value={pt.label}>
+                      {pt.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
+                  <svg
+                    className="h-5 w-5 text-gray-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 12a1 1 0 01-.7-.3l-4-4a1 1 0 011.4-1.4L10 9.58l3.3-3.3a1 1 0 011.4 1.42l-4 4a1 1 0 01-.7.3z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+              </div>
             </div>
 
             <div>

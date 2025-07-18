@@ -1,0 +1,64 @@
+-- เพิ่มคอลัมน์ is_active
+ALTER TABLE users
+ADD COLUMN is_active BOOLEAN DEFAULT TRUE;
+
+-- อัปเดตแถวที่มีอยู่ให้เป็น TRUE
+UPDATE users
+SET is_active = TRUE
+WHERE is_active IS NULL;
+
+-- (ตัวเลือก) ตั้งค่า NOT NULL
+ALTER TABLE users
+ALTER COLUMN is_active SET NOT NULL;
+
+ALTER TABLE projects
+ADD COLUMN address TEXT,
+ADD COLUMN is_active BOOLEAN DEFAULT TRUE;
+
+alter table rental_history 
+add column water_description text,
+add column electricity_description text;
+
+ALTER TABLE projects
+DROP COLUMN start_date,
+DROP COLUMN end_date;
+
+INSERT INTO projects (user_id, name, description, start_date, water_unit_rate, electricity_unit_rate, created_at) values
+(9, 'R26A - โครงโกดังเช่า', 'สมุทรสาคร', '2025-01-01', 37.45, 8.56, CURRENT_TIMESTAMP),
+(9, 'R26B - โครงโกดังเช่า', 'สมุทรสาคร', '2025-02-01', 37.45, 8.56, CURRENT_TIMESTAMP),
+(9, 'R26C - โครงโกดังเช่า', 'สมุทรสาคร', '2025-03-01', 37.45, 8.56, CURRENT_TIMESTAMP),
+(9, 'R26D - โครงโกดังเช่า', 'สมุทรสาคร', '2025-03-01', 37.45, 8.56, CURRENT_TIMESTAMP),
+(9, 'R26E - โครงโกดังเช่า', 'สมุทรสาคร', '2025-03-01', 37.45, 8.56, CURRENT_TIMESTAMP),
+(9, 'R26F - โครงโกดังเช่า', 'สมุทรสาคร', '2025-03-01', 37.45, 8.56, CURRENT_TIMESTAMP),
+(9, 'R26G - โครงโกดังเช่า', 'สมุทรสาคร', '2025-03-01', 37.45, 8.56, CURRENT_TIMESTAMP),
+(9, 'R26H - โครงโกดังเช่า', 'สมุทรสาคร', '2025-03-01', 37.45, 8.56, CURRENT_TIMESTAMP),
+(9, 'R26I - โครงโกดังเช่า', 'สมุทรสาคร', '2025-03-01', 37.45, 8.56, CURRENT_TIMESTAMP),
+(9, 'R26J - โครงโกดังเช่า', 'สมุทรสาคร', '2025-03-01', 37.45, 8.56, CURRENT_TIMESTAMP),
+(9, 'R26K - โครงโกดังเช่า', 'สมุทรสาคร', '2025-03-01', 37.45, 8.56, CURRENT_TIMESTAMP),
+(9, 'R26 - มิเตอร์รวม 12/33', 'สมุทรสาคร', '2025-03-01', 42.45, 13.56, CURRENT_TIMESTAMP),
+(9, 'R26 - มิเตอร์รวม 12/34', 'สมุทรสาคร', '2025-03-01', 43.45, 14.56, CURRENT_TIMESTAMP),
+(9, 'มิเตอร์รวมโครงการ 1', 'สมุทรสาคร', '2025-03-01', 44.45, 15.56, CURRENT_TIMESTAMP),
+(9, 'มิเตอร์รวมโครงการ 2', 'สมุทรสาคร', '2025-03-01', 44.45, 15.56, CURRENT_TIMESTAMP),
+(9, 'HR26 แคมป์คนงาน', 'สมุทรสาคร', '2025-03-01', 37.45, 8.56, CURRENT_TIMESTAMP),
+(9, 'HR26 เช่าพื้นที่', 'สมุทรสาคร', '2025-03-01', 37.45, 8.56, CURRENT_TIMESTAMP);
+
+INSERT INTO project_owners (project_id, user_id) VALUES
+    (1, 9),
+    (2, 9), 
+    (3, 9),
+    (4, 9),
+    (5, 9),
+    (6, 9),
+    (7, 9),
+    (8, 9),
+    (9, 9),
+    (10, 9),
+    (11, 9),
+    (12, 9),
+    (13, 9),
+    (14, 9),
+    (15, 9),
+    (16, 9),
+    (17, 9);
+
+

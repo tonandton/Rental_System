@@ -82,6 +82,8 @@ function Projects({ token, role, user }) {
     setEditProject({
       id: project.id,
       name: project.name,
+      name_unit: project.name_unit,
+      name_type: project.name_type,
       description: project.description,
       water_unit_rate: project.water_unit_rate,
       electricity_unit_rate: project.electricity_unit_rate,
@@ -165,10 +167,13 @@ function Projects({ token, role, user }) {
               <thead className="bg-green-50">
                 <tr>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
-                    ชื่อโครงการ
+                    รหัสโครงการ
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
-                    เจ้าของ
+                    อาคาร / ห้อง
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                    ประเภทโครงการ
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
                     สถานที่
@@ -187,6 +192,9 @@ function Projects({ token, role, user }) {
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
                     รูปโครงการ
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                    เจ้าของ
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
                     การจัดการ
@@ -215,10 +223,14 @@ function Projects({ token, role, user }) {
                 ) : (
                   projects.map((project) => (
                     <tr key={project.id}>
-                      <td className="px-4 py-3 text-sm">{project.name}</td>
                       <td className="px-4 py-3 text-sm">
-                        {project.owner_first_name || "-"}{" "}
-                        {project.owner_last_name || "-"}
+                        {project.name || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {project.name_unit || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {project.name_type || "-"}
                       </td>
                       <td className="px-4 py-3 text-sm">
                         {project.address || "-"}
@@ -275,6 +287,10 @@ function Projects({ token, role, user }) {
                             />
                           </div>
                         )}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {project.owner_first_name || "-"}{" "}
+                        {project.owner_last_name || "-"}
                       </td>
                       <td>
                         <button
@@ -345,6 +361,12 @@ function Projects({ token, role, user }) {
                 <div className="flex justify-between items-center">
                   <span className="font-medium text-gray-800">
                     {project.name}
+                  </span>
+                  <span className="font-medium text-gray-800">
+                    {project.name_unit}
+                  </span>
+                  <span className="font-medium text-gray-800">
+                    {project.name_type}
                   </span>
                   <span
                     className={`px-2 py-1 rounded-full text-xs ${

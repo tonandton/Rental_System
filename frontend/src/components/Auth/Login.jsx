@@ -89,7 +89,7 @@ function Login({ setToken, setRole, setUser }) {
             ></path>
           </svg> */}
         </div>
-        <h2 className="text-3xl font-extrabold text-center text-green-800 mb-6">
+        <h2 className="text-3xl font-extrabold text-center text-green-800 mb-3">
           MS Society
         </h2>
         <h2 className="text-xl text-center text-green-800 mb-6">

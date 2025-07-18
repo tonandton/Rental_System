@@ -50,7 +50,8 @@ module.exports = (authenticateToken, restrictTo, pool) => {
   // จัดการโครงการ (superadmin, admin, user)
   router.get("/projects", authenticateToken, async (req, res) => {
     try {
-      const { name, address, status, ownerId } = req.query;
+      const { name, name_unit, name_type, address, status, ownerId } =
+        req.query;
 
       let query = `
       SELECT DISTINCT ON (p.id) p.*, u.first_name AS owner_first_name, u.last_name AS owner_last_name
@@ -74,6 +75,20 @@ module.exports = (authenticateToken, restrictTo, pool) => {
       if (name) {
         query += ` AND LOWER(p.name) ILIKE $${paramIndex}`;
         params.push(`%${name.toLowerCase()}%`);
+        paramIndex++;
+      }
+
+      // กรองชื่ออาคารและห้อง
+      if (name_unit) {
+        query += ` AND LOWER(p.name_unit) ILIKE $${paramIndex}`;
+        params.push(`%${name_unit.toLowerCase()}%`);
+        paramIndex++;
+      }
+
+      // กรองชื่ออาคารและห้อง
+      if (name_type) {
+        query += ` AND LOWER(p.name_type) ILIKE $${paramIndex}`;
+        params.push(`%${name_type.toLowerCase()}%`);
         paramIndex++;
       }
 
@@ -116,22 +131,26 @@ module.exports = (authenticateToken, restrictTo, pool) => {
     async (req, res) => {
       const {
         name,
+        name_unit,
+        name_type,
         description,
         water_unit_rate,
         electricity_unit_rate,
         owner_id,
-        address, // ✅ เพิ่ม
+        address,
         is_active,
       } = req.body;
 
       try {
         const projectResult = await pool.query(
           `INSERT INTO projects 
-          (user_id, name, description, water_unit_rate, electricity_unit_rate, address, is_active) 
-          VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+          (user_id, name, name_unit, name_type, description, water_unit_rate, electricity_unit_rate, address, is_active) 
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
           [
             req.user.id,
             name,
+            name_unit,
+            name_type,
             description,
             water_unit_rate,
             electricity_unit_rate,
@@ -195,6 +214,8 @@ module.exports = (authenticateToken, restrictTo, pool) => {
       const projectId = req.params.id;
       const {
         name,
+        name_unit,
+        name_type,
         description,
         water_unit_rate,
         electricity_unit_rate,
@@ -206,10 +227,12 @@ module.exports = (authenticateToken, restrictTo, pool) => {
       try {
         await pool.query(
           `UPDATE projects 
-         SET name = $1, description = $2, water_unit_rate = $3, electricity_unit_rate = $4, address = $5, is_active = $6
-         WHERE id = $7`,
+         SET name = $1, name_unit = $2, name_type = $3, description = $4, water_unit_rate = $5, electricity_unit_rate = $6, address = $7, is_active = $8
+         WHERE id = $9`,
           [
             name,
+            name_unit,
+            name_type,
             description,
             water_unit_rate,
             electricity_unit_rate,

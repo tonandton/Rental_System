@@ -30,20 +30,20 @@ const SummaryRow = ({ data }) => {
         <td>-</td>
         <td>-</td>
         <td className="underline">
-          {formatNumberWithCommas(summary.totalWaterUnits)} / หน่วย
+          {formatNumberWithCommas(summary.totalWaterUnits)} หน่วย
         </td>
         <td className="underline">
-          {formatNumberWithCommas(summary.totalWaterBill)} / บาท
+          {formatNumberWithCommas(summary.totalWaterBill)} บาท
         </td>
         <td>-</td>
         <td>-</td>
         <td>-</td>
         <td>-</td>
         <td className="underline">
-          {formatNumberWithCommas(summary.totalElectricityUnits)} / หน่วย
+          {formatNumberWithCommas(summary.totalElectricityUnits)} หน่วย
         </td>
         <td className="underline">
-          {formatNumberWithCommas(summary.totalElectricityBill)} / บาท
+          {formatNumberWithCommas(summary.totalElectricityBill)} บาท
         </td>
         <td>-</td>
         <td>-</td>

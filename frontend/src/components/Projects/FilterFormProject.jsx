@@ -3,10 +3,34 @@ import { useState } from "react";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/solid";
 import { toast } from "react-toastify";
 import { RefreshCw, Search } from "lucide-react";
+import { useEffect } from "react";
+import axios from "axios";
 
-function ProjectFilterForm({ filters, setFilters, owners, tableRef }) {
+function ProjectFilterForm({ filters, setFilters, owners, tableRef, token }) {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [tempFilter, setTempFilter] = useState({ ...filters });
+  const [allProjects, setAllProjects] = useState([]);
+  const [projects, setProjects] = useState([]); // ใช้แสดงรายการแบบกรองแล้ว
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      const token = localStorage.getItem("token"); // ✅ get token here
+      if (!token) return;
+
+      try {
+        const res = await axios.get(`${API_BASE_URL}/api/projects`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setAllProjects(res.data);
+        setProjects(res.data);
+      } catch (error) {
+        console.error("Fetch projects failed:", error);
+      }
+    };
+
+    fetchProjects();
+  }, []);
 
   const handleTempFilterChange = (e) => {
     const { name, value } = e.target;
@@ -24,6 +48,8 @@ function ProjectFilterForm({ filters, setFilters, owners, tableRef }) {
   const handleReset = () => {
     const reset = {
       name: "",
+      name_unit: "",
+      name_type: "",
       address: "",
       status: "",
       ownerId: "",
@@ -51,17 +77,52 @@ function ProjectFilterForm({ filters, setFilters, owners, tableRef }) {
 
       {isFilterOpen && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 animate-slide-in">
-          {/* Search by project name */}
+          {/* Search by code project */}
           <div>
-            <label htmlFor="name">ชื่อโครงการ</label>
+            <label htmlFor="name">รหัสโครงการ</label>
             <input
               type="text"
               name="name"
               value={tempFilter.name}
               onChange={handleTempFilterChange}
-              placeholder="ค้นหาชื่อโครงการ"
+              placeholder="ค้นหารหัสโครงการ"
               className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
             />
+          </div>
+
+          {/* Search by project unit */}
+          <div>
+            <label htmlFor="name_unit">อาคาร / ห้อง </label>
+            <input
+              type="text"
+              name="name_unit"
+              value={tempFilter.name_unit || ""}
+              onChange={handleTempFilterChange}
+              placeholder="ค้นหาอาคาร/ห้อง"
+              className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
+            />
+          </div>
+
+          {/* Search by project type */}
+          <div>
+            <label htmlFor="name_type">ประเภทโครงการ</label>
+            <select
+              type="text"
+              name="name_type"
+              value={tempFilter.name_type}
+              onChange={handleTempFilterChange}
+              placeholder="ค้นหาประเภทโครงการ"
+              className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
+            >
+              <option value="">ทั้งหมด</option>
+              {[...new Set(allProjects.map((project) => project.name_type))]
+                .filter((name) => !!name)
+                .map((name_type, index) => (
+                  <option key={index} value={name_type}>
+                    {name_type}
+                  </option>
+                ))}
+            </select>
           </div>
 
           {/* Search by address */}
