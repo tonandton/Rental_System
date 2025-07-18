@@ -1,4 +1,5 @@
 import React from "react";
+import formatNumberWithCommas from "../../utils/formatNumberWithCommas";
 
 const SummaryRow = ({ data }) => {
   const summary = data.reduce(
@@ -28,19 +29,21 @@ const SummaryRow = ({ data }) => {
         <td>-</td>
         <td>-</td>
         <td>-</td>
-        <td className="underline">{Number(summary.totalWaterUnits)} / หน่วย</td>
         <td className="underline">
-          {Number(summary.totalWaterBill).toFixed(2)} / บาท
+          {formatNumberWithCommas(summary.totalWaterUnits)} / หน่วย
+        </td>
+        <td className="underline">
+          {formatNumberWithCommas(summary.totalWaterBill)} / บาท
         </td>
         <td>-</td>
         <td>-</td>
         <td>-</td>
         <td>-</td>
         <td className="underline">
-          {Number(summary.totalElectricityUnits)} / หน่วย
+          {formatNumberWithCommas(summary.totalElectricityUnits)} / หน่วย
         </td>
         <td className="underline">
-          {Number(summary.totalElectricityBill).toFixed(2)} / บาท
+          {formatNumberWithCommas(summary.totalElectricityBill)} / บาท
         </td>
         <td>-</td>
         <td>-</td>

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
 import SummaryRow from "./SummaryRow";
+import formatNumberWithCommas from "../../utils/formatNumberWithCommas";
 
 function HistoryTable({
   history,
@@ -259,7 +260,9 @@ function HistoryTable({
                         <td className="text-center">
                           {Math.floor(item.water_units)}
                         </td>
-                        <td className="text-center">{item.water_bill}</td>
+                        <td className="text-center">
+                          {formatNumberWithCommas(item.water_bill)}
+                        </td>
                         <td>{item.water_description || "-"}</td>
 
                         <td>{Math.floor(item.previous_electricity_meter)}</td>
@@ -300,7 +303,9 @@ function HistoryTable({
                         <td className="text-center">
                           {Math.floor(item.electricity_units)}
                         </td>
-                        <td className="text-center">{item.electricity_bill}</td>
+                        <td className="text-center">
+                          {formatNumberWithCommas(item.electricity_bill)}
+                        </td>
                         <td>{item.electricity_description || "-"}</td>
                         <td>{item.username}</td>
                         <td>

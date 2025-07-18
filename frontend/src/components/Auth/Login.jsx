@@ -90,7 +90,10 @@ function Login({ setToken, setRole, setUser }) {
           </svg> */}
         </div>
         <h2 className="text-3xl font-extrabold text-center text-green-800 mb-6">
-          ระบบบันทึกข้อมูล MS Society
+          MS Society
+        </h2>
+        <h2 className="text-xl text-center text-green-800 mb-6">
+          ระบบบันทึกข้อมูล
         </h2>
         {error && (
           <p className="text-red-500 text-sm text-center mb-4">{error}</p>
