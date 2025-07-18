@@ -256,8 +256,10 @@ function HistoryTable({
                             </div>
                           )}
                         </td>
-                        <td>{Math.floor(item.water_units)}</td>
-                        <td>{item.water_bill}</td>
+                        <td className="text-center">
+                          {Math.floor(item.water_units)}
+                        </td>
+                        <td className="text-center">{item.water_bill}</td>
                         <td>{item.water_description || "-"}</td>
 
                         <td>{Math.floor(item.previous_electricity_meter)}</td>
@@ -295,8 +297,10 @@ function HistoryTable({
                             </div>
                           )}
                         </td>
-                        <td>{Math.floor(item.electricity_units)}</td>
-                        <td>{item.electricity_bill}</td>
+                        <td className="text-center">
+                          {Math.floor(item.electricity_units)}
+                        </td>
+                        <td className="text-center">{item.electricity_bill}</td>
                         <td>{item.electricity_description || "-"}</td>
                         <td>{item.username}</td>
                         <td>
