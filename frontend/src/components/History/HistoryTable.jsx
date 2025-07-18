@@ -2,6 +2,7 @@ import { Edit, FileText, Image as ImageIcon, Download } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
+import SummaryRow from "./SummaryRow";
 
 function HistoryTable({
   history,
@@ -338,6 +339,7 @@ function HistoryTable({
                     ))
                   )}
                 </tbody>
+                <SummaryRow data={paginatedHistory} />
               </table>
               {/* ปุ่มเลื่อนขวา */}
               <button
