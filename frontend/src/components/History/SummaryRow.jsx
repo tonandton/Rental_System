@@ -21,28 +21,28 @@ const SummaryRow = ({ data }) => {
 
   return (
     <tbody>
-      <tr className="bg-green-200 hover:bg-green-300 font-semibold">
-        <td className="text-right pr-2">ยอดรวมทั้งหมด</td>
+      <tr className="bg-green-200 hover:bg-green-300 text-red-500 underline decoration-double font-semibold">
+        <td className="text-right pr-2 ">ยอดรวมทั้งหมด</td>
         <td>-</td>
         <td>-</td>
         <td>-</td>
         <td>-</td>
         <td>-</td>
         <td>-</td>
-        <td className="underline">
+        <td className="">
           {formatNumberWithCommas(summary.totalWaterUnits)} หน่วย
         </td>
-        <td className="underline">
+        <td className="">
           {formatNumberWithCommas(summary.totalWaterBill)} บาท
         </td>
         <td>-</td>
         <td>-</td>
         <td>-</td>
         <td>-</td>
-        <td className="underline">
+        <td className="">
           {formatNumberWithCommas(summary.totalElectricityUnits)} หน่วย
         </td>
-        <td className="underline">
+        <td className="">
           {formatNumberWithCommas(summary.totalElectricityBill)} บาท
         </td>
         <td>-</td>

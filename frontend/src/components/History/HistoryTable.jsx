@@ -1,5 +1,5 @@
 import { Edit, FileText, Image as ImageIcon, Download } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
 import SummaryRow from "./SummaryRow";
@@ -17,10 +17,13 @@ function HistoryTable({
   API_BASE_URL,
   onEdit,
   token,
-  queryParams = {},
+  role,
+  // queryParams = {},
 }) {
   const [popupImage, setPopupImage] = useState(null);
   const [exporting, setExporting] = useState(false);
+
+  // console.log(role);
 
   useEffect(() => {
     if (error) {
@@ -130,6 +133,26 @@ function HistoryTable({
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
+  const handleToggleCancel = async (id, isCancelled) => {
+    try {
+      await axios.patch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/history/${id}/cancel`,
+        {
+          is_cancelled: isCancelled,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      toast.success(isCancelled ? "ยกเลิกรายการแล้ว" : "ปลดล็อกรายการแล้ว");
+      fetchData(); // โหลดข้อมูลใหม่
+    } catch (err) {
+      toast.error("ไม่สามารถดำเนินการได้");
+    }
+  };
 
   return (
     <div
@@ -328,14 +351,36 @@ function HistoryTable({
                           })}
                         </td> */}
                         <td>
-                          <button
+                          {/* <button
                             onClick={() => onEdit(item)}
                             className="text-green-600 hover:text-green-800 flex items-center"
                             aria-label="แก้ไขรายการ"
                           >
                             <Edit size={16} className="mr-1" />
                             แก้ไขรายการบันทึก
-                          </button>
+                          </button> */}
+                          {(!item.is_cancelled || role === "admin") && (
+                            <button
+                              onClick={() => onEdit(item.id)}
+                              className="text-blue-500 hover:underline"
+                            >
+                              แก้ไข
+                            </button>
+                          )}
+                          {role === "admin" && (
+                            <button
+                              onClick={() =>
+                                handleToggleCancel(item.id, !item.is_cancelled)
+                              }
+                              className={`text-sm px-2 py-1 rounded ${
+                                item.is_cancelled
+                                  ? "bg-yellow-500 text-white"
+                                  : "bg-red-500 text-white"
+                              }`}
+                            >
+                              {item.is_cancelled ? "ปลดล็อก" : "ยกเลิก"}
+                            </button>
+                          )}
                           <button
                             onClick={() => downloadInvoicePDF(item.id)}
                             className="text-blue-600 hover:text-blue-800 flex items-center text-sm mt-2"

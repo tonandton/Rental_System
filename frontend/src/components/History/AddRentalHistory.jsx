@@ -144,6 +144,7 @@ function AddRentalHistory({ token, role, user }) {
         onEdit={setEditItem}
         token={token} // ส่ง token
         filters={filters} // ส่ง filters
+        role={role}
       />
 
       {/* Add Modal */}

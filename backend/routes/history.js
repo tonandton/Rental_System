@@ -760,5 +760,27 @@ module.exports = (authenticateToken, restrictTo, pool) => {
     }
   });
 
+  router.patch(
+    "/history/:id/cancel",
+    authenticateToken,
+    restrictTo("admin", "superadmin"),
+    async (req, res) => {
+      const { is_cancelled } = req.body;
+      const id = req.params.id;
+      try {
+        await pool.query(
+          "UPDATE rental_history SET is_cancelled = $1 WHERE id = $2",
+          [is_cancelled, id]
+        );
+        res.json({
+          message: is_cancelled ? "รายการถูกยกเลิก" : "รายการถูกปลดล็อก",
+        });
+      } catch (err) {
+        console.error("Cancel error:", err);
+        res.status(500).json({ error: "Server error" });
+      }
+    }
+  );
+
   return router;
 };
