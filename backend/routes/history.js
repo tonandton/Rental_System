@@ -80,7 +80,7 @@ module.exports = (authenticateToken, restrictTo, pool) => {
       let query = `
       SELECT rh.id, rh.project_id, rh.rental_date, rh.amount, rh.created_at, rh.updated_at, rh.previous_water_meter, rh.current_water_meter, rh.water_units, rh.water_bill, 
                rh.previous_electricity_meter, rh.current_electricity_meter, rh.electricity_units, rh.electricity_bill, 
-             rh.water_image_path, rh.electricity_image_path, rh.water_description, rh.electricity_description, rh.status, rh.is_locked, p.name AS project_name, p.name_unit, p.name_type, u.username, 
+             rh.water_image_path, rh.electricity_image_path, rh.water_description, rh.electricity_description, rh.status, rh.is_locked, p.name AS project_name, rh.name_unit, p.name_type, u.username, 
              ru.username AS recorder_username, ou.first_name AS owner_first_name, ou.last_name AS owner_last_name, po.user_id AS owner_id
         FROM rental_history rh
         JOIN projects p ON rh.project_id = p.id
@@ -201,6 +201,7 @@ module.exports = (authenticateToken, restrictTo, pool) => {
         status,
         water_description,
         electricity_description,
+        name_unit,
       } = req.body;
       try {
         const projectResult = await pool.query(
@@ -240,7 +241,7 @@ module.exports = (authenticateToken, restrictTo, pool) => {
         const now = new Date();
 
         const result = await pool.query(
-          "INSERT INTO rental_history (user_id, recorder_id, project_id, rental_date, amount, previous_water_meter, current_water_meter, water_units, water_bill, previous_electricity_meter, current_electricity_meter, electricity_units, electricity_bill, water_description, electricity_description, status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) RETURNING id",
+          "INSERT INTO rental_history (user_id, recorder_id, project_id, rental_date, amount, previous_water_meter, current_water_meter, water_units, water_bill, previous_electricity_meter, current_electricity_meter, electricity_units, electricity_bill, water_description, electricity_description, status, name_unit, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) RETURNING id",
           [
             req.user.id,
             req.user.id,
@@ -258,6 +259,7 @@ module.exports = (authenticateToken, restrictTo, pool) => {
             water_description || null,
             electricity_description || null,
             status,
+            name_unit || null,
             now,
             now,
           ]
@@ -418,6 +420,7 @@ module.exports = (authenticateToken, restrictTo, pool) => {
         status,
         water_description,
         electricity_description,
+        name_unit,
       } = req.body;
 
       // ตรวจสอบสิทธิ์
@@ -541,6 +544,10 @@ module.exports = (authenticateToken, restrictTo, pool) => {
         if (status) {
           updates.status = `$${paramIndex++}`;
           params.push(status);
+        }
+        if (name_unit !== undefined) {
+          updates.name_unit = `$${paramIndex++}`;
+          params.push(name_unit || null);
         }
         updates.updated_at = `$${paramIndex++}`;
         params.push(now);

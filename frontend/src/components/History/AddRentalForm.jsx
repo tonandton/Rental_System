@@ -42,6 +42,7 @@ function AddRentalForm({
       water_description: "",
       electricity_description: "",
       status: "pending",
+      name_unit: "",
     }
   );
 
@@ -96,6 +97,7 @@ function AddRentalForm({
         water_description: initialData.water_description || "",
         electricity_description: initialData.electricity_description || "",
         status: initialData.status || "pending",
+        name_unit: initialData.name_unit || "",
       });
 
       // โหลด preview รูปภาพถ้ามี
@@ -128,7 +130,10 @@ function AddRentalForm({
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleFileChange = (e) => {
@@ -261,6 +266,8 @@ function AddRentalForm({
         water_description: "",
         electricity_description: "",
         status: "pending",
+        name_unit: "",
+        name_type: "",
       });
       setFiles({ water_image: null, electricity_image: null });
       setPreviews({ water_image: null, electricity_image: null });
@@ -461,13 +468,57 @@ function AddRentalForm({
                         required
                       >
                         <option value="">เลือกโครงการ</option>
-                        {projects
-                          .filter((project) => project.is_active)
-                          .map((project) => (
-                            <option key={project.id} value={project.id}>
-                              {project.name}
-                            </option>
-                          ))}
+                        {[
+                          ...new Map(
+                            projects
+                              .filter((project) => project.is_active)
+                              .map((project) => [project.name, project]) // ใช้ชื่อเป็น key
+                          ).values(),
+                        ].map((project) => (
+                          <option key={project.id} value={project.id}>
+                            {project.name}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
+                        <svg
+                          className="h-5 w-5 text-gray-400"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 12a1 1 0 01-.7-.3l-4-4a1 1 0 011.4-1.4L10 9.58l3.3-3.3a1 1 0 011.4 1.42l-4 4a1 1 0 01-.7.3z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="relative mt-1">
+                  <div>
+                    <label>
+                      <Warehouse size={16} />
+                      โครงการ
+                    </label>
+                    <div className="relative">
+                      <select
+                        name="name_unit"
+                        value={formData.name_unit}
+                        onChange={handleFormChange}
+                      >
+                        <option value="">เลือกอาคาร / หลัง</option>
+                        {[
+                          ...new Set(
+                            projects.map((p) => p.name_unit).filter(Boolean)
+                          ),
+                        ].map((unit, index) => (
+                          <option key={index} value={unit}>
+                            {unit}
+                          </option>
+                        ))}
                       </select>
                       <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
                         <svg

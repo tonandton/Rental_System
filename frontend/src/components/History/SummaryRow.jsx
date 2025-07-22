@@ -52,6 +52,7 @@ const SummaryRow = ({ data }) => {
         <td>-</td>
         <td>-</td>
         <td>-</td>
+        <td>-</td>
       </tr>
     </tbody>
   );

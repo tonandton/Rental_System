@@ -229,7 +229,8 @@ function HistoryTable({
                     <th>รวมค่าไฟ</th>
                     <th>หมายเหตุเพิ่มเติมสำหรับมิเตอร์ไฟ</th>
                     <th>ผู้บันทึก</th>
-                    <th>วันที่ลงข้อมูล</th>
+                    <th>วันที่บันทึกข้อมูล</th>
+                    <th>วันที่แก้ไขข้อมูล</th>
                     <th>Action</th>
                     {/* <th>วันที่อัพเดทข้อมูล</th> */}
                   </tr>
@@ -350,6 +351,16 @@ function HistoryTable({
                         <td>
                           {" "}
                           {new Date(item.created_at).toLocaleString("th-TH", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </td>
+                        <td>
+                          {" "}
+                          {new Date(item.updated_at).toLocaleString("th-TH", {
                             year: "numeric",
                             month: "short",
                             day: "numeric",

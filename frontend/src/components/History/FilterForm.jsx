@@ -114,7 +114,15 @@ function FilterForm({
     }, 300);
   };
 
-  // console.log(projects);
+  const getUniqueOptions = (items, key) => {
+    const seen = new Set();
+    return items.filter((item) => {
+      const val = item[key];
+      if (!val || seen.has(val)) return false; // กรองค่าว่างหรือซ้ำ
+      seen.add(val);
+      return true;
+    });
+  };
 
   return (
     <div className="bg-white shadow-xl rounded-xl p-6 mb-8 border border-green-100 sm:ml-56 sm:max-w-[calc(100%-14rem)]">
@@ -132,7 +140,7 @@ function FilterForm({
         )}
       </div>
       {isFilterOpen && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 animate-slide-in">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4 animate-slide-in">
           <div>
             <label htmlFor="startDate">วันที่เริ่ม</label>
 
@@ -230,7 +238,7 @@ function FilterForm({
                 className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
               >
                 <option value="">ทุกโครงการ</option>
-                {projects.map((project) => (
+                {getUniqueOptions(projects, "name").map((project) => (
                   <option key={project.id} value={project.id}>
                     {project.name}
                   </option>
@@ -261,12 +269,14 @@ function FilterForm({
                 onChange={handleTempFilterChange}
                 className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
               >
-                <option value="">ทุกหลัง</option>
-                {projects.map((project) => (
-                  <option key={project.id} value={project.name_unit}>
-                    {project.name_unit}
-                  </option>
-                ))}
+                <option value="">ทุกอาคาร/ห้อง</option>
+                {getUniqueOptions(projects, "name_unit").map(
+                  (project, index) => (
+                    <option key={index} value={project.name_unit}>
+                      {project.name_unit}
+                    </option>
+                  )
+                )}
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
                 <svg
@@ -294,11 +304,18 @@ function FilterForm({
                 className="mt-1 block w-full rounded-md border-green-300 shadow-sm focus:border-green-600 focus:ring-green-600 transition"
               >
                 <option value="">ทุกประเภท</option>
-                {projects.map((project) => (
+                {/* {projects.map((project) => (
                   <option key={project.id} value={project.name_type}>
                     {project.name_type}
                   </option>
-                ))}
+                ))} */}
+                {getUniqueOptions(projects, "name_type").map(
+                  (project, index) => (
+                    <option key={index} value={project.name_type}>
+                      {project.name_type}
+                    </option>
+                  )
+                )}
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-0 pr-3 flex items-center">
                 <svg
