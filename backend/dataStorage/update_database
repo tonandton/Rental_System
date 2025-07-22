@@ -23,6 +23,9 @@ ALTER TABLE projects
 DROP COLUMN start_date,
 DROP COLUMN end_date;
 
+ALTER TABLE rental_history ADD COLUMN is_locked BOOLEAN DEFAULT false;
+
+
 INSERT INTO projects (user_id, name, description, start_date, water_unit_rate, electricity_unit_rate, created_at) values
 (9, 'R26A - โครงโกดังเช่า', 'สมุทรสาคร', '2025-01-01', 37.45, 8.56, CURRENT_TIMESTAMP),
 (9, 'R26B - โครงโกดังเช่า', 'สมุทรสาคร', '2025-02-01', 37.45, 8.56, CURRENT_TIMESTAMP),

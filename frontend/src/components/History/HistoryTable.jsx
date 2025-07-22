@@ -1,4 +1,11 @@
-import { Edit, FileText, Image as ImageIcon, Download } from "lucide-react";
+import {
+  Edit,
+  FileText,
+  Image as ImageIcon,
+  Download,
+  RotateCcw,
+  XCircle,
+} from "lucide-react";
 import { useState, useEffect, useContext } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
@@ -206,6 +213,8 @@ function HistoryTable({
                     <th>รอบวันที่</th>
                     <th>เลขที่</th>
                     <th>โครงการ</th>
+                    <th>อาคาร / หลัง</th>
+                    <th>ประเภท</th>
                     <th>เจ้าของโครงการ</th>
                     <th>มิเตอร์น้ำรอบที่ผ่านมา</th>
                     <th>มิเตอร์น้ำรอบปัจจุบัน</th>
@@ -236,8 +245,8 @@ function HistoryTable({
                         key={`${item.id}-${index}`}
                         className={`transition ${
                           item.is_locked
-                            ? "bg-gray-100 text-gray-400" // สีจาง
-                            : "hover:bg-gray-50"
+                            ? "bg-red-100 text-red-400" // สีจาง
+                            : "hover:bg-green-100"
                         }`}
                       >
                         <td>
@@ -249,6 +258,8 @@ function HistoryTable({
                         </td>
                         <td>{item.id}</td>
                         <td>{item.project_name}</td>
+                        <td>{item.name_unit}</td>
+                        <td>{item.name_type}</td>
                         <td>{item.owner_first_name}</td>
                         <td>{Math.floor(item.previous_water_meter)}</td>
                         <td>{Math.floor(item.current_water_meter)}</td>
@@ -355,63 +366,52 @@ function HistoryTable({
                             minute: "2-digit",
                           })}
                         </td> */}
-                        <td>
-                          {/* <button
-                            onClick={() => onEdit(item)}
-                            className="text-green-600 hover:text-green-800 flex items-center"
-                            aria-label="แก้ไขรายการ"
-                          >
-                            <Edit size={16} className="mr-1" />
-                            แก้ไขรายการบันทึก
-                          </button>
-                          {role === "admin" && (
-                            <button
-                              onClick={() =>
-                                handleToggleLock(item.id, !item.is_locked)
-                              }
-                              className={`text-sm px-2 py-1 rounded ${
-                                item.is_locked
-                                  ? "bg-yellow-500 text-white"
-                                  : "bg-red-500 text-white"
-                              }`}
-                            >
-                              {item.is_locked ? "ปลดล็อก" : "ล็อค"}
-                            </button>
-                          )} */}
-
-                          {/* เงื่อนไขแสดงปุ่มแก้ไข */}
+                        <td className="space-y-2 sm:space-y-0 sm:flex sm:flex-col sm:items-start sm:gap-1">
+                          {/* ปุ่มแก้ไข: แสดงเฉพาะถ้าไม่ได้ล็อก หรือเป็น admin */}
                           {(role === "admin" ||
                             role === "superadmin" ||
                             !item.is_locked) && (
                             <button
                               onClick={() => onEdit(item)}
-                              className="text-green-600 hover:text-green-800 flex items-center"
+                              className={`flex items-center px-3 py-1.5 rounded-full  text-white bg-green-600 hover:bg-green-700 transition text-sm`}
                               aria-label="แก้ไขรายการ"
                             >
-                              <Edit size={16} className="mr-1" />
+                              <Edit size={16} className="mr-2" />
                               แก้ไขรายการ
                             </button>
                           )}
-
-                          {/* ปุ่มล็อก / ปลดล็อก เฉพาะ admin */}
+                          {/* ปุ่มยกเลิก / กู้คืน: เฉพาะ admin เท่านั้น */}
                           {(role === "admin" || role === "superadmin") && (
                             <button
                               onClick={() =>
                                 handleToggleLock(item.id, !item.is_locked)
                               }
-                              className={`text-sm px-2 py-1 rounded ${
-                                item.is_locked ? "bg-yellow-500" : "bg-red-500"
-                              } text-white ml-2`}
+                              className={`flex items-center px-3 py-1.5 rounded-full text-white transition text-sm font-medium shadow-sm ${
+                                item.is_locked
+                                  ? "bg-yellow-500 hover:bg-yellow-600"
+                                  : "bg-red-500 hover:bg-red-600"
+                              }`}
                             >
-                              {item.is_locked ? "ปลดล็อก" : "ยกเลิกรายการ"}
+                              {item.is_locked ? (
+                                <>
+                                  <RotateCcw size={16} className="mr-2" />
+                                  กู้คืนรายการ
+                                </>
+                              ) : (
+                                <>
+                                  <XCircle size={16} className="mr-2" />
+                                  ยกเลิกรายการ
+                                </>
+                              )}
                             </button>
                           )}
 
+                          {/* ปุ่มดาวน์โหลด PDF */}
                           <button
                             onClick={() => downloadInvoicePDF(item.id)}
-                            className="text-blue-600 hover:text-blue-800 flex items-center text-sm mt-2"
+                            className="flex items-center px-3 py-1.5 rounded text-blue-600 hover:text-blue-800 transition text-sm"
                           >
-                            <FileText size={14} className="mr-1" />
+                            <FileText size={16} className="mr-2" />
                             PDF ใบแจ้งหนี้
                           </button>
                         </td>

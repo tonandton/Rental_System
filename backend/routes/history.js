@@ -73,12 +73,14 @@ module.exports = (authenticateToken, restrictTo, pool) => {
         createdStartDate,
         createdEndDate,
         limit,
+        name_unit,
+        name_type,
       } = req.query;
 
       let query = `
       SELECT rh.id, rh.project_id, rh.rental_date, rh.amount, rh.created_at, rh.updated_at, rh.previous_water_meter, rh.current_water_meter, rh.water_units, rh.water_bill, 
                rh.previous_electricity_meter, rh.current_electricity_meter, rh.electricity_units, rh.electricity_bill, 
-             rh.water_image_path, rh.electricity_image_path, rh.water_description, rh.electricity_description, rh.status, rh.is_locked, p.name AS project_name, u.username, 
+             rh.water_image_path, rh.electricity_image_path, rh.water_description, rh.electricity_description, rh.status, rh.is_locked, p.name AS project_name, p.name_unit, p.name_type, u.username, 
              ru.username AS recorder_username, ou.first_name AS owner_first_name, ou.last_name AS owner_last_name, po.user_id AS owner_id
         FROM rental_history rh
         JOIN projects p ON rh.project_id = p.id
@@ -129,6 +131,15 @@ module.exports = (authenticateToken, restrictTo, pool) => {
       if (projectId) {
         conditions.push(`rh.project_id = $${params.length + 1}`);
         params.push(projectId);
+      }
+      if (name_unit) {
+        conditions.push(`LOWER(p.name_unit) ILIKE $${params.length + 1}`);
+        params.push(`%${name_unit.toLowerCase()}%`);
+      }
+
+      if (name_type) {
+        conditions.push(`LOWER(p.name_type) ILIKE $${params.length + 1}`);
+        params.push(`%${name_type.toLowerCase()}%`);
       }
       if (ownerId) {
         // ตรวจสอบว่า ownerId มีอยู่ใน project_owners

@@ -15,7 +15,7 @@ function ProjectFilterForm({ filters, setFilters, owners, tableRef, token }) {
 
   useEffect(() => {
     const fetchProjects = async () => {
-      const token = localStorage.getItem("token"); // ✅ get token here
+      const token = localStorage.getItem("token");
       if (!token) return;
 
       try {
