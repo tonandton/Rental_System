@@ -246,7 +246,7 @@ function HistoryTable({
                         key={`${item.id}-${index}`}
                         className={`transition ${
                           item.is_locked
-                            ? "bg-red-100 text-red-400" // สีจาง
+                            ? "bg-red-50 text-red-500" // สีจาง
                             : "hover:bg-green-100"
                         }`}
                       >

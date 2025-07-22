@@ -12,7 +12,7 @@ function Main({ token, role }) {
   );
 
   return (
-    <div className="xl:max-w-screen-xl mx-auto px-4 py-8 lg:max-w-screen-lg">
+    <div className="xl:max-w-screen-2xl mx-auto px-4 py-8 lg:max-w-screen-lg ml-0  sm:ml-56 sm:max-w-[calc(100%-14rem)]">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
         <h1 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-800 flex items-center gap-2">
           <Grid size={20} className="text-green-600" />

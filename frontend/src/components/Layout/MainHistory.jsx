@@ -68,7 +68,7 @@ function MainHistory({ token, role, setToken, setRole }) {
   };
 
   return (
-    <div className="xl:max-w-screen-xl mx-auto px-4 py-8 lg:max-w-screen-lg">
+    <div className="xl:max-w-screen-2xl mx-auto px-4 py-8 lg:max-w-screen-lg ml-0  sm:ml-56 sm:max-w-[calc(100%-14rem)]">
       <h1 className="text-3xl font-bold mb-8 text-gray-800">ภาพรวมระบบเช่า</h1>
       {loading ? (
         <p className="text-gray-600">กำลังโหลด...</p>
