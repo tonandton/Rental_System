@@ -18,10 +18,12 @@ import UserMangement from "./components/User/UserManagement";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./index.css";
+import { useAuth } from "./Context/AuthContext";
 
-function AppContent({ token, role, user, setToken, setRole, setUser }) {
+function AppContent() {
   const location = useLocation();
   const isLoginPage = location.pathname === "/login";
+  const { token, role, user, setToken, setRole, setUser } = useAuth();
 
   return (
     <>
@@ -47,10 +49,10 @@ function AppContent({ token, role, user, setToken, setRole, setUser }) {
           element={
             <ProtectedRoute token={token}>
               <Main
-                token={token}
-                role={role}
-                setToken={setToken}
-                setRole={setRole}
+              // token={token}
+              // role={role}
+              // setToken={setToken}
+              // setRole={setRole}
               />
             </ProtectedRoute>
           }

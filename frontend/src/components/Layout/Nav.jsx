@@ -11,8 +11,9 @@ import {
   SquareChevronLeft,
   SquareChevronRight,
 } from "lucide-react";
+import { useAuth } from "../../Context/AuthContext";
 
-function Navbar({ token, role, user, setToken, setRole, setUser }) {
+function Navbar({ user }) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState({});
@@ -20,13 +21,16 @@ function Navbar({ token, role, user, setToken, setRole, setUser }) {
   const sidebarRef = useRef(null);
   const navigate = useNavigate();
 
+  const { role, token, setToken, setRole, setUser } = useAuth();
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     localStorage.removeItem("user");
-    setToken(null);
-    setRole(null);
+    setToken("");
+    setRole("");
     setUser(null);
+    localStorage.clear(); // หรือ removeItem ทีละตัว
     navigate("/login");
   };
 

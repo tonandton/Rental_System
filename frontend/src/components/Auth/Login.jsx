@@ -3,8 +3,9 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { toast } from "react-toastify";
+import { useAuth } from "../../Context/AuthContext";
 
-function Login({ setToken, setRole, setUser }) {
+function Login() {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -12,6 +13,7 @@ function Login({ setToken, setRole, setUser }) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { setToken, setRole, setUser } = useAuth();
 
   useEffect(() => {
     const rememberedUsername = localStorage.getItem("rememberedUsername");

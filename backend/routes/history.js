@@ -63,6 +63,7 @@ module.exports = (authenticateToken, restrictTo, pool) => {
         startDate,
         endDate,
         status,
+        is_locked,
         month,
         year,
         projectId,
@@ -77,7 +78,7 @@ module.exports = (authenticateToken, restrictTo, pool) => {
       let query = `
       SELECT rh.id, rh.project_id, rh.rental_date, rh.amount, rh.created_at, rh.updated_at, rh.previous_water_meter, rh.current_water_meter, rh.water_units, rh.water_bill, 
                rh.previous_electricity_meter, rh.current_electricity_meter, rh.electricity_units, rh.electricity_bill, 
-             rh.water_image_path, rh.electricity_image_path, rh.water_description, rh.electricity_description, rh.status, p.name AS project_name, u.username, 
+             rh.water_image_path, rh.electricity_image_path, rh.water_description, rh.electricity_description, rh.status, rh.is_locked, p.name AS project_name, u.username, 
              ru.username AS recorder_username, ou.first_name AS owner_first_name, ou.last_name AS owner_last_name, po.user_id AS owner_id
         FROM rental_history rh
         JOIN projects p ON rh.project_id = p.id
@@ -553,6 +554,16 @@ module.exports = (authenticateToken, restrictTo, pool) => {
           params
         );
 
+        const lockedResult = await pool.query(
+          "SELECT is_locked FROM rental_history WHERE id = $1",
+          [historyId]
+        );
+        if (lockedResult.rows[0]?.is_locked) {
+          return res
+            .status(403)
+            .json({ error: "รายการนี้ถูกล็อค ไม่สามารถแก้ไขได้" });
+        }
+
         res.json({
           message: "Rental history updated",
           water_bill,
@@ -761,22 +772,22 @@ module.exports = (authenticateToken, restrictTo, pool) => {
   });
 
   router.patch(
-    "/history/:id/cancel",
+    "/history/:id/lock",
     authenticateToken,
     restrictTo("admin", "superadmin"),
     async (req, res) => {
-      const { is_cancelled } = req.body;
+      const { is_locked } = req.body;
       const id = req.params.id;
       try {
         await pool.query(
-          "UPDATE rental_history SET is_cancelled = $1 WHERE id = $2",
-          [is_cancelled, id]
+          "UPDATE rental_history SET is_locked = $1 WHERE id = $2",
+          [is_locked, id]
         );
         res.json({
-          message: is_cancelled ? "รายการถูกยกเลิก" : "รายการถูกปลดล็อก",
+          message: is_locked ? "ล็อครายการแล้ว" : "ปลดล็อกรายการแล้ว",
         });
       } catch (err) {
-        console.error("Cancel error:", err);
+        console.error("Lock error:", err);
         res.status(500).json({ error: "Server error" });
       }
     }

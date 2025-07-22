@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import axios from "axios";
 import SummaryRow from "./SummaryRow";
 import formatNumberWithCommas from "../../utils/formatNumberWithCommas";
+import { useAuth } from "../../Context/AuthContext";
 
 function HistoryTable({
   history,
@@ -16,14 +17,13 @@ function HistoryTable({
   tableRef,
   API_BASE_URL,
   onEdit,
-  token,
-  role,
-  // queryParams = {},
+  queryParams = {},
 }) {
   const [popupImage, setPopupImage] = useState(null);
   const [exporting, setExporting] = useState(false);
 
-  // console.log(role);
+  const { role, token } = useAuth();
+  console.log(role);
 
   useEffect(() => {
     if (error) {
@@ -134,22 +134,20 @@ function HistoryTable({
     currentPage * itemsPerPage
   );
 
-  const handleToggleCancel = async (id, isCancelled) => {
+  const handleToggleLock = async (id, isLocked) => {
     try {
       await axios.patch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/history/${id}/cancel`,
-        {
-          is_cancelled: isCancelled,
-        },
+        `${API_BASE_URL}/api/history/${id}/lock`,
+        { is_locked: isLocked },
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-      toast.success(isCancelled ? "ยกเลิกรายการแล้ว" : "ปลดล็อกรายการแล้ว");
-      fetchData(); // โหลดข้อมูลใหม่
-    } catch (err) {
+      toast.success(isLocked ? "ล็อครายการแล้ว" : "ปลดล็อกรายการแล้ว");
+      await retryFetch(); // โหลดใหม่
+    } catch (error) {
       toast.error("ไม่สามารถดำเนินการได้");
     }
   };
@@ -234,7 +232,14 @@ function HistoryTable({
                     </tr>
                   ) : (
                     paginatedHistory.map((item, index) => (
-                      <tr key={`${item.id}-${index}`}>
+                      <tr
+                        key={`${item.id}-${index}`}
+                        className={`transition ${
+                          item.is_locked
+                            ? "bg-gray-100 text-gray-400" // สีจาง
+                            : "hover:bg-gray-50"
+                        }`}
+                      >
                         <td>
                           {new Date(item.rental_date).toLocaleString("th-TH", {
                             year: "numeric",
@@ -358,29 +363,50 @@ function HistoryTable({
                           >
                             <Edit size={16} className="mr-1" />
                             แก้ไขรายการบันทึก
-                          </button> */}
-                          {(!item.is_cancelled || role === "admin") && (
-                            <button
-                              onClick={() => onEdit(item.id)}
-                              className="text-blue-500 hover:underline"
-                            >
-                              แก้ไข
-                            </button>
-                          )}
+                          </button>
                           {role === "admin" && (
                             <button
                               onClick={() =>
-                                handleToggleCancel(item.id, !item.is_cancelled)
+                                handleToggleLock(item.id, !item.is_locked)
                               }
                               className={`text-sm px-2 py-1 rounded ${
-                                item.is_cancelled
+                                item.is_locked
                                   ? "bg-yellow-500 text-white"
                                   : "bg-red-500 text-white"
                               }`}
                             >
-                              {item.is_cancelled ? "ปลดล็อก" : "ยกเลิก"}
+                              {item.is_locked ? "ปลดล็อก" : "ล็อค"}
+                            </button>
+                          )} */}
+
+                          {/* เงื่อนไขแสดงปุ่มแก้ไข */}
+                          {(role === "admin" ||
+                            role === "superadmin" ||
+                            !item.is_locked) && (
+                            <button
+                              onClick={() => onEdit(item)}
+                              className="text-green-600 hover:text-green-800 flex items-center"
+                              aria-label="แก้ไขรายการ"
+                            >
+                              <Edit size={16} className="mr-1" />
+                              แก้ไขรายการ
                             </button>
                           )}
+
+                          {/* ปุ่มล็อก / ปลดล็อก เฉพาะ admin */}
+                          {(role === "admin" || role === "superadmin") && (
+                            <button
+                              onClick={() =>
+                                handleToggleLock(item.id, !item.is_locked)
+                              }
+                              className={`text-sm px-2 py-1 rounded ${
+                                item.is_locked ? "bg-yellow-500" : "bg-red-500"
+                              } text-white ml-2`}
+                            >
+                              {item.is_locked ? "ปลดล็อก" : "ยกเลิกรายการ"}
+                            </button>
+                          )}
+
                           <button
                             onClick={() => downloadInvoicePDF(item.id)}
                             className="text-blue-600 hover:text-blue-800 flex items-center text-sm mt-2"
