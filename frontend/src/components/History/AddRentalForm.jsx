@@ -467,7 +467,7 @@ function AddRentalForm({
                         onChange={handleFormChange}
                         required
                       >
-                        <option value="">เลือกโครงการ</option>
+                        <option value="">เลือกรหัสโครงการ</option>
                         {[
                           ...new Map(
                             projects
